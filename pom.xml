@@ -170,7 +170,7 @@
         <profile>
             <id>with-children</id>
             <modules>
-                <module>framework</module>
+                <module>sustain</module>
                 <module>builder</module>
             </modules>
         </profile>
