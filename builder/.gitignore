@@ -1,0 +1,9 @@
+*.class
+
+.DS_Store
+*.swp
+.jetbrains
+.modules
+target
+release.*
+pom.xml.*

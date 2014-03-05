@@ -1,0 +1,11 @@
+*.class
+
+.DS_Store
+*.swp
+.jetbrains
+.modules
+.idea
+target
+release.*
+pom.xml.*
+spring-component-*

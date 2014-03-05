@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<service xmlns="http://www.happyonroad.net/schema/service"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://www.happyonroad.net/schema/service
+       http://www.happyonroad.net/schema/service.xsd">
+
+    <export>
+        <role>spring.test.api.ServiceProvider</role>
+        <hint>test</hint>
+        <ref>testServiceProvider</ref>
+    </export>
+
+</service>

@@ -1,0 +1,5 @@
+<configuration >
+    <include resource="logback-basic.xml"/>
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="net.happyonroad.component" level="TRACE"/>
+</configuration>

@@ -1,0 +1,68 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.myapp</groupId>
+        <artifactId>spring-component-example</artifactId>
+        <version>0.0.5-SNAPSHOT</version>
+    </parent>
+    <artifactId>server</artifactId>
+    <name>My App Server</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.myapp</groupId>
+            <artifactId>api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.myapp</groupId>
+            <artifactId>basis</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.happyonroad</groupId>
+            <artifactId>spring-component-framework</artifactId>
+            <version>${version.component-framework}</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.happyonroad</groupId>
+                <artifactId>spring-component-builder</artifactId>
+                <version>${version.component-framework}</version>
+                <executions>
+                    <execution>
+                        <id>package-app</id>
+                        <goals><goal>package</goal></goals>
+                        <configuration>
+                            <output>${release.root}/${project.artifactId}</output>
+                            <appPort>1097</appPort>
+                            <jvmOptions>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5004</jvmOptions>
+                            <properties>
+                                <property>
+                                    <name>client.app.port</name>
+                                    <value>1096</value>
+                                </property>
+                            </properties>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>clean-app</id>
+                        <goals><goal>clean</goal></goals>
+                        <configuration>
+                            <output>${release.root}/${project.artifactId}</output>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>

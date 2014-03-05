@@ -1,0 +1,30 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>spring</groupId>
+    <artifactId>aggregation</artifactId>
+    <version>0.0.1</version>
+    <packaging>pom</packaging>
+
+    <name>Spring Aggregation</name>
+    <url>http://www.happyonroad.net/softs/component</url>
+    <description>The new technology</description>
+    <organization>
+        <name>Spring</name>
+        <url>http://www.happyonroad.net</url>
+    </organization>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+</project>

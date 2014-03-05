@@ -1,0 +1,22 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>spring</groupId>
+    <artifactId>test</artifactId>
+    <version>0.0.1</version>
+    <packaging>pom</packaging>
+
+    <name>Spring Test Component</name>
+    <description>All test components' parent</description>
+    <url>http://www.happyonroad.net/test/comp</url>
+
+    <modules>
+        <module>comp_1</module>
+        <module>comp_2</module>
+        <module>comp_3</module>
+        <module>comp_4</module>
+    </modules>
+</project>

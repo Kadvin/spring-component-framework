@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>spring</groupId>
+        <artifactId>aggregation</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>spring.aggregation</groupId>
+    <artifactId>sample</artifactId>
+    <version>1.0.0</version>
+
+    <name>Spring Aggregation: Sample</name>
+    <dependencies>
+        <dependency>
+            <groupId>spring</groupId>
+            <artifactId>component-framework</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>spring</groupId>
+        <artifactId>test</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <groupId>spring.test</groupId>
+    <artifactId>comp_5</artifactId>
+    <version>0.0.1</version>
+
+    <name>Spring Test 5th Component</name>
+    <description>It's a service component with service exports and imports</description>
+    <url>http://www.happyonroad.net/test/comp_5</url>
+
+    <dependencies>
+        <dependency>
+            <groupId>spring.test</groupId>
+            <artifactId>comp_1</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>spring.test</groupId>
+            <artifactId>comp_3</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>spring.test</groupId>
+            <artifactId>comp_4</artifactId>
+            <version>${project.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+</project>

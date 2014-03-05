@@ -1,0 +1,8 @@
+*.class
+
+.jetbrains
+.modules
+target
+release*
+pom.xml.release*
+dependency-reduced-pom.xml

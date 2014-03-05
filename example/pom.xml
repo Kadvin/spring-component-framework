@@ -1,0 +1,35 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>net.happyonroad</groupId>
+      <artifactId>spring-component-parent</artifactId>
+      <version>0.0.5-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.myapp</groupId>
+    <artifactId>spring-component-example</artifactId>
+    <version>0.0.5-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Spring Component Example</name>
+    <modules>
+        <module>api</module>
+        <module>basis</module>
+        <module>server</module>
+        <module>client</module>
+        <module>caller</module>
+    </modules>
+
+    <scm>
+        <connection>scm:git:git@github.com:Kadvin/spring-component-example.git</connection>
+        <developerConnection>scm:git:git@github.com:Kadvin/spring-component-example.git</developerConnection>
+        <tag>HEAD</tag>
+     </scm>
+
+    <properties>
+        <version.springframework>3.2.4.RELEASE</version.springframework>
+        <version.component-framework>${project.parent.version}</version.component-framework>
+        <release.root>/opt/releases</release.root>
+    </properties>
+</project>

@@ -1,0 +1,22 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>spring</groupId>
+        <artifactId>aggregation</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <groupId>spring</groupId>
+    <artifactId>infrastructure</artifactId>
+    <version>0.0.1</version>
+
+    <name>SPRING Infrastructure</name>
+    <url>http://www.happyonroad.net/softs/infrastructure</url>
+    <description>The Infrastructure</description>
+
+    <organization>
+        <name>SPRING</name>
+        <url>http://www.happyonroad.net</url>
+    </organization>
+</project>
