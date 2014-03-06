@@ -4,12 +4,12 @@
     <parent>
       <groupId>net.happyonroad</groupId>
       <artifactId>spring-component-parent</artifactId>
-      <version>0.0.5-SNAPSHOT</version>
+      <version>0.0.5</version>
     </parent>
 
     <groupId>com.myapp</groupId>
     <artifactId>spring-component-example</artifactId>
-    <version>0.0.5-SNAPSHOT</version>
+    <version>0.0.5</version>
     <packaging>pom</packaging>
 
     <name>Spring Component Example</name>
