@@ -12,11 +12,13 @@ import org.slf4j.LoggerFactory;
 /** 默认 */
 public abstract class AbstractFeatureResolver implements FeatureResolver {
     protected Logger logger = LoggerFactory.getLogger(getClass());
-    private   int              priority;//优先级，越大越放在前面
+    private   int              loadOrder;//加载优先级，越大越放在前面
+    private   int              unloadOrder;//加载优先级，越大越放在前面
     protected ComponentContext resolveContext;
 
-    public AbstractFeatureResolver(int priority) {
-        this.priority = priority;
+    public AbstractFeatureResolver(int loadOrder, int unloadOrder) {
+        this.loadOrder = loadOrder;
+        this.unloadOrder = unloadOrder;
     }
 
     @Override
@@ -25,20 +27,18 @@ public abstract class AbstractFeatureResolver implements FeatureResolver {
         return this;
     }
 
-    public int getPriority() {
-        return priority;
+    public int getLoadOrder() {
+        return loadOrder;
     }
 
-    @Override
-    public int compareTo(FeatureResolver another) {
-        return another.getPriority() - priority;
+    public int getUnloadOrder() {
+        return unloadOrder;
     }
 
     @Override
     public String toString() {
         return getName();
     }
-
 
     @Override
     public Object release(Component component) {

@@ -14,7 +14,7 @@ import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 public class StaticFeatureResolver extends AbstractFeatureResolver{
 
     public StaticFeatureResolver() {
-        super(100);
+        super(10, 100);
     }
 
     @Override
@@ -29,8 +29,8 @@ public class StaticFeatureResolver extends AbstractFeatureResolver{
 
     @Override
     public void resolve(Component component) {
-        logger.debug("Resolving {} {} feature", component, getName());
         if(component.isPlain()) return;
+        logger.debug("Resolving {} {} feature", component, getName());
         ClassRealm realm = resolveContext.getClassRealm(component.getId());
         if(realm == null){
             PomClassWorld world = resolveContext.getWorld();

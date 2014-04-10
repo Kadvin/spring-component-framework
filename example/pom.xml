@@ -4,12 +4,12 @@
     <parent>
       <groupId>net.happyonroad</groupId>
       <artifactId>spring-component-parent</artifactId>
-      <version>0.0.5</version>
+      <version>0.0.6-SNAPSHOT</version>
     </parent>
 
     <groupId>com.myapp</groupId>
     <artifactId>spring-component-example</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.6-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Spring Component Example</name>
@@ -30,6 +30,6 @@
     <properties>
         <version.springframework>3.2.4.RELEASE</version.springframework>
         <version.component-framework>${project.parent.version}</version.component-framework>
-        <release.root>/opt/releases</release.root>
+        <release.root>/opt/releases/spring</release.root>
     </properties>
 </project>

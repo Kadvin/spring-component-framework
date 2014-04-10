@@ -4,13 +4,14 @@
 
 package net.happyonroad.component.core;
 
-import net.happyonroad.component.classworld.PomClassRealm;
 import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.ComponentLoader;
 import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.ServiceRegistry;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.ApplicationContext;
+
+import java.util.Set;
 
 /** 组件上下文 */
 public interface ComponentContext {
@@ -35,6 +36,8 @@ public interface ComponentContext {
 
     ApplicationContext getServiceFeature(Component component);
 
+    Set<ApplicationContext> getApplicationFeatures();
+
     ServiceRegistry getRegistry();
 
     ComponentLoader getComponentLoader();
@@ -42,4 +45,5 @@ public interface ComponentContext {
     ComponentRepository getComponentRepository();
 
     PomClassWorld getWorld();
+
 }

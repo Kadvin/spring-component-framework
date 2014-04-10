@@ -11,27 +11,30 @@ import net.happyonroad.component.container.feature.ApplicationFeatureResolver;
 import net.happyonroad.component.container.feature.ServiceFeatureResolver;
 import net.happyonroad.component.container.feature.StaticFeatureResolver;
 import net.happyonroad.component.core.*;
+import net.happyonroad.component.core.Component;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** 组件加载 */
+/**
+ * 组件加载
+ */
 public class DefaultComponentLoader implements ComponentLoader, ComponentContext {
     private Logger logger = LoggerFactory.getLogger(DefaultComponentLoader.class);
 
     /*package*/ final PomClassWorld            world;
     /*package*/ final List<FeatureResolver>    featureResolvers;
+    /*package*/ final List<FeatureResolver>    reverseResolvers;
     /*package*/ final Map<Component, Features> loadedFeatures;
     /*package*/ final ServiceRegistry          registry;
     /*package*/ final ComponentRepository      repository;
+    /*package*/ final Set<Component> loading, unloading;
+
 
     public DefaultComponentLoader(ComponentRepository repository,
                                   PomClassWorld world,
@@ -41,13 +44,16 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         loadedFeatures = new ConcurrentHashMap<Component, Features>();
         registry = new DefaultServiceRegistry();
         featureResolvers = new LinkedList<FeatureResolver>();
+        reverseResolvers = new LinkedList<FeatureResolver>();
+        loading = new LinkedHashSet<Component>();
+        unloading = new LinkedHashSet<Component>();
         //注册缺省的特性解析器
-        registerResolver(new StaticFeatureResolver().bind(this));
-        registerResolver(new ApplicationFeatureResolver().bind(this));
-        registerResolver(new ServiceFeatureResolver().bind(this));
+        registerResolver(new StaticFeatureResolver());
+        registerResolver(new ApplicationFeatureResolver());
+        registerResolver(new ServiceFeatureResolver());
         //注册构造时传入的扩展Feature Resolvers
         for (FeatureResolver resolver : resolvers) {
-            registerResolver(resolver.bind(this));
+            registerResolver(resolver);
         }
     }
 
@@ -57,8 +63,11 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      * @param resolver 解析器
      */
     public void registerResolver(FeatureResolver resolver) {
-        featureResolvers.add(resolver.bind(this));
-        Collections.sort(featureResolvers);
+        resolver.bind(this);
+        featureResolvers.add(resolver);
+        reverseResolvers.add(resolver);
+        Collections.sort(featureResolvers, new LoadOrder());
+        Collections.sort(reverseResolvers, new UnloadOrder());
     }
 
     @Override
@@ -95,6 +104,17 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         Features features = loadedFeatures.get(component);
         if (features == null) return null;
         return features.getApplicationFeature();
+    }
+
+    @Override
+    public Set<ApplicationContext> getApplicationFeatures() {
+        Set<ApplicationContext> contexts = new LinkedHashSet<ApplicationContext>();
+        for (Features features : loadedFeatures.values()) {
+            if( features.getApplicationFeature() != null ){
+                contexts.add(features.getApplicationFeature());
+            }
+        }
+        return contexts;
     }
 
     @Override
@@ -136,8 +156,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      */
     @Override
     public void load(Component component) throws IOException {
-        if (isLoaded(component))
-            return;
+        if (isLoaded(component)) return;
         logger.debug("Loading {}", component);
         //首先加载父组件
         if (component.getParent() != null) {
@@ -161,9 +180,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      */
     @Override
     public void unload(Component component) {
-        if (!isLoaded(component)) {
-            return;
-        }
+        if (!isLoaded(component))  return;
         logger.debug("Unloading {}", component);
         //先卸载自身
         unloadSingle(component);
@@ -178,6 +195,30 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             unload(component.getParent());
         }
         logger.debug("Unloaded  {}", component);
+    }
+
+    boolean isLoading(Component component){
+        return loading.contains(component);
+    }
+
+    boolean isUnloading(Component component){
+        return unloading.contains(component);
+    }
+
+    void loading(Component component){
+        loading.add(component);
+    }
+
+    void unloading(Component component){
+        unloading.add(component);
+    }
+
+    void loaded(Component component){
+        loading.remove(component);
+    }
+
+    void unloaded(Component component){
+        unloading.remove(component);
     }
 
     @Override
@@ -210,17 +251,23 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         if (component.isAggregating()) {
             logger.trace("Needn't real load aggregating component {}", component);
             loadedFeatures.put(component, FeatureResolver.AggregatingFlag);
-            return;
-        }
-        ComponentResource resource = component.getResource();
-        if (resource == null) {
-            throw new IOException("The component " + component + " without resource");
-        }
-        logger.trace("Actual loading {}", component);
-        for (FeatureResolver featureResolver : featureResolvers) {
-            if (featureResolver.hasFeature(component)) {
-                featureResolver.resolve(component);
+        } else if (component.isPlain()) {
+            logger.trace("Needn't real load plain component {}", component);
+            loadedFeatures.put(component, FeatureResolver.PlainFlag);
+        } else {
+            if (isLoading(component)) return;
+            loading(component);
+            ComponentResource resource = component.getResource();
+            if (resource == null) {
+                throw new IOException("The component " + component + " without resource");
             }
+            logger.trace("Actual loading {}", component);
+            for (FeatureResolver featureResolver : featureResolvers) {
+                if (featureResolver.hasFeature(component)) {
+                    featureResolver.resolve(component);
+                }
+            }
+            loaded(component);
         }
     }
 
@@ -233,15 +280,34 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         if (component.isAggregating()) {
             logger.trace("Remove aggregating component {}", component);
             loadedFeatures.remove(component);
-            return;
-        }
-        logger.trace("Actual unloading {}", component);
-        for (int i = featureResolvers.size() - 1; i >= 0; i--) {
-            FeatureResolver resolver = featureResolvers.get(i);
-            if (resolver.hasFeature(component)) {
-                resolver.release(component);
+        }else if (component.isPlain()){
+            logger.trace("Remove plain component {}", component);
+            loadedFeatures.remove(component);
+        }else{
+            if (isUnloading(component)) return;
+            unloading(component);
+            logger.trace("Actual unloading {}", component);
+            for (FeatureResolver resolver : reverseResolvers) {
+                if (resolver.hasFeature(component)) {
+                    resolver.release(component);
+                }
             }
+            loadedFeatures.remove(component);
+            unloaded(component);
         }
-        loadedFeatures.remove(component);
+    }
+
+    static class LoadOrder implements java.util.Comparator<FeatureResolver> {
+        @Override
+        public int compare(FeatureResolver resolver1, FeatureResolver resolver2) {
+            return resolver1.getLoadOrder() - resolver2.getLoadOrder();
+        }
+    }
+
+    static class UnloadOrder implements java.util.Comparator<FeatureResolver> {
+        @Override
+        public int compare(FeatureResolver resolver1, FeatureResolver resolver2) {
+            return resolver1.getUnloadOrder() - resolver2.getUnloadOrder();
+        }
     }
 }

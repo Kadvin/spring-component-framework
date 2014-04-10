@@ -40,7 +40,7 @@ public class SpringServiceExporter extends SpringServiceProxy {
      */
     public void exportService(MutableServiceRegistry serviceRegistry, ApplicationContext componentContext)
             throws ServiceConfigurationException {
-        Object service = null;
+        Object service;
         try {
             service = getServiceReference(componentContext);
         } catch (NoSuchBeanDefinitionException e) {

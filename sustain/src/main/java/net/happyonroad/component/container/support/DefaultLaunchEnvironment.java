@@ -6,7 +6,12 @@ package net.happyonroad.component.container.support;
 import net.happyonroad.component.classworld.PomClassRealm;
 import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.*;
+import net.happyonroad.component.container.event.ContainerEvent;
+import net.happyonroad.component.container.event.ContainerStartedEvent;
+import net.happyonroad.component.container.event.ContainerStoppedEvent;
+import net.happyonroad.component.container.event.ContainerStoppingEvent;
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.ComponentContext;
 import net.happyonroad.component.core.FeatureResolver;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
@@ -15,6 +20,7 @@ import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -23,6 +29,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /** 为了让Launch静态程序可以被定制化，从原 Plexus/Launch中分离出来的对象 */
 public class DefaultLaunchEnvironment implements LaunchEnvironment {
@@ -33,7 +40,8 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     private Logger logger = LoggerFactory.getLogger(DefaultLaunchEnvironment.class.getName());
 
     private DefaultComponentRepository repository;
-    private ComponentLoader     loader;
+    private ComponentLoader            loader;
+    private ComponentContext           context;
 
     public DefaultLaunchEnvironment() {
         String home = System.getProperty("app.home");
@@ -75,6 +83,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         //配置 class world
         PomClassRealm mainRealm = launcher.configure();
         this.loader = createLoader(mainRealm);
+        this.context = (ComponentContext) this.loader;
         return launcher;
     }
 
@@ -208,10 +217,24 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
      */
     public void load(Component component) throws IOException {
         loader.load(component);
+        Set<ApplicationContext> applications = context.getApplicationFeatures();
+        ContainerStartedEvent event = new ContainerStartedEvent(this);
+        for (ApplicationContext application : applications) {
+            application.publishEvent(event);
+        }
     }
 
     public void unload(Component component) {
+        Set<ApplicationContext> applications = context.getApplicationFeatures();
+        ContainerEvent event = new ContainerStoppingEvent(this);
+        for (ApplicationContext application : applications) {
+            application.publishEvent(event);
+        }
         loader.unload(component);
+        event = new ContainerStoppedEvent(this);
+        for (ApplicationContext application : applications) {
+            application.publishEvent(event);
+        }
     }
 
 

@@ -6,9 +6,10 @@ package net.happyonroad.component.core;
 import java.io.IOException;
 
 /** 组件的特性解析器 */
-public interface FeatureResolver extends Comparable<FeatureResolver> {
+public interface FeatureResolver {
 
-    Features AggregatingFlag = new Features("pom", new Object());
+    Features AggregatingFlag = new Features("Aggregating", new Object());
+    Features PlainFlag = new Features("Plain", new Object());
 
     String getName();
 
@@ -19,10 +20,16 @@ public interface FeatureResolver extends Comparable<FeatureResolver> {
     FeatureResolver bind(ComponentContext context);
 
     /**
-     * 优先级
+     * 加载顺序，越小越靠前
      * @return priority
      */
-    int getPriority();
+    int getLoadOrder();
+
+    /**
+     * 卸载优先级，越小越靠前
+     * @return priority
+     */
+    int getUnloadOrder();
 
     /**
      * 判断组件是否有本特性

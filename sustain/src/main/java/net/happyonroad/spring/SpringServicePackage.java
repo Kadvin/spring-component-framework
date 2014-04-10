@@ -5,6 +5,7 @@ package net.happyonroad.spring;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -19,10 +20,12 @@ import org.springframework.context.event.ContextStartedEvent;
 
 import java.util.List;
 
-/** 某个jar包中service元素定义出来的一堆服务 */
+/**
+ * 某个jar包中service元素定义出来的一堆服务
+ */
 public class SpringServicePackage implements
-        Lifecycle,
-        ApplicationListener<ApplicationContextEvent>, ApplicationContextAware {
+                                  Lifecycle,
+                                  ApplicationListener<ApplicationContextEvent>, ApplicationContextAware {
     private Logger logger = LoggerFactory.getLogger(SpringServicePackage.class);
     private String                 componentName;
     /* 为该组件对象生成的服务上下文，本对象就是通过服务声明驻留在该上下文中的对象 */
@@ -80,7 +83,8 @@ public class SpringServicePackage implements
     public boolean isRunning() {
         return running;
     }
-////////////////////////////////////////////////////////////////////////////
+
+    ////////////////////////////////////////////////////////////////////////////
     //  子上下文事件
     ////////////////////////////////////////////////////////////////////////////
 
@@ -92,18 +96,25 @@ public class SpringServicePackage implements
     @Override
     public void onApplicationEvent(ApplicationContextEvent event) {
         if (event.getSource() == this.serviceContext)
+        {
+            // 由于 spring的多路转发问题，其会收到两次
+            // 第二次的时候，componentContext已经被置为null，不需要处理
+            if (event instanceof ContextStoppingEvent && this.componentContext != null ) {
+                revokeExportedServices();
+            }
             //不关注所在容器的事件，因为自身的事件自然会导致本对象本启动/停止
             return;
+        }
         //但是关注子context的事件
         if (event instanceof ContextRefreshedEvent) {
             //先在refresh这步把引用加上，保证start/stop事件发生时 component context有引用
-            this.componentContext = (ApplicationContext) event.getSource();
+            this.componentContext = event.getApplicationContext();
         } else if (event instanceof ContextStartedEvent) {
             //而后在context启动之后这一步把本对象要暴露的服务暴露出去
             exportServices();
-        } else if (event instanceof ContextStoppingEvent) {
-            //最后在context结束服务之前，把本对象要停止的服务回收回来
-            revokeExportedServices();
+        } else{
+            //skip it;
+            logger.trace("Skip {}", event);
         }
     }
 
@@ -134,6 +145,7 @@ public class SpringServicePackage implements
         for (SpringServiceExporter exporter : getExporters()) {
             exporter.exportService(serviceRegistry, componentContext);
         }
+        componentContext.publishEvent(new ServiceExportedEvent(serviceContext));
     }
 
     private void revokeExportedServices() {
@@ -141,6 +153,7 @@ public class SpringServicePackage implements
         for (SpringServiceExporter exporter : getExporters()) {
             exporter.revokeService(serviceRegistry, componentContext);
         }
+        componentContext.publishEvent(new ServiceRevokedEvent(serviceContext));
     }
 
     //  辅助

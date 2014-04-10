@@ -17,8 +17,8 @@ import java.util.Set;
 
 /** Resolve the general spring application context */
 public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
-    public SpringFeatureResolver(int priority) {
-        super(priority);
+    public SpringFeatureResolver(int loadOrder, int unloadOrder) {
+        super(loadOrder, unloadOrder);
     }
 
     protected AbstractApplicationContext combineDependedApplicationAsParentContext(Component component) {

@@ -7,6 +7,7 @@ import net.happyonroad.component.container.support.ComponentInputStreamResource;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.Features;
+import net.happyonroad.spring.ContextStoppingEvent;
 import net.happyonroad.spring.ServiceApplicationContext;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -18,8 +19,10 @@ import java.io.InputStream;
 /** 加载服务组件 */
 public class ServiceFeatureResolver extends SpringFeatureResolver {
 
+    // Before application feature resolver load
+    // Before application feature resolver unload
     public ServiceFeatureResolver() {
-        super(90);
+        super(25, 65);
     }
 
     @Override
@@ -81,4 +84,12 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
         return context;
     }
 
+    @Override
+    public Object release(Component component) {
+        AbstractApplicationContext context = (AbstractApplicationContext) super.release(component);
+        if( context != null ){
+            context.publishEvent(new ContextStoppingEvent(context));
+        }
+        return context;
+    }
 }

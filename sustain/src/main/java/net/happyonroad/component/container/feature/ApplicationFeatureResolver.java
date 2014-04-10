@@ -21,7 +21,7 @@ import java.io.InputStream;
 public class ApplicationFeatureResolver extends SpringFeatureResolver {
 
     public ApplicationFeatureResolver() {
-        super(80);
+        super(30, 70);
     }
 
     @Override
@@ -75,10 +75,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
             throw new ResourceNotFoundException("Can't load context from application stream", e);
         }
         registerApplicationHelpers(component, context, realm);
-        if (parent == null) {
-            //如果不存在父上下文，就把这些对服务组件的辅助对象，直接注册在这个上下文中
-            registerServiceHelpers(context);
-        }
+        registerServiceHelpers(context);
         context.refresh();
         return context;
     }
