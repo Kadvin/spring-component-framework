@@ -37,7 +37,7 @@
         <version.maven.versions>2.1</version.maven.versions>
         <version.plexus>2.4.2</version.plexus>
         <version.xstream>1.4.4</version.xstream>
-        <version.slf4j>1.7.5</version.slf4j>
+        <version.slf4j>1.7.6</version.slf4j>
         <version.springframework>3.2.8.RELEASE</version.springframework>
         <version.logback>1.0.13</version.logback>
         <version.commons.lang>2.6</version.commons.lang>
