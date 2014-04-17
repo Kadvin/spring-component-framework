@@ -7,7 +7,7 @@ import net.happyonroad.component.core.Component;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.ApplicationContext;
 
-/** Description */
+/** Service Application Context */
 public class ServiceApplicationContext extends ComponentApplicationContext {
     public ServiceApplicationContext(Component component, ClassRealm resourceLoader, ApplicationContext parent) {
         super(component, resourceLoader, parent);

@@ -5,6 +5,7 @@ package net.happyonroad.spring;
 
 import net.happyonroad.component.core.Component;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.Assert;
 
@@ -19,11 +20,15 @@ import java.util.Set;
  */
 public class SpringPathMatchingResourcePatternResolver extends PathMatchingResourcePatternResolver {
     public static final String CLASSPATH_THIS_URL_PREFIX = "classpath?:";
-    private final ComponentApplicationContext cac;
+    private Component component;
 
-    public SpringPathMatchingResourcePatternResolver(ComponentApplicationContext context) {
-        super(context);
-        this.cac = context;
+    public SpringPathMatchingResourcePatternResolver(ResourceLoader loader) {
+        this(loader, null);
+    }
+
+    public SpringPathMatchingResourcePatternResolver(ResourceLoader loader, Component component) {
+        super(loader);
+        this.component = component;
     }
 
     @Override
@@ -31,9 +36,10 @@ public class SpringPathMatchingResourcePatternResolver extends PathMatchingResou
         Assert.notNull(locationPattern, "Location pattern must not be null");
         if (locationPattern.startsWith(CLASSPATH_THIS_URL_PREFIX)) {
             String pattern = locationPattern.substring(CLASSPATH_THIS_URL_PREFIX.length());
-            Component component = cac.getComponent();
-
-            if(getPathMatcher().isPattern(pattern)){
+            if( component == null ){
+                component = ((ComponentApplicationContext)getResourceLoader()).getComponent();
+            }
+            if (getPathMatcher().isPattern(pattern)) {
                 String rootDirPath = determineRootDir(pattern);
                 String subPattern = pattern.substring(rootDirPath.length());
                 Resource[] resources = component.getResource().getLocalResourcesUnder(rootDirPath);
