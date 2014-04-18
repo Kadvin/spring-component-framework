@@ -10,7 +10,6 @@ import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import net.happyonroad.component.core.exception.InvalidVersionSpecificationException;
 import net.happyonroad.component.core.support.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,12 +81,6 @@ public class DefaultComponentResolver implements ComponentResolver {
         //如：Jetty Server依赖的 gid = javax.servlet, aid = javax.servlet-api
         // 我采取的策略是，将其点号之前的artifactId放到groupId中
         String artifactId = component.getArtifactId();
-        if(artifactId.indexOf(".") > 0 ){
-            int position = artifactId.lastIndexOf('.');
-            String extra = artifactId.substring(0, position);
-            component.setArtifactId(artifactId.substring(position + 1));
-            component.setGroupId(component.getGroupId() + "." + extra);
-        }
         if(!component.isSnapshot())
             component.setRelease(true);//缺省解析出来的都是release的
         if (component.getType() == null)
@@ -98,7 +91,7 @@ public class DefaultComponentResolver implements ComponentResolver {
             //把各个解析出来的组件存储到仓库中，因为在解析 sub module时，其reference parent时会需要
             repository.addComponent(component);
             //解析Parent信息
-            processParent(component, parent);
+            processParent(dependency, component, parent);
             //解析组件的基本动态属性，放在parent解析之后，这样可以获取到parent的属性
             component.interpolate();
             //验证依赖信息
@@ -125,7 +118,7 @@ public class DefaultComponentResolver implements ComponentResolver {
         return component;
     }
 
-    protected void processParent(DefaultComponent component, Component parent)
+    protected void processParent(Dependency childDependency, DefaultComponent component, Component parent)
             throws InvalidComponentNameException, DependencyNotMeetException {
         if (parent == null)
             return;
@@ -136,6 +129,7 @@ public class DefaultComponentResolver implements ComponentResolver {
         Dependency dependency = new Dependency(parent.getGroupId(), parent.getArtifactId(), parentVersion);
         dependency.setClassifier(parent.getClassifier());
         dependency.setType(parent.getType());
+        dependency.setExclusions(childDependency.getExclusions());
 
         Component existParent;
         try {

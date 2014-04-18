@@ -8,8 +8,12 @@ import net.happyonroad.component.core.ComponentVersion;
 import net.happyonroad.component.core.Versionize;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.exception.InvalidVersionSpecificationException;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,6 +27,24 @@ public class Dependency implements Versionize{
     private static Pattern versionPattern      = Pattern.compile("^\\d+(\\.\\d+\\w*)*");
     private static Pattern rangeFeaturePattern = Pattern.compile("[,||\\(|\\)|\\[\\]]+");
 
+    private static Set<Pattern> specialPatterns = new LinkedHashSet<Pattern>();
+
+    static {
+        InputStream stream = Dependency.class.getResourceAsStream("/special_artifacts.txt");
+        try {
+            try {
+                List<String> strings = IOUtils.readLines(stream);
+                for (String string : strings) {
+                    if( string.startsWith("#") ) continue;
+                    specialPatterns.add(Pattern.compile(string));
+                }
+            } finally {
+                stream.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Can't load special_artifacts.txt: " + e.getMessage());
+        }
+    }
 
     private String groupId;
 
@@ -51,12 +73,8 @@ public class Dependency implements Versionize{
     public Dependency(String groupId, String artifactId, String version) {
         this.groupId = groupId;
         this.artifactId = artifactId;
-        if (artifactId.indexOf(".") > 0) {
-            int position = artifactId.lastIndexOf('.');
-            this.artifactId = artifactId.substring(position + 1);
-            this.groupId = groupId + "." + artifactId.substring(0, position);
-        }
-        setVersion(version);
+        this.version = version;
+        reform();
     }
 
     public String getGroupId() {
@@ -171,8 +189,11 @@ public class Dependency implements Versionize{
         String gs = groupId == null ? "<undefined>" : groupId;
         String as = artifactId == null ? "<undefined>" : artifactId;
         String vs = version != null && version.length() > 0 ? "-" + version : null;
-        if(vs == null && range != null ){
-            vs = "-" + range.toString();
+        if(vs == null ){
+            if( range != null )
+                vs = "-" + range.toString();
+            else
+                vs = "-<undefined>";
         }
         String cs = classifier != null && classifier.length() > 0 ? "-" + classifier : "";
         String ts = type != null && type.length() > 0 ? "." + type : "";
@@ -200,56 +221,77 @@ public class Dependency implements Versionize{
         } else {
             path = fullName;
         }
-        //  -> path = org.apache.maven-1.0.0.R1-SNAPSHOT-PDM
+        // special path : org.neo4j.neo4j-cypher-compiler-1.9-2.0.1
+        Matcher result = special(path);
+        if( result != null ){
+            try {
+                String groupId = result.group(1);
+                String artifactId = result.group(2);
+                String versionAndClassifier = result.group(3);
+                dependency.setGroupId(groupId);
+                dependency.setArtifactId(artifactId);
+                String[] split = versionAndClassifier.split("-");
+                dependency.setVersion(split[0]);
+                if( split.length > 1)
+                    dependency.setClassifier(split[1]);
+            } catch (Exception e) {
+                InvalidComponentNameException error = new InvalidComponentNameException(path);
+                error.initCause(e);
+                throw error;
+            }
+        }else{
+            //  -> path = org.apache.maven-1.0.0.R1-SNAPSHOT-PDM
 
-        //  分离group.artifact与版本信息
-        String[] nameAndVersion = path.split("-");
-        if (nameAndVersion.length < 2) {
-            throw new InvalidComponentNameException("The component full name [" + fullName + "] should be format as: " +
-                                                            "$groupId.$artifactId-$version(.$classifier.$type)?");
-        }
-        int versionPos = 0;
-        for(; versionPos < nameAndVersion.length; versionPos++){
-            String string = nameAndVersion[versionPos];
-            if(versionPattern.matcher(string).find())break;
-        }
-        if(versionPos == 0 || versionPos == nameAndVersion.length)
-            throw new InvalidComponentNameException("The component full name [" + fullName + "] should be format as: " +
-                                                            "$groupId.$artifactId-$version(.$classifier.$type)?");
-        StringBuilder name = new StringBuilder();
-        for(int i=0;i<versionPos;i++){
-            name.append(nameAndVersion[i]).append("-");
-        }
-        removeLastChar(name);
-        String version = nameAndVersion[versionPos];
-        StringBuilder classifier = new StringBuilder();
-        for (int i = versionPos+1; i < nameAndVersion.length; i++) {
-            classifier.append(nameAndVersion[i]).append("-");
-        }
-        removeLastChar(classifier);
-        //  -> name = org.apache.maven
-        //  -> version = 1.0.0.SNAPSHOT.R1
-        //  -> classifier = SNAPSHOT-PDM
+            //  分离group.artifact与版本信息
+            String[] nameAndVersion = path.split("-");
+            if (nameAndVersion.length < 2) {
+                throw new InvalidComponentNameException("The component full name [" + fullName + "] should be format as: " +
+                                                                "$groupId.$artifactId-$version(.$classifier.$type)?");
+            }
+            int versionPos = 0;
+            for(; versionPos < nameAndVersion.length; versionPos++){
+                String string = nameAndVersion[versionPos];
+                if(versionPattern.matcher(string).find())break;
+            }
+            if(versionPos == 0 || versionPos == nameAndVersion.length)
+                throw new InvalidComponentNameException("The component full name [" + fullName + "] should be format as: " +
+                                                                "$groupId.$artifactId-$version(.$classifier.$type)?");
+            StringBuilder name = new StringBuilder();
+            for(int i=0;i<versionPos;i++){
+                name.append(nameAndVersion[i]).append("-");
+            }
+            removeLastChar(name);
+            String version = nameAndVersion[versionPos];
+            StringBuilder classifier = new StringBuilder();
+            for (int i = versionPos+1; i < nameAndVersion.length; i++) {
+                classifier.append(nameAndVersion[i]).append("-");
+            }
+            removeLastChar(classifier);
+            //  -> name = org.apache.maven
+            //  -> version = 1.0.0.SNAPSHOT.R1
+            //  -> classifier = SNAPSHOT-PDM
 
-        // 分离groupId与artifactId
-        String[] groupAndArtifact = name.toString().split("\\.");
-        if (groupAndArtifact.length < 2) {
-            throw new InvalidComponentNameException("The component full name [" + fullName + "] should be format as: " +
-                                                            "$groupId.$artifactId-$version(.$classifier.$type)?");
+            // 分离groupId与artifactId
+            String[] groupAndArtifact = name.toString().split("\\.");
+            if (groupAndArtifact.length < 2) {
+                throw new InvalidComponentNameException("The component full name [" + fullName + "] should be format as: " +
+                                                                "$groupId.$artifactId-$version(.$classifier.$type)?");
+            }
+            StringBuilder groupId = new StringBuilder();
+            for (int i = 0; i < groupAndArtifact.length - 1; i++) {
+                String pkg = groupAndArtifact[i];
+                groupId.append(pkg).append(".");
+            }
+            groupId.deleteCharAt(groupId.length() - 1);
+            dependency.setGroupId(groupId.toString());
+            dependency.setArtifactId(groupAndArtifact[groupAndArtifact.length - 1]);
+
+            //  -> groupId = org.apache
+            //  -> artifactId = maven
+            String[] versionAndClassifier = splitClassifierFromVersion(version, classifier);
+            dependency.setVersion(versionAndClassifier[0]);
+            dependency.setClassifier(versionAndClassifier[1]);
         }
-        StringBuilder groupId = new StringBuilder();
-        for (int i = 0; i < groupAndArtifact.length - 1; i++) {
-            String pkg = groupAndArtifact[i];
-            groupId.append(pkg).append(".");
-        }
-        groupId.deleteCharAt(groupId.length() - 1);
-        dependency.setGroupId(groupId.toString());
-        dependency.setArtifactId(groupAndArtifact[groupAndArtifact.length - 1]);
-        //  -> groupId = org.apache
-        //  -> artifactId = maven
-        String[] versionAndClassifier = splitClassifierFromVersion(version, classifier);
-        dependency.setVersion(versionAndClassifier[0]);
-        dependency.setClassifier(versionAndClassifier[1]);
         //  -> pureVersion = 1.0.0
         //  -> classifier = R1-SNAPSHOT-PDM
         return dependency;
@@ -428,6 +470,10 @@ public class Dependency implements Versionize{
      * 从XML中直接解析出来的依赖信息，其groupId和artifactId可能有问题，其version可能是range形态，都需要重新调整
      */
     public void reform() {
+        if( isSpecial() ){
+            setVersion(this.version);
+            return;
+        }
         if(artifactId.contains(".")){
             String badArtifactId = this.artifactId;
             int position = badArtifactId.lastIndexOf('.');
@@ -435,5 +481,18 @@ public class Dependency implements Versionize{
             this.groupId = groupId + "." + badArtifactId.substring(0, position);
         }
         setVersion(this.version);
+    }
+
+    protected boolean isSpecial(){
+        return special(this.groupId + "." + this.artifactId) != null;
+    }
+
+    private static Matcher special(String challenger){
+        for (Pattern pattern: specialPatterns) {
+            Matcher matcher = pattern.matcher(challenger);
+            boolean matches = matcher.matches();
+            if(matches) return matcher;
+        }
+        return null;
     }
 }

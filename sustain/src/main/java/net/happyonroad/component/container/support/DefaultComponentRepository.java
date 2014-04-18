@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -112,7 +113,14 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
         try {
             scanJars(libFolder);
         } catch (Exception e) {
-            logger.error("Failed to scan {} dir: {}", bootFolder, e.getMessage());
+            logger.error("Failed to scan {} dir: {}", libFolder, e.getMessage());
+        }
+        File poms = new File(libFolder, "poms");
+        try {
+            //而后再遍历lib/poms下面的pom.xml，把不存在对应jar的 group pom预加载进来
+            scanPoms(poms);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
         }
 
         //最后还要扫描扩展仓库目录 repository/*.jar
@@ -120,7 +128,14 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
         try {
             scanJars(repositoryFolder);
         } catch (Exception e) {
-            logger.error("Failed to scan {} dir: {}", bootFolder, e.getMessage());
+            logger.error("Failed to scan {} dir: {}", repositoryFolder, e.getMessage());
+        }
+        poms = new File(repositoryFolder, "poms");
+        try {
+            //而后再遍历repository/poms下面的pom.xml，把不存在对应jar的 group pom预加载进来
+            scanPoms(poms);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
         }
         this.running = true;
         logger.info(banner("Scanned jars"));
@@ -145,17 +160,18 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
                 cache.put(dependency, jar);
             } catch (ResourceNotFoundException e) {
                 //Not cache it by the concrete jar
+                //logger.error("Error while read :" + jar.getPath(), e);
             } finally {
-                resource.close();
-                if (stream != null) stream.close();
+                try {
+                    resource.close();
+                    if (stream != null) stream.close();
+                } catch (IOException e) {
+                    logger.error("Error while close:" + jar.getPath(), e);
+                }
             }
             logger.trace("Mapping {} -> {}", dependency, jar);
         }
         logger.debug("Scanned  {}", folder.getAbsolutePath());
-
-        //而后再遍历lib/poms下面的pom.xml，把不存在对应jar的 group pom预加载进来
-        File poms = new File(folder, "poms");
-        scanPoms(poms);
 
     }
 

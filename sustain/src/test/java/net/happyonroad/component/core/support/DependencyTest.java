@@ -236,7 +236,48 @@ public class DependencyTest extends TestCase {
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1-SNAPSHOT")));
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.2")));
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.2-SNAPSHOT")));
+    }
 
+    public void testConstructSpecialArtifacts() throws Exception{
+        Dependency dependency = new Dependency("org.scalautils", "scalautils_2.10");
+        Assert.assertEquals("org.scalautils", dependency.getGroupId());
+        Assert.assertEquals("scalautils_2.10", dependency.getArtifactId() );
+
+        dependency = new Dependency("org.scala-lang", "scala-library");
+        Assert.assertEquals("org.scala-lang",dependency.getGroupId() );
+        Assert.assertEquals("scala-library",dependency.getArtifactId());
+
+        dependency = new Dependency("org.scalacheck", "scalacheck_2.10");
+        Assert.assertEquals("org.scalacheck", dependency.getGroupId());
+        Assert.assertEquals( "scalacheck_2.10", dependency.getArtifactId());
+
+        dependency = new Dependency("org.scalatest", "scalatest_2.10");
+        Assert.assertEquals( "org.scalatest",dependency.getGroupId());
+        Assert.assertEquals( "scalatest_2.10",dependency.getArtifactId());
+
+        dependency = new Dependency("org.scalautils", "scalautils_2.10");
+        Assert.assertEquals( "org.scalautils",dependency.getGroupId());
+        Assert.assertEquals("scalautils_2.10", dependency.getArtifactId() );
+
+        dependency = new Dependency("org.parboiled", "parboiled-scala_2.10");
+        Assert.assertEquals( "org.parboiled", dependency.getGroupId());
+        Assert.assertEquals( "parboiled-scala_2.10",dependency.getArtifactId());
+
+        dependency = new Dependency("org.neo4j", "neo4j-cypher-compiler-1.9");
+        Assert.assertEquals( "org.neo4j",dependency.getGroupId());
+        Assert.assertEquals( "neo4j-cypher-compiler-1.9",dependency.getArtifactId());
+
+        dependency = new Dependency("org.neo4j", "neo4j-cypher-compiler-2.0");
+        Assert.assertEquals( "org.neo4j",dependency.getGroupId());
+        Assert.assertEquals( "neo4j-cypher-compiler-2.0" ,dependency.getArtifactId());
+    }
+
+    public void testParseSpecialArtifacts() throws Exception{
+        Dependency dependency = Dependency.parse("org.neo4j.neo4j-cypher-compiler-1.9-2.0.1.jar");
+        Assert.assertEquals( "org.neo4j",dependency.getGroupId());
+        Assert.assertEquals( "neo4j-cypher-compiler-1.9",dependency.getArtifactId());
+        Assert.assertEquals( "2.0.1",dependency.getVersion());
+        Assert.assertEquals( "jar",dependency.getType());
     }
 
 }

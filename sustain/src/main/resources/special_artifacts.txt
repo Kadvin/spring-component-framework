@@ -1,0 +1,5 @@
+(org\.scala\w+)\.(scala\w+_\d+\.\d+)\-?(.*)?
+(org\.parboiled)\.(parboiled-scala_\d+\.\d+)\-?(.*)?
+(org\.neo4j)\.(neo4j-cypher-compiler-\d+\.\d+)\-?(.*)?
+(javax\.servlet)\.(javax\.servlet-api)\-?(.*)?
+(org\.apache\.geronimo\.specs)\.(geronimo-jta_1\.1_spec)\-?(.*)?
