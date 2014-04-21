@@ -220,4 +220,11 @@ public interface Component extends Comparable<Component>, Versionize {
      * @return 第三方包url列表，如果没有依赖，也应该返回一个空数组
      */
     Set<URL> getDependedPlainURLs();
+
+    /**
+     * 判断一个组件是不是依赖于另外一个组件
+     * @param another 另外一个组件
+     * @return 是否依赖
+     */
+    boolean dependsOn(Component another);
 }

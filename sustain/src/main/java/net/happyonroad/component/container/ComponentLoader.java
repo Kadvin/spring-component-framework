@@ -3,8 +3,6 @@ package net.happyonroad.component.container;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.FeatureResolver;
 
-import java.io.IOException;
-
 /** 组件加载接口 */
 public interface ComponentLoader {
     /**
@@ -20,7 +18,7 @@ public interface ComponentLoader {
      *
      * @param component 被加载的组件
      */
-    void load(Component component) throws IOException;
+    void load(Component component) throws Exception;
 
     /**
      * 实际卸载某个已经加载的组件

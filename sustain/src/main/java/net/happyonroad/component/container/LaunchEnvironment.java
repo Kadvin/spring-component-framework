@@ -24,7 +24,7 @@ public interface LaunchEnvironment {
      *
      * @param component 被加载的组件
      */
-    void load(Component component) throws IOException;
+    void load(Component component) throws Exception;
 
     /**
      * 整体卸载某个组件，如果存在父组件或者依赖组件，则会在卸载自身之后，先卸载依赖组件，再卸载父组件

@@ -215,8 +215,9 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
      *
      * @param component 被加载的组件
      */
-    public void load(Component component) throws IOException {
+    public void load(Component component) throws Exception {
         loader.load(component);
+        logger.info("The component container is started");
         Set<ApplicationContext> applications = context.getApplicationFeatures();
         ContainerStartedEvent event = new ContainerStartedEvent(this);
         for (ApplicationContext application : applications) {
@@ -225,12 +226,14 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     }
 
     public void unload(Component component) {
+        logger.info("The component container is stopping");
         Set<ApplicationContext> applications = context.getApplicationFeatures();
         ContainerEvent event = new ContainerStoppingEvent(this);
         for (ApplicationContext application : applications) {
             application.publishEvent(event);
         }
         loader.unload(component);
+        logger.info("The component container is stopped");
         event = new ContainerStoppedEvent(this);
         for (ApplicationContext application : applications) {
             application.publishEvent(event);

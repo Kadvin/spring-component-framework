@@ -3,8 +3,6 @@
  */
 package net.happyonroad.component.core;
 
-import java.io.IOException;
-
 /** 组件的特性解析器 */
 public interface FeatureResolver {
 
@@ -45,7 +43,7 @@ public interface FeatureResolver {
      * @param component 被解析的组件
      *
      */
-    void resolve(Component component) throws IOException;
+    void resolve(Component component) throws Exception;
 
     /**
      * 在特定的上下文中卸载/释放相应的组件

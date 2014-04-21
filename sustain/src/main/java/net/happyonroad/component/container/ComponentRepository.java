@@ -5,6 +5,7 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.Dependency;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -29,6 +30,7 @@ public interface ComponentRepository{
      * @throws InvalidComponentNameException
      */
     Component resolveComponent(String strDependency) throws DependencyNotMeetException, InvalidComponentNameException;
+
     /**
      * 根据依赖，解析出所有的候选组件
      *
@@ -36,4 +38,12 @@ public interface ComponentRepository{
      * @return 候选组件列表
      */
     List<Component> resolveComponents(Dependency dependency);
+
+
+    /**
+     * 根据候选的依赖情况，对文件进行排序，以便进行加载
+     *
+     * @param candidateComponentJars 候选组件的文件
+     */
+    void sortCandidates(File[] candidateComponentJars);
 }

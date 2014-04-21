@@ -109,7 +109,7 @@ public class DefaultComponent implements Component, SelfNaming {
         }
 
         if (artifactId == null) {
-            throw new InvalidComponentException(groupId, artifactId, getVersion(), type,
+            throw new InvalidComponentException(groupId, "null", getVersion(), type,
                                                 "The artifactId cannot be empty.");
         }
 
@@ -348,7 +348,7 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
 
-    public int compareTo(Component a) {
+    public int compareTo(@SuppressWarnings("NullableProblems") Component a) {
         int result = groupId.compareTo(a.getGroupId());
         if (result == 0) {
             result = artifactId.compareTo(a.getArtifactId());
@@ -689,6 +689,15 @@ public class DefaultComponent implements Component, SelfNaming {
         }
     }
 
+    @Override
+    public boolean dependsOn(Component another) {
+        Set<Component> depends= getAllDependedComponents();
+        for (Component depended : depends) {
+                if( depended.equals(another) )
+                return true;
+        }
+        return false;
+    }
 }
 
 

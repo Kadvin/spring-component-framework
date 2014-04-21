@@ -155,7 +155,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      * @param component 被加载的组件
      */
     @Override
-    public void load(Component component) throws IOException {
+    public void load(Component component) throws Exception {
         if (isLoaded(component)) return;
         logger.debug("Loading {}", component);
         //首先加载父组件
@@ -247,7 +247,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      * @param component 被加载的组件
      * @throws IOException 加载过程中的IO错误
      */
-    protected void loadSingle(Component component) throws IOException {
+    protected void loadSingle(Component component) throws Exception {
         if (component.isAggregating()) {
             logger.trace("Needn't real load aggregating component {}", component);
             loadedFeatures.put(component, FeatureResolver.AggregatingFlag);

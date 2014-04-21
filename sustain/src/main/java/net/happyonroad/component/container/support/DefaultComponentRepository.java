@@ -32,7 +32,8 @@ import static net.happyonroad.util.LogUtils.banner;
  * 组件仓库
  * 请注意，该对象的工作依赖系统环境变量 app.home
  */
-public class DefaultComponentRepository implements MutableComponentRepository, SmartLifecycle {
+public class DefaultComponentRepository
+        implements MutableComponentRepository, SmartLifecycle, Comparator<File> {
     private static FilenameFilter jarFilter = new FilenameFilterBySuffix(".jar");
     private static FilenameFilter pomFilter = new FilenameFilterBySuffix(".pom");
 
@@ -260,6 +261,11 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
         return meets;
     }
 
+    @Override
+    public void sortCandidates(File[] candidateComponentJars) {
+        Arrays.sort(candidateComponentJars, this);
+    }
+
     // ------------------------------------------------------------
     //     提供给内部实现者
     // ------------------------------------------------------------
@@ -283,5 +289,26 @@ public class DefaultComponentRepository implements MutableComponentRepository, S
     @Override
     public String getHome() {
         return home.getPath();
+    }
+
+    @Override
+    public int compare(File jar1, File jar2) {
+        Component comp1;
+        Component comp2;
+        try {
+            comp1 = resolveComponent(jar1.getName());
+        } catch (Exception e) {
+            throw new RuntimeException("Can't resolve " + jar1.getPath() );
+        }
+        try {
+            comp2 = resolveComponent(jar2.getName());
+        } catch (Exception e) {
+            throw new RuntimeException("Can't resolve " + jar2.getPath() );
+        }
+        if(comp1.dependsOn(comp2)){
+            return 1;//priority to another
+        }else if(comp2.dependsOn(comp1)){
+            return -1;
+        }else return 0;
     }
 }

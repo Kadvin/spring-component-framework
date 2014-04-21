@@ -11,7 +11,6 @@ import net.happyonroad.component.core.Component;
 import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 import org.codehaus.plexus.classworlds.launcher.Launcher;
 import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
-import org.codehaus.plexus.classworlds.realm.NoSuchRealmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
@@ -20,7 +19,6 @@ import org.springframework.util.StringUtils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static net.happyonroad.util.LogUtils.banner;
@@ -101,14 +99,8 @@ public class AppLauncher extends Launcher implements Executable {
     /**
      * 启动当前的组件Jar包
      *
-     * @throws ClassNotFoundException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     * @throws NoSuchMethodException
-     * @throws NoSuchRealmException
      */
-    public void start()
-            throws ClassNotFoundException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, NoSuchRealmException {
+    public void start() throws Exception{
         try {
             //主线程设置为该class loader，可以让RMI序列化的时候工作
             Thread.currentThread().setContextClassLoader(this.pomWorld.getMainRealm());
