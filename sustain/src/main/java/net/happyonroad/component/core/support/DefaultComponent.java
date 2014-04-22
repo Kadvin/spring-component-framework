@@ -233,7 +233,7 @@ public class DefaultComponent implements Component, SelfNaming {
             if (isAggregating()) {
                 return null;
             } else if (file.isFile()) {
-                if(file.getName().endsWith(".pom")){
+                if (file.getName().endsWith(".pom")) {
                     String fileName = file.getName();
                     fileName = fileName.replaceFirst("\\.pom$", ".jar");
                     File jarFile = new File(file.getParentFile().getParent(), fileName);
@@ -241,13 +241,13 @@ public class DefaultComponent implements Component, SelfNaming {
                         return jarFile.toURI().toURL();
                     else
                         return null;
-                }else if (file.getName().endsWith(".jar")) {
+                } else if (file.getName().endsWith(".jar")) {
                     return file.toURI().toURL();
-                } else{
+                } else {
                     //unknown file type, return file url as default
                     return file.toURI().toURL();
                 }
-            } else  { //folder
+            } else { //folder
                 return file.toURI().toURL();
             }
         } catch (MalformedURLException e) {
@@ -270,8 +270,13 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     @Override
-    public ObjectName getObjectName() throws MalformedObjectNameException {
-        return new ObjectName("spring.components:name=" + getId());
+    public ObjectName getObjectName() {
+        String name = getBriefId();
+        try {
+            return new ObjectName("spring.components:name=" + name);
+        } catch (MalformedObjectNameException e) {
+            throw new IllegalArgumentException("Can't create component object name:" + name);
+        }
     }
 
 // ----------------------------------------------------------------------
@@ -423,15 +428,15 @@ public class DefaultComponent implements Component, SelfNaming {
         return all;
     }
 
-    public Set<Component> getAllDependedComponents(){
+    public Set<Component> getAllDependedComponents() {
         Set<Component> all = new HashSet<Component>();
-        if(dependedComponents != null){
-            for (Component depended: dependedComponents) {
+        if (dependedComponents != null) {
+            for (Component depended : dependedComponents) {
                 all.add(depended);
                 all.addAll(depended.getAllDependedComponents());
             }
         }
-        if(this.parent != null){
+        if (this.parent != null) {
             all.addAll(this.parent.getAllDependedComponents());
         }
         return all;
@@ -441,12 +446,12 @@ public class DefaultComponent implements Component, SelfNaming {
     @Override
     public Set<URL> getDependedPlainURLs() {
         Set<URL> plainUrls = new HashSet<URL>();
-        if(getParent() != null){
+        if (getParent() != null) {
             plainUrls.addAll(getParent().getDependedPlainURLs());
         }
         List<Component> depends = getDependedComponents();
         for (Component depend : depends) {
-            if(depend.isPlain() && depend.getFileURL() != null) {
+            if (depend.isPlain() && depend.getFileURL() != null) {
                 plainUrls.add(depend.getFileURL());
             }
             plainUrls.addAll(depend.getDependedPlainURLs());
@@ -667,7 +672,7 @@ public class DefaultComponent implements Component, SelfNaming {
         this.classLoader = classLoader;
     }
 
-    public void perform(Runnable job) throws Exception{
+    public void perform(Runnable job) throws Exception {
         ClassLoader originCl = Thread.currentThread().getContextClassLoader();
         try {
             ClassLoader classLoader = this.getClassLoader();
@@ -678,7 +683,7 @@ public class DefaultComponent implements Component, SelfNaming {
         }
     }
 
-    public <T> T perform(Callable<T> job) throws Exception{
+    public <T> T perform(Callable<T> job) throws Exception {
         ClassLoader originCl = Thread.currentThread().getContextClassLoader();
         try {
             ClassLoader classLoader = this.getClassLoader();
@@ -691,12 +696,17 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public boolean dependsOn(Component another) {
-        Set<Component> depends= getAllDependedComponents();
+        Set<Component> depends = getAllDependedComponents();
         for (Component depended : depends) {
-                if( depended.equals(another) )
+            if (depended.equals(another))
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public String getBriefId() {
+        return getGroupId() + "." + getArtifactId() + "-" + getVersion();
     }
 }
 

@@ -17,7 +17,6 @@ import net.happyonroad.util.FilenameFilterBySuffix;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.SmartLifecycle;
 
 
 import java.io.File;
@@ -33,7 +32,7 @@ import static net.happyonroad.util.LogUtils.banner;
  * 请注意，该对象的工作依赖系统环境变量 app.home
  */
 public class DefaultComponentRepository
-        implements MutableComponentRepository, SmartLifecycle, Comparator<File> {
+        implements MutableComponentRepository, Comparator<Component> {
     private static FilenameFilter jarFilter = new FilenameFilterBySuffix(".jar");
     private static FilenameFilter pomFilter = new FilenameFilterBySuffix(".pom");
 
@@ -44,7 +43,6 @@ public class DefaultComponentRepository
     private Map<Dependency, File> cache;
 
     /*package*/ ComponentResolver resolver;
-    private boolean running;
 
     /**
      * 构建一个缺省组件仓库
@@ -71,32 +69,6 @@ public class DefaultComponentRepository
     //     本身的Lifecycle方法
     // ------------------------------------------------------------
 
-    @Override
-    public boolean isAutoStartup() {
-        return true;
-    }
-
-    @Override
-    public void stop(Runnable callback) {
-        stop();
-        if (callback != null) {
-            try {
-                callback.run();
-            } catch (Exception e) {
-                logger.error("Failed to run callback", e);
-            }
-        }
-    }
-
-    @Override
-    public boolean isRunning() {
-        return running;
-    }
-
-    @Override
-    public int getPhase() {
-        return 5;
-    }
 
     /** 启动时预加载 lib目录, lib/poms 下所有的组件信息 */
     public void start()  {
@@ -138,7 +110,6 @@ public class DefaultComponentRepository
         } catch (Exception e) {
             logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
         }
-        this.running = true;
         logger.info(banner("Scanned jars"));
     }
 
@@ -262,8 +233,18 @@ public class DefaultComponentRepository
     }
 
     @Override
+    public Set<Component> getComponents() {
+        return Collections.unmodifiableSet(components);
+    }
+
+    @Override
     public void sortCandidates(File[] candidateComponentJars) {
-        Arrays.sort(candidateComponentJars, this);
+        Arrays.sort(candidateComponentJars, new ComponentJarFileComparator(this));
+    }
+
+    @Override
+    public void sortComponents(List<Component> components) {
+        Collections.sort(components, this);
     }
 
     // ------------------------------------------------------------
@@ -292,23 +273,12 @@ public class DefaultComponentRepository
     }
 
     @Override
-    public int compare(File jar1, File jar2) {
-        Component comp1;
-        Component comp2;
-        try {
-            comp1 = resolveComponent(jar1.getName());
-        } catch (Exception e) {
-            throw new RuntimeException("Can't resolve " + jar1.getPath() );
-        }
-        try {
-            comp2 = resolveComponent(jar2.getName());
-        } catch (Exception e) {
-            throw new RuntimeException("Can't resolve " + jar2.getPath() );
-        }
+    public int compare(Component comp1, Component comp2) {
         if(comp1.dependsOn(comp2)){
             return 1;//priority to another
         }else if(comp2.dependsOn(comp1)){
             return -1;
         }else return 0;
     }
+
 }

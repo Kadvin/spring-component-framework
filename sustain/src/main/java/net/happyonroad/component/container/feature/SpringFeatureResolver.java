@@ -6,7 +6,6 @@ package net.happyonroad.component.container.feature;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.Features;
 import net.happyonroad.spring.CombinedApplicationContext;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -47,17 +46,18 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
         }
     }
 
-    protected void registerApplicationHelpers(Component component,
-                                          GenericXmlApplicationContext context,
-                                          ClassRealm realm) {
-        ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
+//    protected void registerApplicationHelpers(Component component,
+//                                          GenericXmlApplicationContext context,
+//                                          ClassRealm realm) {
+        //ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
         //将组件注册到服务上下文中
-        cbf.registerSingleton("component", component);
+
+        //cbf.registerSingleton("component", component);
         //将组件的资源加载器也注册到其中
-        cbf.registerSingleton("realm", realm);
+        //cbf.registerSingleton("realm", realm);
         //将world也注册进去
-        cbf.registerSingleton("world", resolveContext.getWorld());
-    }
+        //cbf.registerSingleton("world", resolveContext.getWorld());
+//    }
 
     protected void registerServiceHelpers(GenericXmlApplicationContext context) {
         ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
@@ -73,12 +73,16 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
     public Object release(Component component) {
         AbstractApplicationContext context = (AbstractApplicationContext) super.release(component);
         if (context != null) {
-            context.stop();
-            context.close();
+            shutdownContext(context);
         }else{
             logger.error("Can't pick loaded {} feature for: {}", getName(), component);
         }
         return context;
+    }
+
+    protected void shutdownContext(AbstractApplicationContext context) {
+        context.stop();
+        context.close();
     }
 
 }

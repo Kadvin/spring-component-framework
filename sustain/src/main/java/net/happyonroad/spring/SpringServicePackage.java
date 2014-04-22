@@ -5,7 +5,6 @@ package net.happyonroad.spring;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
 import net.happyonroad.component.core.Component;
-import net.happyonroad.component.core.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -167,7 +166,7 @@ public class SpringServicePackage implements
             //in shutdown phase, trigger by lazy access
             return;
         }
-        Component component = applicationContext.getBean(Component.class);
+        Component component = ((ComponentApplicationContext)applicationContext).getComponent();
         this.componentName = component.getDisplayName();
         for (SpringServiceImporter importer : importers) {
             importer.bind(applicationContext);

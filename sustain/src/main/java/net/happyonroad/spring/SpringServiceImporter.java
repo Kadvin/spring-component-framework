@@ -7,6 +7,7 @@ import net.happyonroad.component.container.MutableServiceRegistry;
 import net.happyonroad.component.container.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.ClassUtils;
@@ -51,7 +52,19 @@ public class SpringServiceImporter extends SpringServiceProxy {
         if(service != null){
             ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) serviceContext.getAutowireCapableBeanFactory();
             logger.debug("Import {} to {} as {}", this, serviceContext.getDisplayName(), getAs());
-            cbf.registerSingleton(getAs(), service);
+            ProxyFactory proxyFactory = new ProxyFactory();
+            proxyFactory.setTarget(service);
+            proxyFactory.addInterface(getRoleClass());
+            proxyFactory.setOpaque(true);
+            Object proxy;
+            ClassLoader classLoader = service.getClass().getClassLoader();
+            try {
+                proxy = proxyFactory.getProxy(classLoader);
+            } catch (IllegalArgumentException e) {
+                throw new ServiceConfigurationException("Can't create service proxy," +
+                                                        " current class loader is " + classLoader, e);
+            }
+            cbf.registerSingleton(getAs(), proxy);
         }else{
             throw new ServiceNotFoundException(this);
         }
@@ -64,15 +77,8 @@ public class SpringServiceImporter extends SpringServiceProxy {
      * @param serviceContext 服务上下文，不是组件的那个上下文
      */
     public void removeService(MutableServiceRegistry serviceRegistry, ApplicationContext serviceContext) {
+        //TODO HOW TO DEAL WITH IT?
         logger.debug("Remove {} which is named as {} from {}", this, getAs(), serviceContext.getDisplayName());
-        ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) serviceContext.getAutowireCapableBeanFactory();
-        Object service = cbf.getBean(getAs());
-        //TODO 现在这样注册过去的bean无法被卸载
-        try {
-            cbf.destroyBean(getAs(), service);
-        } catch (Exception e) {
-            logger.trace("TODO: registerResolver a destroyable bean:" + e.getMessage());
-        }
     }
 
     @Override

@@ -14,18 +14,24 @@ public interface ComponentLoader {
     boolean isLoaded(Component component);
 
     /**
-     * 实际加载某个组件
+     * 实际加载某个组件，如果组件存在依赖，会自动预先加载相关依赖
      *
      * @param component 被加载的组件
      */
     void load(Component component) throws Exception;
 
     /**
-     * 实际卸载某个已经加载的组件
+     * 实际卸载某个已经加载的组件，如果组件存在依赖，会自动卸载其依赖
      *
      * @param component 被卸载的组件
      */
     void unload(Component component);
+
+    /**
+     * 仅卸载组件自身，不进行关联和依赖卸载
+     * @param component 被卸载的组件
+     */
+    void unloadSingle(Component component);
 
     /**
      * 注册特性解析器

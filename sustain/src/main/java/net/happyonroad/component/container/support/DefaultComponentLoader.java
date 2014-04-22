@@ -107,12 +107,18 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public Set<ApplicationContext> getApplicationFeatures() {
-        Set<ApplicationContext> contexts = new LinkedHashSet<ApplicationContext>();
-        for (Features features : loadedFeatures.values()) {
-            if( features.getApplicationFeature() != null ){
-                contexts.add(features.getApplicationFeature());
+    public List<ApplicationContext> getApplicationFeatures() {
+        List<Component> components = new LinkedList<Component>();
+        for (Map.Entry<Component, Features> entry : loadedFeatures.entrySet()) {
+            if( entry.getValue().getApplicationFeature() != null ){
+                components.add(entry.getKey());
             }
+        }
+        repository.sortComponents(components);
+        List<ApplicationContext> contexts = new LinkedList<ApplicationContext>();
+        for (Component component : components) {
+            ApplicationContext feature = getApplicationFeature(component);
+            contexts.add(feature);
         }
         return contexts;
     }
@@ -276,7 +282,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      *
      * @param component 被卸载的组件
      */
-    protected void unloadSingle(Component component) {
+    public void unloadSingle(Component component) {
         if (component.isAggregating()) {
             logger.trace("Remove aggregating component {}", component);
             loadedFeatures.remove(component);

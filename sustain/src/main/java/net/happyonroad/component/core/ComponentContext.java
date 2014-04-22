@@ -11,6 +11,7 @@ import net.happyonroad.component.container.ServiceRegistry;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.ApplicationContext;
 
+import java.util.List;
 import java.util.Set;
 
 /** 组件上下文 */
@@ -36,7 +37,8 @@ public interface ComponentContext {
 
     ApplicationContext getServiceFeature(Component component);
 
-    Set<ApplicationContext> getApplicationFeatures();
+    //按照对应组件的依赖顺序排序的应用程序上下文
+    List<ApplicationContext> getApplicationFeatures();
 
     ServiceRegistry getRegistry();
 

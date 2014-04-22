@@ -7,6 +7,7 @@ import net.happyonroad.component.core.support.Dependency;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 组件仓库
@@ -41,9 +42,22 @@ public interface ComponentRepository{
 
 
     /**
-     * 根据候选的依赖情况，对文件进行排序，以便进行加载
+     * 根据候选的依赖情况，对文件进行排序，以便进行加载，被依赖的排在前面
      *
      * @param candidateComponentJars 候选组件的文件
      */
     void sortCandidates(File[] candidateComponentJars);
+
+    /**
+     * 根据组件的依赖情况，进行排序，被依赖的组件被排在前面
+     *
+     * @param components 被排序的组件
+     */
+    void sortComponents(List<Component> components);
+
+    /**
+     * 所有已经解析的组件
+     * @return 所有已经解析的组件
+     */
+    Set<Component> getComponents();
 }

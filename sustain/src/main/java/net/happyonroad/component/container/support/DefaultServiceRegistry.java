@@ -4,6 +4,7 @@
 package net.happyonroad.component.container.support;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,8 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
         } else if (removes.isEmpty()) {
             return null;
         } else {
-            logger.warn("I have unRegister multiple service with hint {}", hint);
+            logger.warn("I have unRegister multiple service {} with hint {}, {}",
+                        interfaceClass, hint, StringUtils.join(removes, ","));
             return removes.get(0);
         }
     }

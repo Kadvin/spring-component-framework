@@ -74,7 +74,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         } catch (Exception e) {
             throw new ResourceNotFoundException("Can't load context from application stream", e);
         }
-        registerApplicationHelpers(component, context, realm);
+        //registerApplicationHelpers(component, context, realm);
         registerServiceHelpers(context);
         context.refresh();
         return context;

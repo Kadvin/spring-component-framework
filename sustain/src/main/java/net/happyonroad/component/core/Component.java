@@ -227,4 +227,6 @@ public interface Component extends Comparable<Component>, Versionize {
      * @return 是否依赖
      */
     boolean dependsOn(Component another);
+
+    String getBriefId();
 }

@@ -5,22 +5,27 @@ package net.happyonroad.component.container.support;
 
 import net.happyonroad.component.classworld.PomClassRealm;
 import net.happyonroad.component.classworld.PomClassWorld;
-import net.happyonroad.component.container.*;
+import net.happyonroad.component.container.AppLauncher;
+import net.happyonroad.component.container.ComponentLoader;
+import net.happyonroad.component.container.Executable;
+import net.happyonroad.component.container.LaunchEnvironment;
 import net.happyonroad.component.container.event.ContainerEvent;
 import net.happyonroad.component.container.event.ContainerStartedEvent;
-import net.happyonroad.component.container.event.ContainerStoppedEvent;
 import net.happyonroad.component.container.event.ContainerStoppingEvent;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentContext;
 import net.happyonroad.component.core.FeatureResolver;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.util.LogUtils;
 import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -217,24 +222,55 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
      */
     public void load(Component component) throws Exception {
         loader.load(component);
-        logger.info("The component container is started");
-        Set<ApplicationContext> applications = context.getApplicationFeatures();
+
+        registerWorldAndComponents(component);
+
+        publishContainerStartedEvent();
+    }
+
+    void registerWorldAndComponents(Component component) {
+        ApplicationContext mainContext = context.getApplicationFeature(component);
+        if(mainContext == null) return;
+        MBeanExporter exporter;
+        try {
+            exporter = mainContext.getBean(MBeanExporter.class);
+        } catch (BeansException e) {
+            logger.warn("You should configure a MBeanExporter in main app context");
+            return;
+        }
+        PomClassWorld world = context.getWorld();
+        exporter.registerManagedResource(world, world.getObjectName());
+        Set<Component> components =repository.getComponents();
+        for (Component comp : components) {
+            if( repository.isApplication(comp.getGroupId())){
+                PomClassRealm cl = (PomClassRealm) comp.getClassLoader();
+                exporter.registerManagedResource(comp, ((DefaultComponent) comp).getObjectName());
+                if( cl != null )exporter.registerManagedResource(cl, cl.getObjectName());
+            }
+        }
+    }
+
+    public void unload(Component component) {
+        publishContainerStoppingEvent();
+
+        loader.unload(component);
+    }
+
+    void publishContainerStartedEvent() {
+        banner("The component container is started");
+        List<ApplicationContext> applications = context.getApplicationFeatures();
         ContainerStartedEvent event = new ContainerStartedEvent(this);
         for (ApplicationContext application : applications) {
             application.publishEvent(event);
         }
     }
 
-    public void unload(Component component) {
-        logger.info("The component container is stopping");
-        Set<ApplicationContext> applications = context.getApplicationFeatures();
+    void publishContainerStoppingEvent() {
+        banner("The component container is stopping");
+        List<ApplicationContext> applications = context.getApplicationFeatures();
+        Collections.reverse(applications);
+
         ContainerEvent event = new ContainerStoppingEvent(this);
-        for (ApplicationContext application : applications) {
-            application.publishEvent(event);
-        }
-        loader.unload(component);
-        logger.info("The component container is stopped");
-        event = new ContainerStoppedEvent(this);
         for (ApplicationContext application : applications) {
             application.publishEvent(event);
         }
@@ -243,7 +279,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
     @Override
     public void shutdown() {
-        logger.info("Shutting down");
+        banner("Shutting down");
         if (repository != null) {
             repository.stop();
         }
@@ -259,7 +295,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         if(StringUtils.hasText(featureResolvers)){
             for(String resolverFqn: featureResolvers.split(",")){
                 try{
-                    logger.info(LogUtils.banner("Found extended feature resolver: " + resolverFqn));
+                    banner("Found extended feature resolver: " + resolverFqn);
                     Class resolverClass = Class.forName(resolverFqn, true, mainRealm);
                     FeatureResolver resolver = (FeatureResolver) resolverClass.newInstance();
                     loader.registerResolver(resolver);
@@ -269,6 +305,10 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             }
         }
         return loader;
+    }
+
+    void banner(String message){
+        logger.info(LogUtils.banner(message));
     }
 
 }

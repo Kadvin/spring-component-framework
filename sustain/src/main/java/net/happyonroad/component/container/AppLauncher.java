@@ -59,6 +59,7 @@ public class AppLauncher extends Launcher implements Executable {
     protected LaunchEnvironment environment;
     protected Component         mainComponent;
     protected PomClassWorld     pomWorld;
+    private   boolean           exiting;
 
     public AppLauncher(Component theMainComponent, LaunchEnvironment environment) {
         super();
@@ -100,7 +101,7 @@ public class AppLauncher extends Launcher implements Executable {
      * 启动当前的组件Jar包
      *
      */
-    public void start() throws Exception{
+    public void start() throws Exception {
         try {
             //主线程设置为该class loader，可以让RMI序列化的时候工作
             Thread.currentThread().setContextClassLoader(this.pomWorld.getMainRealm());
@@ -126,9 +127,14 @@ public class AppLauncher extends Launcher implements Executable {
 
     /** 退出 */
     public void exit() {
+        if( exiting ){
+            logger.debug("Another thread is shutting down");
+            return;
+        }
         //noinspection finally
         try {
             logger.info(banner("Unload the main component {}", this.mainComponent));
+            exiting = true;
             environment.unload(this.mainComponent);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);

@@ -248,8 +248,13 @@ public class PomClassRealm extends ClassRealm
     }
 
     @Override
-    public ObjectName getObjectName() throws MalformedObjectNameException {
-        return new ObjectName("spring.realms:name=" + getId());
+    public ObjectName getObjectName() {
+        String name = component.getBriefId();
+        try {
+            return new ObjectName("spring.realms:name=" + name);
+        } catch (MalformedObjectNameException e) {
+            throw new IllegalArgumentException("Can't create object name:" + name);
+        }
     }
 
     // ------------------------------------------------------------

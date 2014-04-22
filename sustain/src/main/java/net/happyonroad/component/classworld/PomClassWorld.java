@@ -13,7 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
+import org.springframework.jmx.export.naming.SelfNaming;
 
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
@@ -23,8 +26,8 @@ import java.util.Map;
 /**
  * 根据Pom创建一个Classworld，其中的Realm为其他依赖的Jar的Pom
  */
-@ManagedResource(objectName= "spring.components:name=world", description = "Pom类体系")
-public class PomClassWorld extends ClassWorld {
+@ManagedResource(description = "Pom类体系")
+public class PomClassWorld extends ClassWorld implements SelfNaming{
     private Logger logger = LoggerFactory.getLogger(PomClassWorld.class.getName());
     Map<String, PomClassRealm> stolenRealms;
     List<ClassWorldListener>   stolenListeners;
@@ -135,5 +138,14 @@ public class PomClassWorld extends ClassWorld {
     @ManagedAttribute
     public String getMainComponentId(){
         return mainComponentId;
+    }
+
+    @Override
+    public ObjectName getObjectName() {
+        try {
+            return new ObjectName("spring.components:name=world");
+        } catch (MalformedObjectNameException e) {
+            throw new IllegalArgumentException("Can't create object name: spring.components:name=world");
+        }
     }
 }
