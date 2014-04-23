@@ -398,8 +398,8 @@ public class DefaultComponentResolverTest extends TestCase {
         File pomFile = getResourceFile("poms/javax.servlet.javax.servlet-api-3.1.0.pom");
         Dependency dependency = Dependency.parse("javax.servlet.javax.servlet-api-3.1.0.pom");
         Component component = resolver.resolveComponent(dependency, pomFile);
-        assertEquals("javax.servlet.javax", component.getGroupId());
-        assertEquals("servlet-api", component.getArtifactId());
+        assertEquals("javax.servlet", component.getGroupId());
+        assertEquals("javax.servlet-api", component.getArtifactId());
         assertEquals("3.1.0", component.getVersion());
     }
 

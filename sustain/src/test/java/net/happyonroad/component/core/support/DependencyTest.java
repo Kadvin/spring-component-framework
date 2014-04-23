@@ -200,8 +200,8 @@ public class DependencyTest extends TestCase {
      */
     public void testConvertArtifactWithDotAsNormal() throws Exception {
         Dependency dependency = new Dependency("javax.servlet", "javax.servlet-api", "3.1.0");
-        assertEquals("javax.servlet.javax", dependency.getGroupId());
-        assertEquals("servlet-api", dependency.getArtifactId());
+        assertEquals("javax.servlet", dependency.getGroupId());
+        assertEquals("javax.servlet-api", dependency.getArtifactId());
         assertEquals("3.1.0", dependency.getVersion());
     }
 
