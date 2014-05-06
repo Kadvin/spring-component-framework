@@ -28,6 +28,15 @@ public interface MutableServiceRegistry extends ServiceRegistry {
      */
     <T> void register(Class<T> interfaceClass, T service, String hint);
 
+    /**
+     * 注册一个bean，暴露出多个接口作为服务
+     * @param interfaceClasses 暴露的接口
+     * @param service  服务bean
+     * @param hint 服务备注
+     * @param <T> 服务类型
+     */
+    <T> void register(Class[] interfaceClasses, T service, String hint);
+
 
     /**
      * 取消特定的hint服务的注册

@@ -30,6 +30,15 @@ public interface ServiceRegistry {
     <T> T getService(Class<T> requiredType, String hint);
 
     /**
+     * 找到某个同时暴露多个接口的服务bean
+     * @param requiredTypes 服务接口
+     * @param hint 服务备注
+     * @param <T> 服务类型
+     * @return 找到的服务对象
+     */
+    <T> T getService(Class[] requiredTypes, String hint);
+
+    /**
      * 获得某个服务接口所有的实例对象
      *
      * @param requiredType 服务的接口

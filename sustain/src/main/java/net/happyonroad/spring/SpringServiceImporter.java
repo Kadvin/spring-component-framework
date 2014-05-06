@@ -48,13 +48,13 @@ public class SpringServiceImporter extends SpringServiceProxy {
      */
     public void importService(MutableServiceRegistry serviceRegistry, ApplicationContext serviceContext)
             throws ServiceNotFoundException {
-        Object service = serviceRegistry.getService(getRoleClass(), getHint());
+        Object service = serviceRegistry.getService(getRoleClasses(), getHint());
         if(service != null){
             ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) serviceContext.getAutowireCapableBeanFactory();
             logger.debug("Import {} to {} as {}", this, serviceContext.getDisplayName(), getAs());
             ProxyFactory proxyFactory = new ProxyFactory();
             proxyFactory.setTarget(service);
-            proxyFactory.addInterface(getRoleClass());
+            proxyFactory.setInterfaces(getRoleClasses());
             proxyFactory.setOpaque(true);
             Object proxy;
             ClassLoader classLoader = service.getClass().getClassLoader();

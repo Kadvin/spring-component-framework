@@ -3,15 +3,18 @@
  */
 package net.happyonroad.spring;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-/** Description */
+/**
+ * The parent class of service importer/exporter
+ */
 public class SpringServiceProxy {
     protected static Logger logger = LoggerFactory.getLogger(SpringServiceExporter.class);
     protected String             role;
-    protected Class              roleClass;
+    protected Class[]            roleClasses;
     private   String             hint;
     private   ApplicationContext context;
 
@@ -32,15 +35,24 @@ public class SpringServiceProxy {
     }
 
     protected Class getRoleClass() throws ServiceConfigurationException {
-        if (roleClass == null) {
-            try {
-                roleClass = Class.forName(getRole(), true, context.getClassLoader());
-            } catch (Exception ex) {
-                throw new ServiceConfigurationException("Can't resolve role class: [" +
-                                                        getRole() + "] by class context: " + context, ex);
+        return getRoleClasses()[0];
+    }
+
+    protected Class[] getRoleClasses() throws ServiceConfigurationException {
+        if (roleClasses == null) {
+            String[] roles = StringUtils.split(getRole(), ",");
+            roleClasses = new Class[roles.length];
+            for (int i = 0; i < roles.length; i++) {
+                String role = StringUtils.trim(roles[i]);
+                try {
+                    roleClasses[i] = Class.forName(role, true, context.getClassLoader());
+                } catch (Exception ex) {
+                    throw new ServiceConfigurationException("Can't resolve role class: [" +
+                                                            role + "] by class context: " + context, ex);
+                }
             }
         }
-        return roleClass;
+        return roleClasses;
     }
 
 

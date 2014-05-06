@@ -4,6 +4,7 @@
 package net.happyonroad.component.container.support;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
+import net.happyonroad.spring.ServiceConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,13 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
             services.put(interfaceClass, instances);
         }
         instances.put(hint, service);
+    }
+
+    @Override
+    public <T> void register(Class[] interfaceClasses, T service, String hint) {
+        for (Class interfaceClass : interfaceClasses) {
+            register(interfaceClass, service, hint);
+        }
     }
 
     @Override
@@ -97,6 +105,21 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
             return (T) map.values().iterator().next();
         }
         return (T) map.get(hint);
+    }
+
+    @Override
+    public <T> T getService(Class[] requiredTypes, String hint) {
+        Set<T> found = new HashSet<T>();
+        for (Class type : requiredTypes) {
+            T service = (T)getService(type, hint);
+            found.add(service);
+        }
+        if( found.size() != 1 ){
+            String types = StringUtils.join(requiredTypes, ",");
+            throw new ServiceConfigurationException("The service with hint = " + hint +
+                                                    " is not exported with multiple interfaces: " + types);
+        }
+        return found.iterator().next();
     }
 
     @Override

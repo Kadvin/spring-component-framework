@@ -49,7 +49,7 @@ public class SpringServiceExporter extends SpringServiceProxy {
                     componentContext.getDisplayName() + "!", e);
         }
         logger.debug("Export {} -> {} from {} to service registry", this, service, componentContext.getDisplayName());
-        serviceRegistry.register(getRoleClass(), service, getHint());
+        serviceRegistry.register(getRoleClasses(), service, getHint());
     }
 
     /**
@@ -61,6 +61,10 @@ public class SpringServiceExporter extends SpringServiceProxy {
     public void revokeService(MutableServiceRegistry serviceRegistry, ApplicationContext componentContext) {
         Object service = getServiceReference(componentContext);
         logger.debug("Revoke {} -> {} to {}", this, service, componentContext);
+        // TODO 服务从注册表revoke只能避免其被其他使用者再次发现
+        // 但对于已经import的对象，将无能为力
+        // 实际应该的做法是，在export的时候，就export一个proxy对象
+        // 这里对proxy切入一个控制，就是对所有的服务方法，都抛出ServiceRevokedException
         serviceRegistry.unRegister(getRoleClass(), getHint());
     }
 
