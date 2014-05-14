@@ -6,6 +6,5 @@
 .modules
 .idea
 target
-release.*
 pom.xml.*
 spring-component-*
