@@ -41,7 +41,7 @@ echo "### $name Next    Version = $next"
 
 OPTIONS="-DreleaseVersion=$release  \
          -DdevelopmentVersion=$next \
-         -P dnt with-children -Darguments='-N -DskipTests'"
+         -P dnt,with-children -Darguments='-N -DskipTests'"
 
 mvn release:clean
 
