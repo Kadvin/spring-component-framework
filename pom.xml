@@ -49,9 +49,9 @@
     </properties>
 
     <scm>
-        <url>https://github.com/Kadvin/spring-component-parent</url>
-        <connection>scm:git:git@github.com:Kadvin/spring-component-parent.git</connection>
-        <developerConnection>scm:git:git@github.com:Kadvin/spring-component-parent.git</developerConnection>
+        <url>http://happyonroad.net/component-framework</url>
+        <connection>scm:git:git@happyonroad.net:happyonroad/component-framework.git</connection>
+        <developerConnection>scm:git:git@happyonroad.net:happyonroad/component-framework.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
