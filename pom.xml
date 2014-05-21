@@ -52,7 +52,6 @@
         <url>http://happyonroad.net/component-framework</url>
         <connection>scm:git:git@happyonroad.net:happyonroad/component-framework.git</connection>
         <developerConnection>scm:git:git@happyonroad.net:happyonroad/component-framework.git</developerConnection>
-        <tag>HEAD</tag>
     </scm>
 
     <developers>
