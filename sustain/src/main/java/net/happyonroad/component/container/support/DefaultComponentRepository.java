@@ -193,7 +193,7 @@ public class DefaultComponentRepository
         }
         if (meets.isEmpty()) {
             logger.trace("Can't find {} in current repository", dependency);
-            throw new DependencyNotMeetException(dependency, "in current repository");
+            throw new DependencyNotMeetException(dependency);
         }
         return meets.get(0);
     }

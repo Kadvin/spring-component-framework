@@ -20,11 +20,33 @@ public class ComponentException extends Exception{
         super(message, cause);
     }
 
-    public ComponentException(Throwable cause) {
-        super(cause);
-    }
-
     public Component getComponent() {
         return component;
     }
+
+    public void setComponent(Component component) {
+        this.component = component;
+    }
+
+    public String getPath(){
+        if( this.getCause() != null && this.getCause() instanceof ComponentException){
+            return currPath() + " -> " + ((ComponentException) this.getCause()).getPath();
+        }else{
+            return currPath();
+        }
+    }
+
+    protected String currPath(){
+         return this.component == null ? "/" : this.component.toString();
+    }
+
+    public Throwable getRootCause(){
+        Throwable rootCause = this;
+        while(rootCause.getCause() != null){
+            rootCause = rootCause.getCause();
+        }
+        return rootCause;
+    }
 }
+
+

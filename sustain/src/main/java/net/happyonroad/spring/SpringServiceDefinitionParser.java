@@ -3,6 +3,9 @@
  */
 package net.happyonroad.spring;
 
+import net.happyonroad.spring.service.SpringServiceExporter;
+import net.happyonroad.spring.service.SpringServiceImporter;
+import net.happyonroad.spring.service.SpringServicePackage;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;

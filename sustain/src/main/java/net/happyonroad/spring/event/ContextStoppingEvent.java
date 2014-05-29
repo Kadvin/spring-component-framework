@@ -1,7 +1,7 @@
 /**
  * @author XiongJie, Date: 13-10-30
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.event;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ApplicationContextEvent;

@@ -4,6 +4,7 @@
 package net.happyonroad.spring;
 
 import net.happyonroad.component.core.Component;
+import net.happyonroad.spring.context.ComponentApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;

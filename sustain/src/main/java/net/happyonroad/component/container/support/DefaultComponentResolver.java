@@ -143,10 +143,7 @@ public class DefaultComponentResolver implements ComponentResolver {
 
                 repository.addComponent(parent);
             } else {
-                //把找不到特定组件的异常转换为更为详细（为哪个组件找不到）
-                throw new DependencyNotMeetException(component,
-                                                     "Can't resolve " + component + ", because of parent " + parent +
-                                                     " can't be resolved", e);
+                throw new DependencyNotMeetException(component, dependency, e);
             }
         }
     }
@@ -199,12 +196,13 @@ public class DefaultComponentResolver implements ComponentResolver {
                     Component dependedComponent = repository.resolveComponent(depended);
                     dependedComponents.add(dependedComponent);
                 } catch (DependencyNotMeetException e) {
+                    if( e.getComponent() == null ) e.setComponent(component);
                     //但只有必选的，以及是compile time的找不到才抛出异常
                     if (!depended.isOptional() && depended.isCompile()) {
-                        throw new DependencyNotMeetException(component,
-                                                             "Can't resolve " + component +
-                                                             ", because of dependency " +
-                                                             e.getDependency() + " can't be satisfied", e);
+                        if( e.getComponent() == component )
+                            throw e;
+                        else
+                            throw new DependencyNotMeetException(component, depended, e);
                     } else{
                         logger.trace("Can't resolve {} dependency {}", depended.getScope(), depended);
                     }
@@ -260,14 +258,13 @@ public class DefaultComponentResolver implements ComponentResolver {
             if (optional) return null;
             if (customizedGroup != null || customizedArtifactId != null) {
                 // 定制过的异常，不再进行额外的尝试
-                throw new DependencyNotMeetException(component, "Can't resolve " + component + ", because of module " +
-                                                                dependency + " can't be resolved", e);
+                throw new DependencyNotMeetException(component, dependency, e);
             }
             //另外一种是子模块的groupId与父模块的group+id相同
             if (dependency.accept(e.getDependency())) {
                 // 该异常确实是当前 option a解析不了的异常
-                Dependency another =
-                        new Dependency(component.getGroupId() + "." + component.getArtifactId(), moduleName);
+                String groupId = component.getGroupId() + "." + component.getArtifactId();
+                Dependency another = new Dependency(groupId, moduleName);
                 logger.debug("Retrying  {} instead of {} to overcome: " + e.getMessage(), another, dependency);
                 try {
                     module = repository.resolveComponent(another);
@@ -275,9 +272,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                     //只有当前应用相关的模块找不到，才抛出异常
                     //如果是第三方库中的子模块找不到，则不抛出异常，仅仅打出日志即可
                     if (repository.isApplication(component.getGroupId())) {
-                        throw new DependencyNotMeetException(component,
-                                                             "Can't resolve " + component + ", because of module " +
-                                                             dependency + " can't be resolved", e);
+                        throw new DependencyNotMeetException(component, dependency, e);
                     } else {
                         logger.debug("Can't find module {}, tolerate this 3rd library absent", dependency);
                         module = null;
@@ -285,8 +280,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                 }
             } else {
                 // 该异常确实是解析时其他底层依赖未满足，直接抛出
-                throw new DependencyNotMeetException(component, "Can't resolve " + component + ", because of module " +
-                                                                dependency + " can't be resolved", e);
+                throw new DependencyNotMeetException(component, dependency, e);
             }
         }
         return module;

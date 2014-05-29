@@ -5,11 +5,10 @@ package net.happyonroad.component.container.feature;
 
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.Features;
-import net.happyonroad.spring.CombinedApplicationContext;
+import net.happyonroad.spring.context.CombinedApplicationContext;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -59,7 +58,7 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
         //cbf.registerSingleton("world", resolveContext.getWorld());
 //    }
 
-    protected void registerServiceHelpers(GenericXmlApplicationContext context) {
+    protected void registerServiceHelpers(AbstractApplicationContext context) {
         ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
         //将全局的注册表也注册进去
         cbf.registerSingleton("serviceRegistry", resolveContext.getRegistry());

@@ -1,7 +1,7 @@
 /**
  * @author XiongJie, Date: 13-10-31
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.context;
 
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.ApplicationContext;

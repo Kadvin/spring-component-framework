@@ -12,27 +12,19 @@ import net.happyonroad.component.core.support.Dependency;
  */
 public class DependencyNotMeetException extends ComponentException {
     private final Dependency dependency;
-    private final Component  component;
 
-    public DependencyNotMeetException(Dependency dependency, String reason) {
-        super("Can't find " + dependency + " " + reason);
-        this.dependency = dependency;
-        this.component = null;
+    public DependencyNotMeetException(Dependency dependency) {
+        this(null, dependency, null);
     }
 
-    public DependencyNotMeetException(Dependency dependency, Component component, Throwable cause) {
-        super("Can't find " + dependency + " for " + component, cause);
+    public DependencyNotMeetException(Component component, Dependency dependency, Throwable cause) {
+        super(dependency + " can't be meet", cause);
         this.dependency = dependency;
-        this.component = component;
-    }
-
-    public DependencyNotMeetException(Component component, String message, DependencyNotMeetException cause) {
-        super(message, cause);
-        this.dependency = cause.getDependency();
         this.component = component;
     }
 
     public Dependency getDependency() {
         return dependency;
     }
+
 }

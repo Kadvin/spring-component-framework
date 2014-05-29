@@ -3,6 +3,7 @@
  */
 package net.happyonroad.spring;
 
+import net.happyonroad.spring.context.ComponentApplicationContext;
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;

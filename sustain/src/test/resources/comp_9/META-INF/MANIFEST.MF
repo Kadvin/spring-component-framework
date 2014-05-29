@@ -1,0 +1,1 @@
+App-Config: spring.test.ann_application.AppConfig

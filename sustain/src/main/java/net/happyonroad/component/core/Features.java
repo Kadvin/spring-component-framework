@@ -4,8 +4,8 @@
 package net.happyonroad.component.core;
 
 import net.happyonroad.component.classworld.PomClassRealm;
-import net.happyonroad.spring.ComponentApplicationContext;
-import net.happyonroad.spring.ServiceApplicationContext;
+import net.happyonroad.spring.context.ComponentApplicationContext;
+import net.happyonroad.spring.context.ServiceApplicationContext;
 
 import java.util.HashMap;
 import java.util.Map;

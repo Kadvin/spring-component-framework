@@ -21,19 +21,10 @@ import java.net.URL;
 import java.util.Collection;
 
 /** 组件加载器的测试 */
-public class DefaultComponentLoaderTest {
-
-    private static Project project = new Project();
-    private static File tempFolder;
-
-    private DefaultComponentLoader     loader;
-    private DefaultComponentRepository repository;
-    private PomClassWorld              world;
-    private Component                  target;
+public class DefaultComponentLoaderTest extends net.happyonroad.component.ComponentTestSupport {
 
     @BeforeClass
     public static void setUpTotal() throws Exception {
-        tempFolder = TempFile.tempFolder();
 
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
         if("create".equals(System.getenv("spring.test.action") )){
@@ -67,24 +58,6 @@ public class DefaultComponentLoaderTest {
         }
     }
 
-    @Before
-    public void setUp() throws Exception {
-        repository = new DefaultComponentRepository(tempFolder.getPath());
-        world = new PomClassWorld();
-        loader = new DefaultComponentLoader(repository, world);
-        repository.start();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        try {
-            loader.unload(target);
-        }catch (Exception ex){
-            System.err.println(ex.getMessage());
-        } finally {
-            repository.stop();
-        }
-    }
 
     /**
      * 测试目的：
@@ -301,44 +274,6 @@ public class DefaultComponentLoaderTest {
         target.getDependedComponents().contains(depended);
     }
 
-    private static void createPom(String folder, String compName, File root) throws IOException {
-        String path = folder + "/pom.xml";
-        URL source = DefaultComponentLoaderTest.class.getClassLoader().getResource(path);
-        File destination = new File(root, "lib/poms/" + compName + ".pom");
-        FileUtils.copyURLToFile(source, destination);
-    }
-
-    private static void copyJar(String name, File tempFolder)throws IOException{
-        URL jar = DefaultComponentLoaderTest.class.getClassLoader().getResource("jars/"+ name + ".jar");
-        File file = new File(tempFolder, "lib/" + name + ".jar");
-        FileUtils.copyURLToFile(jar, file );
-    }
-
-    private static void createJar(String folder, String compName, String classPath, File root) throws IOException {
-        createJar(folder, compName, classPath, root, null);
-    }
-
-    private static void createJar(String folder, String compName, String classPath, File root, IOFileFilter filter) throws IOException {
-        URL metaInf = DefaultComponentLoaderTest.class.getClassLoader().getResource(folder);
-        URL classes = DefaultComponentLoaderTest.class.getClassLoader().getResource(classPath);
-        assert metaInf != null;
-        assert classes != null;
-        File destination = new File(root, "temp/" + compName);
-        FileUtils.copyDirectory(new File(metaInf.getPath()), destination);
-        //FileUtils.copyDirectory(new File(classes.getPath()), new File(destination, classPath));
-        Collection<File> classesFiles = FileUtils.listFiles(new File(classes.getPath()), new String[]{"class"}, true);
-        for (File classesFile : classesFiles) {
-            if( filter != null && !filter.accept(classesFile))continue;
-            FileUtils.copyFileToDirectory(classesFile, new File(destination, classPath ));
-        }
-        File file = new File(root, "lib/" + compName + ".jar");
-        Jar jar = new Jar();
-        jar.setProject(project);
-        jar.setDestFile(file);
-        jar.setBasedir(destination);
-        jar.execute();
-    }
-
     private static Object invokeWork(Object target){
         try{
             Method method = target.getClass().getMethod("work");
@@ -358,21 +293,4 @@ public class DefaultComponentLoaderTest {
         }
     }
 
-    private static class Filter implements IOFileFilter{
-        private String prefix;
-
-        private Filter(String prefix) {
-            this.prefix = prefix;
-        }
-
-        @Override
-        public boolean accept(File file) {
-            return file.getName().startsWith(prefix);
-        }
-
-        @Override
-        public boolean accept(File dir, String name) {
-            return true;
-        }
-    }
 }

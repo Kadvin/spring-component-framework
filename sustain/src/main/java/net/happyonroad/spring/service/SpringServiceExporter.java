@@ -1,10 +1,11 @@
 /**
  * @author XiongJie, Date: 13-10-30
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.service;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
 import net.happyonroad.component.container.ServiceRegistry;
+import net.happyonroad.spring.exception.ServiceConfigurationException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.util.ClassUtils;
@@ -71,7 +72,7 @@ public class SpringServiceExporter extends SpringServiceProxy {
     private Object getServiceReference(ApplicationContext componentContext) {
         Object service;
         if(StringUtils.hasText(getRef())){
-            service = componentContext.getBean(getRef());
+            service = componentContext.getBean(getRef(), getRoleClass());
         }else{
             service = componentContext.getBean(getRoleClass());
         }

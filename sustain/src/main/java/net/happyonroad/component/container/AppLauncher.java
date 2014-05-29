@@ -8,6 +8,7 @@ import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.support.DefaultLaunchEnvironment;
 import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.ComponentException;
 import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 import org.codehaus.plexus.classworlds.launcher.Launcher;
 import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
@@ -328,6 +329,9 @@ public class AppLauncher extends Launcher implements Executable {
             //      停止系统(通过本机Socket停止另外一个已经在运行的系统)
             environment.execute(launcher, newArgs);
             return launcher.getExitCode();
+        }catch (ComponentException ex){
+            logger.error("{} : {}", ex.getPath(), ex.getRootCause().getMessage());
+            return -1;
         }catch (Throwable ex){
             logger.error("Failed: " + ex.getMessage(), ex);
             return -1;

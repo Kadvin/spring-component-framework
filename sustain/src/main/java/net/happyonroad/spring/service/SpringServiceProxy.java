@@ -1,8 +1,9 @@
 /**
  * @author XiongJie, Date: 13-10-30
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.service;
 
+import net.happyonroad.spring.exception.ServiceConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

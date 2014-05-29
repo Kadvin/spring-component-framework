@@ -1,24 +1,29 @@
 /**
- * @author XiongJie, Date: 13-11-11
+ * Developer: Kadvin Date: 14-5-28 下午1:05
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.context;
 
 import net.happyonroad.component.core.Component;
+import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/** Description */
-public class ComponentApplicationContext extends GenericXmlApplicationContext {
+/**
+ * 基于Annotation Config的Spring Component Application Context
+ */
+public class AnnotationComponentApplicationContext extends AnnotationConfigApplicationContext
+        implements ComponentApplicationContext {
+
     private final Component component;
 
-    public ComponentApplicationContext(Component component, ClassRealm realm, ApplicationContext parent) {
+    public AnnotationComponentApplicationContext(Component component, ClassRealm realm, ApplicationContext parent) {
         this.setParent(parent); /*It accept null*/
         this.component = component;
         if (parent != null) {
@@ -35,7 +40,6 @@ public class ComponentApplicationContext extends GenericXmlApplicationContext {
             }
         }
         this.setDisplayName("Application Context for: [" + component.getDisplayName() + "]");
-        this.setValidating(false);
         this.setClassLoader(realm);
     }
 
@@ -51,6 +55,7 @@ public class ComponentApplicationContext extends GenericXmlApplicationContext {
         return new SpringPathMatchingResourcePatternResolver(this);
     }
 
+    @Override
     public Component getComponent() {
         return component;
     }

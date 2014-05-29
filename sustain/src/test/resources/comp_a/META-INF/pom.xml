@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>spring</groupId>
+        <artifactId>test</artifactId>
+        <version>0.0.1</version>
+    </parent>
+
+    <groupId>spring.test</groupId>
+    <artifactId>comp_a</artifactId>
+    <version>0.0.1</version>
+
+    <name>Spring Test 10th Component</name>
+    <description>It's a component load by Configuration, and export services</description>
+    <url>http://www.happyonroad.net/test/comp_a</url>
+</project>

@@ -1,10 +1,12 @@
 /**
  * @author XiongJie, Date: 13-10-30
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.service;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
 import net.happyonroad.component.container.ServiceRegistry;
+import net.happyonroad.spring.exception.ServiceConfigurationException;
+import net.happyonroad.spring.exception.ServiceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.framework.ProxyFactory;

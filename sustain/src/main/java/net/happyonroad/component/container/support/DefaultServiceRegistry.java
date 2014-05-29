@@ -4,7 +4,7 @@
 package net.happyonroad.component.container.support;
 
 import net.happyonroad.component.container.MutableServiceRegistry;
-import net.happyonroad.spring.ServiceConfigurationException;
+import net.happyonroad.spring.exception.ServiceConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

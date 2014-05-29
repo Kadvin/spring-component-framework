@@ -1,7 +1,9 @@
 /**
  * @author XiongJie, Date: 13-10-30
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.exception;
+
+import net.happyonroad.spring.service.SpringServiceImporter;
 
 /** 服务未找到异常 */
 public class ServiceNotFoundException extends Exception {
