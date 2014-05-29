@@ -6,12 +6,13 @@ package net.happyonroad.component.container.feature;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.Features;
 import net.happyonroad.spring.context.CombinedApplicationContext;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /** Resolve the general spring application context */
 public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
@@ -22,11 +23,12 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
     protected AbstractApplicationContext combineDependedApplicationAsParentContext(Component component) {
         // 将所有该组件依赖的组件生成的context组合起来，作为parent context，以便直接获取相关设置
         Set<ApplicationContext> dependedContexts = new LinkedHashSet<ApplicationContext>();
-        digDependedApplicationContext(component, dependedContexts);
+        List<ResourceBundleMessageSource> sources = new LinkedList<ResourceBundleMessageSource>();
+        digDependedApplicationContext(component, dependedContexts, sources);
         if (dependedContexts.isEmpty())
             return null;
         else {
-            CombinedApplicationContext combined = new CombinedApplicationContext(dependedContexts);
+            CombinedApplicationContext combined = new CombinedApplicationContext(dependedContexts, sources);
             combined.refresh();
             combined.start();
             return combined;
@@ -34,14 +36,23 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
     }
 
 
-    protected void digDependedApplicationContext(Component component, Set<ApplicationContext> dependedContexts) {
+    protected void digDependedApplicationContext(Component component,
+                                                 Set<ApplicationContext> dependedContexts,
+                                                 List<ResourceBundleMessageSource> sources) {
         Object loaded = resolveContext.getFeature(component, Features.APPLICATION_FEATURE);
         if (loaded != null && loaded instanceof ApplicationContext) {
             ApplicationContext componentContext = (ApplicationContext) loaded;
             dependedContexts.add(componentContext);
+            ResourceBundleMessageSource source = null;
+            try {
+                source = componentContext.getBean(ResourceBundleMessageSource.class);
+            } catch (BeansException e) {
+                //ignore
+            }
+            sources.add(source);
         }
         for (Component depended : component.getDependedComponents()) {
-            digDependedApplicationContext(depended, dependedContexts);
+            digDependedApplicationContext(depended, dependedContexts, sources);
         }
     }
 

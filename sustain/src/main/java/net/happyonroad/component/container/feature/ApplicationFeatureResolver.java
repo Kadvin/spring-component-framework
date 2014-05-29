@@ -13,8 +13,10 @@ import net.happyonroad.spring.exception.ApplicationConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
+import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.InputStreamResource;
 
 import java.io.IOException;
@@ -25,6 +27,7 @@ import java.io.InputStream;
  */
 public class ApplicationFeatureResolver extends SpringFeatureResolver {
     public static final String APP_CONFIG = "App-Config";
+    public static final String APP_MESSAGE = "App-Message";
     public static final String APP_XML = "META-INF/application.xml";
 
     public ApplicationFeatureResolver() {
@@ -57,6 +60,22 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         //registerApplicationHelpers(component, context, realm);
         registerServiceHelpers(context);
         context.refresh();
+        //在根据配置的情况下，根据 manifest里面的App-Message加载资源
+        //在根据XML配置的时候，由xml文件全权负责
+        if( byConfig(component) ){
+            String appMessage = getAppMessage(component);
+            if(StringUtils.isNotBlank(appMessage)){
+                ResourceBundleMessageSource bundle;
+                try {
+                    bundle = context.getBean(ResourceBundleMessageSource.class);
+                    bundle.setParentMessageSource(parent);
+                } catch (BeansException e) {
+                    String message = "The app config should configure a resource bundle message source!";
+                    throw new ApplicationConfigurationException(message, e);
+                }
+                bundle.setBasenames(StringUtils.split(appMessage,","));
+            }
+        }
         context.start();
         resolveContext.registerFeature(component, getName(), context);
     }
@@ -121,6 +140,11 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     protected boolean byXml(Component component) {
         ComponentResource resource = component.getResource();
         return resource.exists(APP_XML);
+    }
+
+    protected String getAppMessage(Component component){
+        ComponentResource resource = component.getResource();
+        return resource.getManifest().getMainAttributes().getValue(APP_MESSAGE);
     }
 
 }

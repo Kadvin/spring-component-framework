@@ -1,0 +1,2 @@
+App-Config: net.happyonroad.spring.service.DefaultAppConfig
+App-Message: META-INF/comp_d-messages,META-INF/more-messages

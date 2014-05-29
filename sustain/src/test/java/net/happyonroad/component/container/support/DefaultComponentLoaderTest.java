@@ -3,59 +3,33 @@
  */
 package net.happyonroad.component.container.support;
 
+import net.happyonroad.component.ComponentTestSupport;
 import net.happyonroad.component.classworld.PomClassRealm;
-import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.core.Component;
-import net.happyonroad.util.TempFile;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.Jar;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.Collection;
 
 /** 组件加载器的测试 */
-public class DefaultComponentLoaderTest extends net.happyonroad.component.ComponentTestSupport {
+public class DefaultComponentLoaderTest extends ComponentTestSupport {
 
     @BeforeClass
     public static void setUpTotal() throws Exception {
 
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
-        if("create".equals(System.getenv("spring.test.action") )){
-            createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
-            createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);
-            createJar("comp_3", "spring.test.comp_3-0.0.1", "spring/test/provider", tempFolder);
-            createJar("comp_4", "spring.test.comp_4-0.0.1", "spring/test/user", tempFolder);
-            createJar("comp_5", "spring.test.comp_5-0.0.1", "spring/test/mixed", tempFolder);
-            createJar("comp_6", "spring.test.comp_6-0.0.1", "spring/test/scan_p", tempFolder, new Filter("Provider"));
-            createJar("comp_7", "spring.test.comp_7-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
-            createJar("comp_8", "spring.test.comp_8-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
-        }else{
-            copyJar("spring.test.comp_1-0.0.1", tempFolder);
-            copyJar("spring.test.comp_2-0.0.1", tempFolder);
-            copyJar("spring.test.comp_3-0.0.1", tempFolder);
-            copyJar("spring.test.comp_4-0.0.1", tempFolder);
-            copyJar("spring.test.comp_5-0.0.1", tempFolder);
-            copyJar("spring.test.comp_6-0.0.1", tempFolder);
-            copyJar("spring.test.comp_7-0.0.1", tempFolder);
-            copyJar("spring.test.comp_8-0.0.1", tempFolder);
-        }
+        createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
+        createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);
+        createJar("comp_3", "spring.test.comp_3-0.0.1", "spring/test/provider", tempFolder);
+        createJar("comp_4", "spring.test.comp_4-0.0.1", "spring/test/user", tempFolder);
+        createJar("comp_5", "spring.test.comp_5-0.0.1", "spring/test/mixed", tempFolder);
+        createJar("comp_6", "spring.test.comp_6-0.0.1", "spring/test/scan_p", tempFolder, new Filter("Provider"));
+        createJar("comp_7", "spring.test.comp_7-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
+        createJar("comp_8", "spring.test.comp_8-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
 
-    }
-
-    @AfterClass
-    public static void tearDownTotal() throws Exception {
-        try {
-            FileUtils.deleteDirectory(tempFolder);
-        } catch (IOException e) {
-            e.printStackTrace();//TODO resolve it later
-        }
     }
 
 

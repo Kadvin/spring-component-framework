@@ -12,7 +12,7 @@ public class ServiceConfig extends AbstractServiceConfig {
 
     @Override
     public void defineServices() {
-        exportService(AnnotationService.class.getName(), "default", "annotationService");
-        exportService(AnnotationService.class.getName(), "scanned", "scannedProvider");
+        exportService(AnnotationService.class, "default", "annotationService");
+        exportService(AnnotationService.class, "scanned", "scannedProvider");
     }
 }

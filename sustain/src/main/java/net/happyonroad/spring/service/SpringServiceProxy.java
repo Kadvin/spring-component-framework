@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContext;
 /**
  * The parent class of service importer/exporter
  */
+@SuppressWarnings("UnusedDeclaration")
 public class SpringServiceProxy {
     protected static Logger logger = LoggerFactory.getLogger(SpringServiceExporter.class);
     protected String             role;
@@ -35,11 +36,19 @@ public class SpringServiceProxy {
         this.hint = hint;
     }
 
-    protected Class getRoleClass() throws ServiceConfigurationException {
+    public Class getRoleClass() throws ServiceConfigurationException {
         return getRoleClasses()[0];
     }
 
-    protected Class[] getRoleClasses() throws ServiceConfigurationException {
+    public void setRoleClass(Class roleClass){
+        this.roleClasses = new Class[]{roleClass};
+    }
+
+    public void setRoleClasses(Class[] roleClasses) {
+        this.roleClasses = roleClasses;
+    }
+
+    public Class[] getRoleClasses() throws ServiceConfigurationException {
         if (roleClasses == null) {
             String[] roles = StringUtils.split(getRole(), ",");
             roleClasses = new Class[roles.length];

@@ -3,16 +3,21 @@
  */
 package net.happyonroad.spring.context;
 
+import net.happyonroad.spring.support.CombinedMessageSource;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
+import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 /** 将多个Context组合成为一个 */
 public class CombinedApplicationContext extends GenericApplicationContext {
 
-    public CombinedApplicationContext(Set<ApplicationContext> dependedContexts) {
+    public CombinedApplicationContext(Set<ApplicationContext> dependedContexts,
+                                      List<ResourceBundleMessageSource> sources) {
         StringBuilder name = new StringBuilder("Combined Context of: [");
         //不应该将依赖的bean的context里面的放过来
         //为了让系统能够正确的加载或者解析，先仅仅将PropertyConfigurer加过来
@@ -30,6 +35,7 @@ public class CombinedApplicationContext extends GenericApplicationContext {
             }
             name.append(context.getDisplayName()).append(",");
         }
+        this.getBeanFactory().registerSingleton("messageSource", new CombinedMessageSource(sources));
         name.deleteCharAt(name.length()-1);
         name.append("]");
         setDisplayName(name.toString());

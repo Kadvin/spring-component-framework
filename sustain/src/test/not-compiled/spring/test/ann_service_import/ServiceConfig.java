@@ -13,9 +13,9 @@ public class ServiceConfig extends AbstractServiceConfig {
 
     @Override
     public void defineServices() {
-        importService(AnnotationService.class.getName(), "default", "annotationProvider");
-        importService(AnnotationService.class.getName(), "scanned", "scannedProvider");
+        importService(AnnotationService.class, "default", "annotationProvider");
+        importService(AnnotationService.class, "scanned", "scannedProvider");
 
-        exportService(AnnotationService.class.getName(), "more", "moreAnnotationService");
+        exportService(AnnotationService.class, "more", "moreAnnotationService");
     }
 }

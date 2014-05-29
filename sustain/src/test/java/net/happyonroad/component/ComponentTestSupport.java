@@ -15,6 +15,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Jar;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 
 import java.io.File;
@@ -23,7 +24,7 @@ import java.net.URL;
 import java.util.Collection;
 
 /**
- * Description here
+ * 基于组件的测试
  */
 public class ComponentTestSupport {
     protected static File    tempFolder = TempFile.tempFolder();
@@ -33,6 +34,16 @@ public class ComponentTestSupport {
     protected DefaultComponentRepository repository;
     protected PomClassWorld              world;
     protected Component                  target;
+
+
+    @AfterClass
+    public static void tearDownTotal() throws Exception {
+        try {
+            FileUtils.deleteDirectory(tempFolder);
+        } catch (IOException e) {
+            e.printStackTrace();//TODO resolve it later
+        }
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -60,6 +71,7 @@ public class ComponentTestSupport {
         FileUtils.copyURLToFile(source, destination);
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     protected static void copyJar(String name, File tempFolder) throws IOException {
         URL jar = DefaultComponentLoaderTest.class.getClassLoader().getResource("jars/" + name + ".jar");
         File file = new File(tempFolder, "lib/" + name + ".jar");
