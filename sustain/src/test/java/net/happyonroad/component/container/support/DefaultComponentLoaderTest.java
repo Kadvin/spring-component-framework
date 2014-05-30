@@ -82,7 +82,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Class suClass = realm.loadClass("spring.test.api.ServiceUser");
         Class spClass = realm.loadClass("spring.test.standalone.StandaloneProvider");
         Assert.assertNotNull(spClass);
-        ApplicationContext context = loader.getApplicationFeature(target);
+        ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         /*这个地方不能用 literal 方式加载的类，因为其与Loader里面的class不是同一个Loader*/
         /*如果解析的时候，没有做特殊的realm限制，组件解析的对象将会是当前classpath下的，而不是组件内部的*/
@@ -121,7 +121,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Assert.assertNotNull(tspClass);
         ApplicationContext serviceContext = loader.getServiceFeature(target);
         Assert.assertNotNull(serviceContext);
-        ApplicationContext context = loader.getApplicationFeature(target);
+        ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Object serviceProvider = context.getBean(spClass);
         Assert.assertNotNull(serviceProvider);
@@ -158,7 +158,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Assert.assertNotNull(tsuClass);
         ApplicationContext serviceContext = loader.getServiceFeature(target);
         Assert.assertNotNull(serviceContext);
-        ApplicationContext context = loader.getApplicationFeature(target);
+        ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Object serviceUser = context.getBean(suClass);
         Assert.assertNotNull(serviceUser);
@@ -194,7 +194,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Assert.assertNotNull(msuClass);
         ApplicationContext serviceContext = loader.getServiceFeature(target);
         Assert.assertNotNull(serviceContext);
-        ApplicationContext context = loader.getApplicationFeature(target);
+        ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Object serviceUser = context.getBean(suClass);
         Assert.assertNotNull(serviceUser);
@@ -224,7 +224,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         PomClassRealm realm = world.newRealm(target);
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
-        ApplicationContext context = loader.getApplicationFeature(target);
+        ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Class suClass = realm.loadClass("spring.test.scan_u.User");
         Object user = context.getBean(suClass);

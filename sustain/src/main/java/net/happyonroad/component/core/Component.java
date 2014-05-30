@@ -2,6 +2,7 @@ package net.happyonroad.component.core;
 
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.DependencyManagement;
+import org.springframework.context.ApplicationContext;
 
 import java.io.File;
 import java.net.URL;
@@ -228,5 +229,15 @@ public interface Component extends Comparable<Component>, Versionize {
      */
     boolean dependsOn(Component another);
 
+    /**
+     * GroupId + ArtifactId + Version
+     * @return brief id
+     */
     String getBriefId();
+
+    /**
+     * 如果是应用组件，返回相应的Application上下文，如果不是，返回null
+     * @return Application Context
+     */
+    ApplicationContext getApplication();
 }

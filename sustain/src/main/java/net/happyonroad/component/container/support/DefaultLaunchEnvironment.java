@@ -229,7 +229,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     }
 
     void registerWorldAndComponents(Component component) {
-        ApplicationContext mainContext = context.getApplicationFeature(component);
+        ApplicationContext mainContext = component.getApplication();
         if(mainContext == null) return;
         MBeanExporter exporter;
         try {

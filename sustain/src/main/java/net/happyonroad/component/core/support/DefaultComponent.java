@@ -10,6 +10,7 @@ import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.export.naming.SelfNaming;
@@ -71,8 +72,9 @@ public class DefaultComponent implements Component, SelfNaming {
 
     private String name, description, url;
 
-    private Properties  properties;
-    private ClassLoader classLoader;
+    private Properties         properties;
+    private ClassLoader        classLoader;
+    private ApplicationContext application;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -707,6 +709,14 @@ public class DefaultComponent implements Component, SelfNaming {
     @Override
     public String getBriefId() {
         return getGroupId() + "." + getArtifactId() + "-" + getVersion();
+    }
+
+    public ApplicationContext getApplication() {
+        return application;
+    }
+
+    public void setApplication(ApplicationContext application) {
+        this.application = application;
     }
 }
 

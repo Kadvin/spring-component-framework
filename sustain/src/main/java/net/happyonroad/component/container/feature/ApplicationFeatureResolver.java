@@ -7,6 +7,7 @@ import net.happyonroad.component.container.support.ComponentInputStreamResource;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.Features;
+import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.spring.context.AnnotationComponentApplicationContext;
 import net.happyonroad.spring.context.XmlComponentApplicationContext;
 import net.happyonroad.spring.exception.ApplicationConfigurationException;
@@ -78,6 +79,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         }
         context.start();
         resolveContext.registerFeature(component, getName(), context);
+        ((DefaultComponent)component).setApplication(context);
     }
 
     /**

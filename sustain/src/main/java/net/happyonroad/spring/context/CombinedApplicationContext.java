@@ -35,10 +35,12 @@ public class CombinedApplicationContext extends GenericApplicationContext {
             }
             name.append(context.getDisplayName()).append(",");
         }
-        this.getBeanFactory().registerSingleton("messageSource", new CombinedMessageSource(sources));
         name.deleteCharAt(name.length()-1);
         name.append("]");
         setDisplayName(name.toString());
+
+        if( !sources.isEmpty() )
+            this.getBeanFactory().registerSingleton("messageSource", new CombinedMessageSource(sources));
     }
 
 }
