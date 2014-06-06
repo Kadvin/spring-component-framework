@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 public class AnnotationDrivenTest extends ComponentTestSupport{
     @BeforeClass
     public static void setUpTotal() throws Exception {
+        System.setProperty("app.prefix","dnt.;spring.test");
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
         createJar("comp_9", "spring.test.comp_9-0.0.1", "spring/test/ann_application", tempFolder);
         createJar("comp_a", "spring.test.comp_a-0.0.1", "spring/test/ann_service_export", tempFolder);

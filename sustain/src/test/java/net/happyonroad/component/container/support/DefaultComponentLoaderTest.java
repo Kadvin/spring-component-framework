@@ -19,6 +19,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
 
     @BeforeClass
     public static void setUpTotal() throws Exception {
+        System.setProperty("app.prefix","dnt.;spring.test");
 
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
         createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
