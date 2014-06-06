@@ -572,7 +572,7 @@ public class DefaultComponent implements Component, SelfNaming {
     @ManagedAttribute
     @Override
     public boolean isPlain() {
-        return getResource() == null || !getResource().exists("META-INF/pom.xml");
+        return !isApplication() || getResource() == null;
     }
 
     @Override
@@ -652,6 +652,11 @@ public class DefaultComponent implements Component, SelfNaming {
         }
         m.appendTail(sb);
         return sb.toString().trim();
+    }
+
+    @Override
+    public boolean isApplication() {
+        return DefaultComponent.isApplication(getGroupId());
     }
 
     static public boolean isApplication(String groupId) {

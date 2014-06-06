@@ -54,6 +54,10 @@ public class PomClassRealm extends ClassRealm
         }
     }
 
+    public Component getComponent() {
+        return component;
+    }
+
     // ------------------------------------------------------------
     //     扩展功能，统计类加载情况
     // ------------------------------------------------------------

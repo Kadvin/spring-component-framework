@@ -12,6 +12,8 @@ import net.happyonroad.component.container.feature.ServiceFeatureResolver;
 import net.happyonroad.component.container.feature.StaticFeatureResolver;
 import net.happyonroad.component.core.*;
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.exception.DependencyNotMeetException;
+import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,6 +135,18 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     @Override
     public ClassRealm getClassRealm(String componentId) {
         return world.getClassRealm(componentId);
+    }
+
+    @Override
+    public ApplicationContext getMainApp() {
+        String id = world.getMainComponentId();
+        Component component;
+        try {
+            component = repository.resolveComponent(id);
+        } catch (Exception e) {
+            throw new RuntimeException("The system is not read for access main app");
+        }
+        return component.getApplication();
     }
 
     @Override

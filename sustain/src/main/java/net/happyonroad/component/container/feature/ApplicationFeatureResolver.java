@@ -71,7 +71,8 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
                     bundle = context.getBean(ResourceBundleMessageSource.class);
                     bundle.setParentMessageSource(parent);
                 } catch (BeansException e) {
-                    String message = "The app config should configure a resource bundle message source!";
+                    String message = "The " + component + " app config should configure a " +
+                                     "resource bundle message source to hold:" + appMessage + "!";
                     throw new ApplicationConfigurationException(message, e);
                 }
                 bundle.setBasenames(StringUtils.split(appMessage,","));

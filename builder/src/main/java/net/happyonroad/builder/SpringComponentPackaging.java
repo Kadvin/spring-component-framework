@@ -3,6 +3,8 @@
  */
 package net.happyonroad.builder;
 
+import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.support.Dependency;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
@@ -12,37 +14,44 @@ import org.apache.maven.plugin.dependency.fromDependencies.CopyDependenciesMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.Jar;
+import org.apache.tools.ant.types.FileSet;
 import org.codehaus.plexus.util.FileUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 /** The spring component packaging */
 @SuppressWarnings("UnusedDeclaration")
 @Mojo(name = "package", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class SpringComponentPackaging extends CopyDependenciesMojo {
     @Parameter
-    private File output;
+    private File       output;
     @Parameter(defaultValue = "1099")
-    private int  appPort;
+    private int        appPort;
     @Parameter(defaultValue = "")
-    private String jvmOptions;
+    private String     jvmOptions;
     @Parameter
-    private String appName;
+    private String     appName;
     @Parameter
     private Properties properties;
     @Parameter
-    private File propertiesFile;
+    private File       propertiesFile;
     @Parameter
-    private File logbackFile;
+    private File       logbackFile;
     @Parameter
-    private File[] folders;
+    private File[]     folders;
     //Debug port
     @Parameter
-    private int debug;
+    private int        debug;
     //Jmx port
     @Parameter
-    private int jmx;
+    private int        jmx;
+    @Parameter
+    private String     appPrefix;
 
     private static String lineSeparator = System.getProperty("os.name").contains("Windows") ? "\r\n" : "\n";
 
@@ -57,16 +66,19 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
         copyDependencies();
 
+        //清除与jar重复的pom文件
+        movePoms();
+
         moveBootstrapJar();
 
         generateScripts();
     }
 
     private void initAppParams() {
-        if(appName == null || StringUtils.isBlank(appName)){
+        if (appName == null || StringUtils.isBlank(appName)) {
             appName = project.getName() == null ? project.getArtifactId() : project.getName();
         }
-        if(properties == null){
+        if (properties == null) {
             properties = new Properties();
         }
     }
@@ -97,13 +109,19 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     private void copyTargets() throws MojoExecutionException {
         String fileName = project.getGroupId() + "." + project.getArtifactId() + "-" + project.getVersion();
-        File targetFile = new File( project.getBasedir(),
+        File newTargetFile = new File(project.getBasedir(), "target/" + fileName + ".jar");
+        File defaultTargetFile = new File( project.getBasedir(),
                                     "target/" + project.getArtifactId() + "-" + project.getVersion() + ".jar");
         try {
             //copy main pom
             FileUtils.copyFile(project.getFile(), new File(output, "lib/poms/" + fileName + ".pom"));
             //copy jar
-            FileUtils.copyFile(targetFile, new File(output, "lib/" + fileName + ".jar"));
+            File output = new File(this.output, "lib/" + fileName + ".jar");
+            if(newTargetFile.exists()){
+                FileUtils.copyFile(newTargetFile, output);
+            }else{
+                FileUtils.copyFile(defaultTargetFile, output);
+            }
         } catch (IOException e) {
             throw new MojoExecutionException("Can't copy targets: " + e.getMessage());
         }
@@ -152,15 +170,72 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         } catch (IOException e) {
             getLog().warn("Can't delete unnecessary boot pom " + bootPom + " :" + e.getMessage());
         }
+    }
+
+    private void movePoms() throws MojoExecutionException{
+        File libPath = new File(output, "lib");
+        File tempFolder = new File(libPath, "temp");
         try {
             List<File> pomFiles = FileUtils.getFiles(libPath, "*.pom", null);
             for (File pomFile : pomFiles) {
                 File newPomFile = new File(libPath, "poms/" + pomFile.getName());
-                FileUtils.rename(pomFile, newPomFile);
+                File jarFile = new File(pomFile.getPath().replace(".pom", ".jar"));
+                Dependency dep;
+                try {
+                    dep = Dependency.parse(pomFile.getName());
+                } catch (InvalidComponentNameException e) {
+                    throw new MojoExecutionException("Can't parse component from:" + pomFile);
+                }
+                String pomXmlPath = "META-INF/maven/" + dep.getGroupId() + "/" + dep.getArtifactId();
+                if( jarFile.exists() ){
+                    JarFile jar = new JarFile(jarFile);
+                    ZipEntry mavenFolder = jar.getEntry(pomXmlPath);
+                    jar.close();
+                    if( mavenFolder != null ){
+                        FileUtils.forceDelete(pomFile);
+                    }else{
+                        File pomFolder = new File(tempFolder, pomXmlPath);
+                        FileUtils.forceMkdir(pomFolder);
+                        newPomFile = new File(pomFolder, "pom.xml");
+                        FileUtils.rename(pomFile, newPomFile);
+
+                        List<String> lines = new ArrayList<String>(3);
+                        lines.add("version=" + dep.getVersion());
+                        lines.add("groupId=" + dep.getGroupId());
+                        lines.add("artifactId=" + dep.getArtifactId());
+                        File pomProperties = new File(pomFolder, "pom.properties");
+                        boolean created = pomProperties.createNewFile();
+                        if( !created ) throw new MojoExecutionException("Can't create " + pomProperties.getPath());
+                        FileOutputStream pomPropertiesStream = new FileOutputStream(pomProperties, false);
+                        try {
+                            IOUtils.writeLines(lines, "\n", pomPropertiesStream);
+                        } finally {
+                            pomPropertiesStream.close();
+                        }
+
+                        try {
+                            Jar ant = new Jar();
+                            ant.setProject(ANT_PROJECT);
+                            ant.setUpdate(true);
+                            ant.setDestFile(jarFile);
+                            FileSet fs = new FileSet();
+                            fs.setProject(ANT_PROJECT);
+                            fs.setDir(tempFolder);
+                            ant.add(fs);
+                            ant.execute();
+                        } finally {
+                            FileUtils.forceDelete(tempFolder);
+                        }
+                    }
+                }
+                else{
+                    FileUtils.rename(pomFile, newPomFile);
+                }
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Can't move poms: " + e.getMessage());
+            throw new MojoExecutionException("Can't move/delete poms: " + e.getMessage());
         }
+
     }
 
     private void generateScripts() throws MojoExecutionException {
@@ -186,6 +261,9 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                               " -Dcom.sun.management.jmxremote.authenticate=false" +
                               " -Dcom.sun.management.jmxremote.ssl=false" +
                               " -Dcom.sun.management.jmxremote.port=" + jmx;
+            }
+            if(StringUtils.isNotBlank(appPrefix)){
+                jvmOptions += " -Dapp.prefix=" + appPrefix;
             }
             replaces.put("jvm.options", jvmOptions);
             String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh"};
@@ -271,4 +349,6 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             FileUtils.forceMkdir(subFolder);
         }
     }
+
+    private static Project ANT_PROJECT = new Project();
 }

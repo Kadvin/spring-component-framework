@@ -35,20 +35,6 @@ import static net.happyonroad.util.LogUtils.banner;
  * <p>对某个组件进行
  * <ol><li>加载<li>启动<li>停止<li>卸载</ol>
  * </p>
- * <p/>
- * <pre>
- *  本类都是这么被使用的:
- *    java -jar boot/dnt.component.container-1.0.0.jar dnt.pdm.server.adminpane-1.0.0
- *  dnt.component.container-1.0.0.jar!/META-INF/MANIFEST.MF
- *    Main-Class:  dnt.component.container.AppLauncher
- *    Class-Path: ../lib/org.codehaus.plexus.plexus-classworlds-2.4.2.jar
- *                ../lib/com.thoughtworks.xstream.xstream-1.4.4.jar
- *  根据第一个参数：dnt.pdm.server.adminpane-1.0.0(也可以加上.jar或者.pom的后缀)
- *  找到相应的程序入口: <b>dnt.pdm.server.adminpane-1.0.0.jar</b>
- *    所有的依赖关系: dnt.pdm.server.adminpane-1.0.0.jar!/META-INF/pom.xml
- *    所有的应用实例化需求: dnt.pdm.server.adminpane-1.0.0.jar!/META-INF/application.xml
- *    所有的与外部组件实例依赖需求: dnt.pdm.server.adminpane-1.0.0.jar!/META-INF/service.xml
- * </pre>
  */
 public class AppLauncher extends Launcher implements Executable {
     private static       Logger logger     = LoggerFactory.getLogger(AppLauncher.class.getName());

@@ -48,4 +48,6 @@ public interface ComponentContext {
 
     PomClassWorld getWorld();
 
+    ApplicationContext getMainApp();
+
 }

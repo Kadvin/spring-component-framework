@@ -2,4 +2,6 @@
 (org\.parboiled)\.(parboiled-scala_\d+\.\d+)\-?(.*)?
 (org\.neo4j)\.(neo4j-cypher-compiler-\d+\.\d+)\-?(.*)?
 (javax\.servlet)\.(javax\.servlet-api)\-?(.*)?
-(org\.apache\.geronimo\.specs)\.(geronimo-jta_1\.1_spec)\-?(.*)?
+(org\.apache\.geronimo\.specs)\.(geronimo-jta_\d\.\d_spec)\-?(.*)?
+(org\.jboss\.spec\.javax\.transaction)\.(jboss-transaction-api_\d\.\d_spec)\-?(.*)?
+(org\.hibernate\.javax\.persistence)\.(hibernate-jpa-\d\.\d-api)\-?(.*)?

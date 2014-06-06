@@ -90,7 +90,7 @@ public class DefaultComponentRepository
         }
         File poms = new File(libFolder, "poms");
         try {
-            //而后再遍历lib/poms下面的pom.xml，把不存在对应jar的 group pom预加载进来
+            //而后再遍历lib/poms下面的pom.xml，把packaging = pom 的父pom预加载进来
             scanPoms(poms);
         } catch (Exception e) {
             logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
@@ -123,7 +123,8 @@ public class DefaultComponentRepository
                 logger.trace("Skip sources {}", jar.getPath());
             }
             Dependency dependency = Dependency.parse(jar.getName());
-            ComponentJarResource resource = new ComponentJarResource(jar);
+            ComponentJarResource resource = new ComponentJarResource(dependency.getGroupId(),
+                                                                     dependency.getArtifactId(), jar);
             InputStream stream = null;
             try {
                 stream = resource.getPomStream();

@@ -24,12 +24,12 @@ public class StaticFeatureResolver extends AbstractFeatureResolver{
 
     @Override
     public boolean hasFeature(Component component) {
-        return component.getResource().exists("META-INF/pom.xml");
+        return component.isApplication() && component.getResource().isPomXmlExists();
     }
 
     @Override
     public void resolve(Component component) {
-        if(component.isPlain()) return;
+        if( component.isPlain()) return;
         logger.debug("Resolving {} {} feature", component, getName());
         ClassRealm realm = resolveContext.getClassRealm(component.getId());
         if(realm == null){

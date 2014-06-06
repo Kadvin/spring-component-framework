@@ -43,13 +43,12 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
         if (loaded != null && loaded instanceof ApplicationContext) {
             ApplicationContext componentContext = (ApplicationContext) loaded;
             dependedContexts.add(componentContext);
-            ResourceBundleMessageSource source = null;
             try {
-                source = componentContext.getBean(ResourceBundleMessageSource.class);
+                ResourceBundleMessageSource source = componentContext.getBean(ResourceBundleMessageSource.class);
+                sources.add(source);
             } catch (BeansException e) {
                 //ignore
             }
-            sources.add(source);
         }
         for (Component depended : component.getDependedComponents()) {
             digDependedApplicationContext(depended, dependedContexts, sources);

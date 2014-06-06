@@ -13,16 +13,33 @@ import java.util.jar.Manifest;
  * 组件的资源
  */
 public abstract class ComponentResource {
-
+    protected final String groupId, artifactId;
     protected Manifest manifest;
+
+    protected ComponentResource(String groupId, String artifactId) {
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 主要对外公开API
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public String getGroupId(){
+        return groupId;
+    }
+
+    public String getArtifactId(){
+        return artifactId;
+    }
 
     public InputStream getPomStream() throws IOException {
-        return getInputStream("META-INF/pom.xml");
+        return getInputStream(getPomXmlPath());
+    }
+
+    protected String getPomXmlPath() {
+        return "META-INF/maven/" + getGroupId() + "/" + getArtifactId() + "/pom.xml";
     }
 
     public InputStream getApplicationStream() throws IOException {
@@ -46,6 +63,10 @@ public abstract class ComponentResource {
     public abstract InputStream getInputStream(String relativePath) throws IOException;
 
     public abstract boolean exists(String relativePath);
+
+    public boolean isPomXmlExists(){
+        return exists(getPomXmlPath());
+    }
 
     public abstract void close();
 

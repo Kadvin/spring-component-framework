@@ -287,7 +287,7 @@ public class DefaultComponentResolver implements ComponentResolver {
     }
 
     @Override
-    public Component resolveComponent(Dependency dependency, File jarOrPomFilePath)
+    public Component resolveComponent(final Dependency dependency, File jarOrPomFilePath)
             throws InvalidComponentNameException, DependencyNotMeetException {
         logger.debug("Resolving {} from {}", dependency, jarOrPomFilePath);
         Dependency basic = Dependency.parse(jarOrPomFilePath.getName());
@@ -305,7 +305,8 @@ public class DefaultComponentResolver implements ComponentResolver {
                 if (!comp.isAggregating()) {
                     File jarFile = digJarFilePath(jarOrPomFilePath);
                     if (jarFile != null) {
-                        ComponentJarResource jarResource = new ComponentJarResource(jarFile);
+                        ComponentJarResource jarResource = new ComponentJarResource(dependency.getGroupId(),
+                                                                                    dependency.getArtifactId(), jarFile);
                         comp.setResource(jarResource);
                     } else {
                         logger.warn("Can't find jar file for {}", comp);
@@ -320,7 +321,8 @@ public class DefaultComponentResolver implements ComponentResolver {
                 } catch (IOException ex) {/**/}
             }
         } else {
-            ComponentJarResource jarResource = new ComponentJarResource(jarOrPomFilePath);
+            ComponentJarResource jarResource = new ComponentJarResource(dependency.getGroupId(),
+                                                                        dependency.getArtifactId(), jarOrPomFilePath);
             try {
                 stream = jarResource.getPomStream();
                 comp = (DefaultComponent) resolveComponent(dependency, stream);

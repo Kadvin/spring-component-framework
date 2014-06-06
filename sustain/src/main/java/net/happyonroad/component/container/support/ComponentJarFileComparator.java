@@ -25,12 +25,12 @@ class ComponentJarFileComparator implements Comparator<File> {
         try {
             comp1 = repository.resolveComponent(jar1.getName());
         } catch (Exception e) {
-            throw new RuntimeException("Can't resolve " + jar1.getPath() );
+            throw new RuntimeException("Can't resolve " + jar1.getPath(), e );
         }
         try {
             comp2 = repository.resolveComponent(jar2.getName());
         } catch (Exception e) {
-            throw new RuntimeException("Can't resolve " + jar2.getPath() );
+            throw new RuntimeException("Can't resolve " + jar2.getPath(), e );
         }
 
         return repository.compare(comp1, comp2);

@@ -25,7 +25,8 @@ import java.util.jar.Manifest;
 public class ComponentFolderResource extends ComponentResource {
     protected File folder;
 
-    public ComponentFolderResource(String folder) {
+    public ComponentFolderResource(String groupId, String artifactId, String folder) {
+        super(groupId, artifactId);
         if( folder == null ){
             throw new IllegalArgumentException("The component folder can't be null");
         }

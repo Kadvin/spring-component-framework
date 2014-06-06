@@ -187,6 +187,12 @@ public interface Component extends Comparable<Component>, Versionize {
     boolean isAggregating();
 
     /**
+     * 判断是否是当前项目的应用程序，而非第三方包
+     * @return 非第三方包
+     */
+    boolean isApplication();
+
+    /**
      * 获取jar文件的Manifest属性
      *
      * @param attributeName 属性名称

@@ -59,7 +59,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
 
     /**
      * 测试目的：
-     * 测试加载一个应用组件
+     *   测试加载一个应用组件，且该组件的打包形态与普通lib一样，分为 pom.xml + pom.properties
      * <p>验证方式：
      * <ul>
      * <li>应用组件被标记为已加载

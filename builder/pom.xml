@@ -18,7 +18,7 @@
         <connection>Scm:git:git@github.com:Kadvin/spring-component-builder.git</connection>
         <developerConnection>scm:git:git@github.com:Kadvin/spring-component-builder.git</developerConnection>
         <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <properties>
         <mavenVersion>3.1.1</mavenVersion>
@@ -26,6 +26,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>net.happyonroad</groupId>
+            <artifactId>spring-component-framework</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-core</artifactId>
@@ -41,7 +46,7 @@
         <dependency>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
-            <version>2.8</version>
+            <version>${version.maven.dependency}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.maven</groupId>

@@ -27,7 +27,6 @@
      </scm>
 
     <properties>
-        <version.springframework>3.2.8.RELEASE</version.springframework>
         <version.component-framework>${project.parent.version}</version.component-framework>
         <release.root>/opt/releases/spring</release.root>
     </properties>

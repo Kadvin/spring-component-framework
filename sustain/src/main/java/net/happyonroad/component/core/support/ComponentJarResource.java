@@ -24,7 +24,8 @@ public class ComponentJarResource extends ComponentResource {
 
     protected JarFile file;
 
-    public ComponentJarResource(File file) {
+    public ComponentJarResource(String groupId, String artifactId, File file) {
+        super(groupId, artifactId);
         try {
             this.file = new JarFile(file);
             this.manifest = this.file.getManifest();

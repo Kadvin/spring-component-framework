@@ -54,22 +54,34 @@ public class SpringServiceImporter extends SpringServiceProxy {
         if(service != null){
             ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) serviceContext.getAutowireCapableBeanFactory();
             logger.debug("Import {} to {} as {}", this, serviceContext.getDisplayName(), getAs());
-            ProxyFactory proxyFactory = new ProxyFactory();
-            proxyFactory.setTarget(service);
-            proxyFactory.setInterfaces(getRoleClasses());
-            proxyFactory.setOpaque(true);
-            Object proxy;
-            ClassLoader classLoader = service.getClass().getClassLoader();
-            try {
-                proxy = proxyFactory.getProxy(classLoader);
-            } catch (IllegalArgumentException e) {
-                throw new ServiceConfigurationException("Can't create service proxy," +
-                                                        " current class loader is " + classLoader, e);
+            //仅以接口的形式暴露时需要进行proxy
+            if(isInterfaces()){
+                ProxyFactory proxyFactory = new ProxyFactory();
+                proxyFactory.setTarget(service);
+                proxyFactory.setInterfaces(getRoleClasses());
+                proxyFactory.setOpaque(true);
+                Object proxy;
+                ClassLoader classLoader = service.getClass().getClassLoader();
+                try {
+                    proxy = proxyFactory.getProxy(classLoader);
+                } catch (IllegalArgumentException e) {
+                    throw new ServiceConfigurationException("Can't create service proxy," +
+                                                            " current class loader is " + classLoader, e);
+                }
+                cbf.registerSingleton(getAs(), proxy);
+            }else{
+                cbf.registerSingleton(getAs(), service);
             }
-            cbf.registerSingleton(getAs(), proxy);
         }else{
             throw new ServiceNotFoundException(this);
         }
+    }
+
+    private boolean isInterfaces() {
+        for (Class roleClass : getRoleClasses()) {
+            if( !roleClass.isInterface() ) return  false;
+        }
+        return true;
     }
 
     /**
