@@ -66,7 +66,7 @@ public abstract class AbstractServiceConfig {
      */
     protected final void importService(Class[] serviceInterfaces, String... hintAndAs){
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(SpringServiceImporter.class);
-        builder.addPropertyValue("roleClass", serviceInterfaces);
+        builder.addPropertyValue("roleClasses", serviceInterfaces);
         if( hintAndAs.length > 0 ) builder.addPropertyValue("hint", hintAndAs[0]);
         if( hintAndAs.length > 1 ) builder.addPropertyValue("as", hintAndAs[1]);
         importServices.add(builder.getBeanDefinition());

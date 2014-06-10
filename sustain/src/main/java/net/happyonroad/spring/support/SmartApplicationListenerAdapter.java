@@ -13,6 +13,7 @@ import org.springframework.util.Assert;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 
 /**
  * 能够根据事件的source类型进行过滤的 application listener 适配器
@@ -64,7 +65,13 @@ public class SmartApplicationListenerAdapter implements SmartApplicationListener
                 Class modelClass;
                 if( modelType instanceof ParameterizedType){
                     modelClass = (Class)((ParameterizedType) modelType).getRawType();
-                }else{
+                }else if (modelType instanceof WildcardType){
+                    WildcardType wildType = (WildcardType) modelType;
+                    Type bound = wildType.getLowerBounds().length > 0 ?
+                                 wildType.getLowerBounds()[0] :
+                                 wildType.getUpperBounds()[0];
+                    modelClass = (Class) bound;
+                }else {
                     modelClass = (Class) modelType;
                 }
                 return modelClass.isAssignableFrom(sourceType);

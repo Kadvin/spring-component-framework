@@ -15,7 +15,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.InputStreamResource;
@@ -49,7 +48,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     public void resolve(Component component) throws IOException {
         logger.debug("Resolving {} {} feature", component, getName());
         ClassRealm realm = resolveContext.getClassRealm(component.getId());
-        ApplicationContext parent = resolveContext.getServiceFeature(component);
+        AbstractApplicationContext parent = (AbstractApplicationContext) resolveContext.getServiceFeature(component);
         if (parent == null)
             parent = combineDependedApplicationAsParentContext(component);
         AbstractApplicationContext context;
@@ -92,7 +91,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
      */
     protected AbstractApplicationContext resolveByXml(Component component,
                                                       ClassRealm realm,
-                                                      ApplicationContext parent) {
+                                                      AbstractApplicationContext parent) {
         InputStream applicationStream = null;
         try {
             applicationStream = component.getResource().getApplicationStream();
@@ -120,7 +119,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
      */
     protected AbstractApplicationContext resolveByConfig(Component component,
                                                          ClassRealm realm,
-                                                         ApplicationContext parent) {
+                                                         AbstractApplicationContext parent) {
         String appConfig = component.getResource().getManifest().getMainAttributes().getValue(APP_CONFIG);
         Class appConfigClass;
         try {

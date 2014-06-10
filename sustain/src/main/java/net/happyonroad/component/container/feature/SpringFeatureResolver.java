@@ -22,7 +22,7 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
 
     protected AbstractApplicationContext combineDependedApplicationAsParentContext(Component component) {
         // 将所有该组件依赖的组件生成的context组合起来，作为parent context，以便直接获取相关设置
-        Set<ApplicationContext> dependedContexts = new LinkedHashSet<ApplicationContext>();
+        Set<AbstractApplicationContext> dependedContexts = new LinkedHashSet<AbstractApplicationContext>();
         List<ResourceBundleMessageSource> sources = new LinkedList<ResourceBundleMessageSource>();
         digDependedApplicationContext(component, dependedContexts, sources);
         if (dependedContexts.isEmpty())
@@ -37,11 +37,11 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
 
 
     protected void digDependedApplicationContext(Component component,
-                                                 Set<ApplicationContext> dependedContexts,
+                                                 Set<AbstractApplicationContext> dependedContexts,
                                                  List<ResourceBundleMessageSource> sources) {
         Object loaded = resolveContext.getFeature(component, Features.APPLICATION_FEATURE);
         if (loaded != null && loaded instanceof ApplicationContext) {
-            ApplicationContext componentContext = (ApplicationContext) loaded;
+            AbstractApplicationContext componentContext = (AbstractApplicationContext) loaded;
             dependedContexts.add(componentContext);
             try {
                 ResourceBundleMessageSource source = componentContext.getBean(ResourceBundleMessageSource.class);
@@ -71,11 +71,11 @@ public abstract class SpringFeatureResolver extends AbstractFeatureResolver {
     protected void registerServiceHelpers(AbstractApplicationContext context) {
         ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) context.getAutowireCapableBeanFactory();
         //将全局的注册表也注册进去
-        cbf.registerSingleton("serviceRegistry", resolveContext.getRegistry());
+        cbf.registerSingleton("springServiceRegistry", resolveContext.getRegistry());
         //将Component Loader也注册进去
-        cbf.registerSingleton("componentLoader", resolveContext.getComponentLoader());
+        cbf.registerSingleton("springComponentLoader", resolveContext.getComponentLoader());
         //将Component Repository也注册进去
-        cbf.registerSingleton("componentRepository", resolveContext.getComponentRepository());
+        cbf.registerSingleton("springComponentRepository", resolveContext.getComponentRepository());
     }
 
     @Override
