@@ -44,8 +44,10 @@ class ContextUtils {
                 configurers.add((PropertyResourceConfigurer) postProcessor);
             }
         }
+        List<BeanFactoryPostProcessor> existProcessors = context.getBeanFactoryPostProcessors();
         for (PropertyResourceConfigurer configurer : configurers) {
-            context.addBeanFactoryPostProcessor(configurer);
+            if( !existProcessors.contains(configurer) )
+                context.addBeanFactoryPostProcessor(configurer);
         }
     }
 
