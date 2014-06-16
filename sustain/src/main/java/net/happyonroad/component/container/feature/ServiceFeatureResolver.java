@@ -59,6 +59,8 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
             serviceContext = resolveByXml(component, realm, parentContext);
         }
         registerServiceHelpers(serviceContext);
+        String env = System.getProperty("spring.env", "production");
+        serviceContext.getEnvironment().setActiveProfiles(env);
         serviceContext.refresh();
         // 父上下文Start之后，应该为子下文准备好所有要import的对象
         // 所以，父上下文的 service package对象，应该在start事件内将所有import的bean导入过来

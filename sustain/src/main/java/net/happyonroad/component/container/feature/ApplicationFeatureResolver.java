@@ -59,6 +59,8 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         }
         //registerApplicationHelpers(component, context, realm);
         registerServiceHelpers(context);
+        String env = System.getProperty("spring.env", "production");
+        context.getEnvironment().setActiveProfiles(env);
         context.refresh();
         //在根据配置的情况下，根据 manifest里面的App-Message加载资源
         //在根据XML配置的时候，由xml文件全权负责
