@@ -59,6 +59,7 @@
             <id>Kadvin</id>
             <name>Jay Xiong</name>
             <email>kadvin@gmail.com</email>
+            <url>http://github.com/Kadvin</url>
         </developer>
     </developers>
 
@@ -79,8 +80,7 @@
                             <rules>
                                 <requireMavenVersion>
                                     <version>(,2.1.0),(2.1.0,2.2.0),(2.2.0,)</version>
-                                    <message>Maven 2.1.0 and 2.2.0 produce incorrect GPG signatures and checksums
-                                        respectively.
+                                    <message>Maven 2.1.0 and 2.2.0 produce incorrect GPG signatures and check sums.
                                     </message>
                                 </requireMavenVersion>
                             </rules>

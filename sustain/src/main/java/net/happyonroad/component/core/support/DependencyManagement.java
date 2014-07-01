@@ -19,4 +19,23 @@ public class DependencyManagement {
             dependencies = new ArrayList<Dependency>();
         return dependencies;
     }
+
+    public void merge(DependencyManagement another) {
+        if( another == null || another.dependencies == null ) return;
+        getDependencies().addAll(another.getDependencies());
+    }
+
+    public void unmerge(DependencyManagement another) {
+        if( another == null || another.dependencies == null ) return;
+        getDependencies().removeAll(another.getDependencies());
+    }
+
+    public void qualify(Dependency dependency) {
+        if( dependencies == null ) return;
+        for (Dependency qualified : dependencies) {
+            if( qualified.accept(dependency)){
+                dependency.setExclusions(qualified.getExclusions()); return;
+            }
+        }
+    }
 }

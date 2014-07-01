@@ -280,6 +280,16 @@ public class DependencyTest extends TestCase {
         Assert.assertEquals( "jar",dependency.getType());
     }
 
+    public void testParseSpecialVersion() throws Exception{
+        Dependency dependency = Dependency.parse("org.fusesource.scalate.scalate-util-1.5.3-scala_2.8.2.jar");
+        Assert.assertEquals( "org.fusesource.scalate",dependency.getGroupId());
+        Assert.assertEquals( "scalate-util",dependency.getArtifactId());
+        Assert.assertEquals( "1.5.3",dependency.getVersion());
+        Assert.assertEquals( "scala_2.8.2",dependency.getClassifier());
+        Assert.assertEquals( "jar",dependency.getType());
+    }
+
+
 }
 
 

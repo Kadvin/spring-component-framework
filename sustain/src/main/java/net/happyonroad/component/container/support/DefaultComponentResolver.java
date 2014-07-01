@@ -22,13 +22,16 @@ import java.util.List;
 public class DefaultComponentResolver implements ComponentResolver {
     protected XStream                    xmlResolver;
     protected MutableComponentRepository repository;
-    private Logger logger = LoggerFactory.getLogger(DefaultComponentResolver.class.getName());
+    private Logger                            logger               =
+            LoggerFactory.getLogger(DefaultComponentResolver.class.getName());
+    final   ThreadLocal<DependencyManagement> dependencyManagement = new ThreadLocal<DependencyManagement>();
 
     public DefaultComponentResolver(MutableComponentRepository repository) {
         if (repository == null) {
             throw new NullPointerException("The repository can't be null");
         }
         this.repository = repository;
+        dependencyManagement.set(new DependencyManagement());
         customizeXstream();
     }
 
@@ -87,9 +90,12 @@ public class DefaultComponentResolver implements ComponentResolver {
             //把各个解析出来的组件存储到仓库中，因为在解析 sub module时，其reference parent时会需要
             repository.addComponent(component);
             //解析Parent信息
-            processParent(dependency, component, parent);
+            parent = processParent(dependency, component, parent);
             //解析组件的基本动态属性，放在parent解析之后，这样可以获取到parent的属性
             component.interpolate();
+
+            getDependencyManagement().merge(component.getDependencyManagement());
+            if(parent != null ) getDependencyManagement().merge(parent.getDependencyManagement());
             //验证依赖信息
             processDependencies(dependency, component);
             //这个策略貌似不对，解析了父模块，难道一定要解析子模块？没这个道理
@@ -108,16 +114,25 @@ public class DefaultComponentResolver implements ComponentResolver {
             //此时，该组件就是一个垃圾，应该被删除
             repository.removeComponent(component);
             throw e;
+        } finally {
+            getDependencyManagement().unmerge(component.getDependencyManagement());
+            if(parent != null ) getDependencyManagement().unmerge(parent.getDependencyManagement());
         }
 
         logger.debug("Resolved  {} from input stream", component);
         return component;
     }
 
-    protected void processParent(Dependency childDependency, DefaultComponent component, Component parent)
+    protected DependencyManagement getDependencyManagement() {
+        return dependencyManagement.get();
+    }
+
+    protected DefaultComponent processParent(Dependency childDependency,
+                                             DefaultComponent component,
+                                             DefaultComponent parent)
             throws InvalidComponentNameException, DependencyNotMeetException {
         if (parent == null)
-            return;
+            return null;
         //指向parent的version可能包括动态变量，但此时还没有完全解析，所以对parent version进行单独解析
         String parentVersion = parent.getVersion();
         parentVersion = component.interpolate(parentVersion);
@@ -135,6 +150,7 @@ public class DefaultComponentResolver implements ComponentResolver {
             component.setParent(existParent);
             mergeDependencies(existParent, component);
             logger.trace("Attaching {} as parent of {}", existParent, component);
+            return (DefaultComponent) existParent;
         } catch (DependencyNotMeetException e) {
             //这个依赖不满足的情况，可能是其他试错产生的，只有是对应parent依赖不满足才 on-demand的将这个临时parent加入仓库
             if (dependency.accept(e.getDependency())) {
@@ -146,6 +162,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                 throw new DependencyNotMeetException(component, dependency, e);
             }
         }
+        return parent;
     }
 
     protected void mergeDependencies(Component parent, DefaultComponent component) {
@@ -187,6 +204,7 @@ public class DefaultComponentResolver implements ComponentResolver {
         List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
         for (Dependency depended : dependencies) {
             depended.reform();//move the artifactId prefix with dot into group Id
+            getDependencyManagement().qualify(depended);
             if (dependency.exclude(depended)) {
                 logger.trace("Skip excluded {}", depended);
                 continue;

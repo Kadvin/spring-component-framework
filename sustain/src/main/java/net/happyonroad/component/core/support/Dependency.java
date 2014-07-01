@@ -9,7 +9,7 @@ import net.happyonroad.component.core.Versionize;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.exception.InvalidVersionSpecificationException;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -136,6 +136,12 @@ public class Dependency implements Versionize{
                     this.version = range.getRecommendedVersion().toString();
                 }
             }else{
+                if( version.contains("-") ){
+                    String[] vac = version.split("-");
+                    this.version = vac[0];
+                    this.classifier = vac[1];
+                    return;
+                }
                 String[] versionAndClassifier = splitClassifierFromVersion(version, new StringBuilder());
                 this.version = versionAndClassifier[0];
                 this.setClassifier(versionAndClassifier[1]);
@@ -227,13 +233,14 @@ public class Dependency implements Versionize{
             try {
                 String groupId = result.group(1);
                 String artifactId = result.group(2);
-                String versionAndClassifier = result.group(3);
+                String version = result.group(3);
                 dependency.setGroupId(groupId);
                 dependency.setArtifactId(artifactId);
-                String[] split = versionAndClassifier.split("-");
-                dependency.setVersion(split[0]);
-                if( split.length > 1)
-                    dependency.setClassifier(split[1]);
+                dependency.setVersion(version);
+                if( result.groupCount() > 3){
+                    String classifier = result.group(4);
+                    dependency.setClassifier(classifier);
+                }
             } catch (Exception e) {
                 InvalidComponentNameException error = new InvalidComponentNameException(path);
                 error.initCause(e);
@@ -372,10 +379,12 @@ public class Dependency implements Versionize{
             accept = range.containsVersion(new ComponentVersion(componentOrDependency.getVersion()));
             if (!accept) return false;
         }
+/*
         if( getClassifier() != null ){
             accept = getClassifier().equals(componentOrDependency.getClassifier());
             if (!accept) return false;
         }
+*/
 /*
         if( getType() != null ){
             accept = getType().equals(componentOrDependency.getType());

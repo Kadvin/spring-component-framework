@@ -43,7 +43,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     @Parameter
     private File       logbackFile;
     @Parameter
-    private File[]     folders;
+    private String     folders;
     //Debug port
     @Parameter
     private int        debug;
@@ -96,12 +96,13 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                                                  relativePath + " in " + output.getPath());
             }
         }
-        if(folders != null){
-            for (File folder : folders) {
+        if(StringUtils.isNotBlank(folders)){
+            for (String path : StringUtils.split(folders,",")) {
                 try {
-                    FileUtils.copyDirectory(folder, new File(output, folder.getName()));
+                    File folder = new File(path);
+                    FileUtils.copyDirectoryStructure(folder, new File(output, folder.getName()));
                 } catch (IOException e) {
-                    getLog().error("Can't copy user specified folder: " + folder + " because of:" + e.getMessage());
+                    getLog().error("Can't copy user specified folder: " + path + " because of:" + e.getMessage());
                 }
             }
         }

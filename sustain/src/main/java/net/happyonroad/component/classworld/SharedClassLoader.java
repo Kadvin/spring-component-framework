@@ -10,7 +10,8 @@ import java.util.Set;
 
 /** 共享的第三方类加载器 */
 class SharedClassLoader extends URLClassLoader{
-    private final Set<URL> allUrls;
+    final Set<URL> allUrls;
+
     public SharedClassLoader() {
         super(new URL[0]);
         allUrls = new HashSet<URL>();

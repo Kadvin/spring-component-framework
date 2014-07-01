@@ -75,4 +75,8 @@ public class ClassLoaderRepresentation extends ClassLoader {
         }
         return Collections.enumeration(urls);
     }
+
+    public static Set<URL> getThirdpartURLs() {
+        return sharedClassLoader.allUrls;
+    }
 }

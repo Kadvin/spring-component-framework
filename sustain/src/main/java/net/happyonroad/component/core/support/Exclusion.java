@@ -33,4 +33,9 @@ public class Exclusion {
         return getGroupId().equals(componentOrDependency.getGroupId()) &&
                 getArtifactId().equals(componentOrDependency.getArtifactId());
     }
+
+    @Override
+    public String toString() {
+        return groupId + "-" + artifactId;
+    }
 }

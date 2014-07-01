@@ -593,6 +593,14 @@ public class DefaultComponent implements Component, SelfNaming {
 
 
     public void splitVersionAndClassifier() {
+        if( version.contains("-") ){
+            String[] vac = this.version.split("-");
+            if(!vac[1].contains("SNAPSHOT")){
+                this.version = vac[0];
+                this.classifier = vac[1];
+                return;
+            }
+        }
         String[] versionAndClassifier = Dependency.splitClassifierFromVersion(version, new StringBuilder());
         this.version = versionAndClassifier[0];
         if (versionAndClassifier[1].length() > 0) setClassifier(versionAndClassifier[1]);
@@ -635,7 +643,7 @@ public class DefaultComponent implements Component, SelfNaming {
                     throw new InvalidComponentException(this.groupId, this.artifactId, this.version, this.type,
                                                         "Can't interpolate variable [" + variable + "]");
                 else {
-                    logger.warn("Can't interpolate variable [" + variable + "] for " + this);
+                    logger.warn("Can't interpolate variable ${" + variable + "} for " + this);
                     continue;
                 }
             }
