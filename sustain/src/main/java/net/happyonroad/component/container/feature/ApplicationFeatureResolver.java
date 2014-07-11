@@ -79,9 +79,9 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
                 bundle.setBasenames(StringUtils.split(appMessage,","));
             }
         }
+        ((DefaultComponent)component).setApplication(context);
         context.start();
         resolveContext.registerFeature(component, getName(), context);
-        ((DefaultComponent)component).setApplication(context);
     }
 
     /**

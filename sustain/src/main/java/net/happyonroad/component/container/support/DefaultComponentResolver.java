@@ -17,21 +17,22 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /** 解析pom xml的缺省实现对象 */
 public class DefaultComponentResolver implements ComponentResolver {
     protected XStream                    xmlResolver;
     protected MutableComponentRepository repository;
-    private Logger                            logger               =
+    private Logger                      logger               =
             LoggerFactory.getLogger(DefaultComponentResolver.class.getName());
-    final   ThreadLocal<DependencyManagement> dependencyManagement = new ThreadLocal<DependencyManagement>();
+    //应该用一个DM的merge/unmerge，但是现在这么做会失败，需要debug
+    private Stack<DependencyManagement> dependencyManagements = new Stack<DependencyManagement>();
 
     public DefaultComponentResolver(MutableComponentRepository repository) {
         if (repository == null) {
             throw new NullPointerException("The repository can't be null");
         }
         this.repository = repository;
-        dependencyManagement.set(new DependencyManagement());
         customizeXstream();
     }
 
@@ -93,11 +94,16 @@ public class DefaultComponentResolver implements ComponentResolver {
             parent = processParent(dependency, component, parent);
             //解析组件的基本动态属性，放在parent解析之后，这样可以获取到parent的属性
             component.interpolate();
+            if( parent != null )
+              component.getDependencyManagement().merge(parent.getDependencyManagement());
 
-            getDependencyManagement().merge(component.getDependencyManagement());
-            if(parent != null ) getDependencyManagement().merge(parent.getDependencyManagement());
             //验证依赖信息
-            processDependencies(dependency, component);
+            dependencyManagements.push(component.getDependencyManagement());
+            try {
+                processDependencies(dependency, component);
+            } finally {
+                dependencyManagements.pop();
+            }
             //这个策略貌似不对，解析了父模块，难道一定要解析子模块？没这个道理
             // 以后如果有使用者有需要，则可以把这个功能开放到仓库接口上，变成一个高级功能，让调用者主动调用
             //解析子模块信息
@@ -114,17 +120,10 @@ public class DefaultComponentResolver implements ComponentResolver {
             //此时，该组件就是一个垃圾，应该被删除
             repository.removeComponent(component);
             throw e;
-        } finally {
-            getDependencyManagement().unmerge(component.getDependencyManagement());
-            if(parent != null ) getDependencyManagement().unmerge(parent.getDependencyManagement());
         }
 
         logger.debug("Resolved  {} from input stream", component);
         return component;
-    }
-
-    protected DependencyManagement getDependencyManagement() {
-        return dependencyManagement.get();
     }
 
     protected DefaultComponent processParent(Dependency childDependency,
@@ -198,13 +197,12 @@ public class DefaultComponentResolver implements ComponentResolver {
     protected void processDependencies(Dependency dependency, DefaultComponent component)
             throws InvalidComponentNameException, DependencyNotMeetException {
         if (component.getDependencies().isEmpty()) return;
-
         //验证依赖信息
         List<Dependency> dependencies = component.getDependencies();
         List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
         for (Dependency depended : dependencies) {
             depended.reform();//move the artifactId prefix with dot into group Id
-            getDependencyManagement().qualify(depended);
+            qualify(depended);
             if (dependency.exclude(depended)) {
                 logger.trace("Skip excluded {}", depended);
                 continue;
@@ -231,6 +229,13 @@ public class DefaultComponentResolver implements ComponentResolver {
         }
         component.setDependedComponents(dependedComponents);
     }
+
+    private void qualify(Dependency depended) {
+        for (DependencyManagement dm : dependencyManagements) {
+            dm.qualify(depended);
+        }
+    }
+
 
     @SuppressWarnings("unused")
     protected void processModules(DefaultComponent component)
