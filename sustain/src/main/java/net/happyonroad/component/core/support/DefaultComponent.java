@@ -74,6 +74,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     private Properties         properties;
     private ClassLoader        classLoader;
+    private ApplicationContext serviceApplication;
     private ApplicationContext application;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
@@ -730,6 +731,14 @@ public class DefaultComponent implements Component, SelfNaming {
 
     public void setApplication(ApplicationContext application) {
         this.application = application;
+    }
+
+    public ApplicationContext getServiceApplication() {
+        return serviceApplication;
+    }
+
+    public void setServiceApplication(ApplicationContext serviceApplication) {
+        this.serviceApplication = serviceApplication;
     }
 }
 

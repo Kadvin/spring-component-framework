@@ -230,6 +230,7 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * 判断一个组件是不是依赖于另外一个组件
+     *
      * @param another 另外一个组件
      * @return 是否依赖
      */
@@ -243,7 +244,15 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * 如果是应用组件，返回相应的Application上下文，如果不是，返回null
+     *
      * @return Application Context
      */
     ApplicationContext getApplication();
+
+    /**
+     * 如果是服务组件，返回相应的服务上下文，如果不是返回null
+     *
+     * @return 服务上下文
+     */
+    ApplicationContext getServiceApplication();
 }

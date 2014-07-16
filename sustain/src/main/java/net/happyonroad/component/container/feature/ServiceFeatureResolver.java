@@ -7,6 +7,7 @@ import net.happyonroad.component.container.support.ComponentInputStreamResource;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.Features;
+import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.spring.context.GenericServiceApplicationContext;
 import net.happyonroad.spring.context.XmlServiceApplicationContext;
 import net.happyonroad.spring.event.ContextStoppingEvent;
@@ -62,6 +63,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
         String env = System.getProperty("spring.env", "production");
         serviceContext.getEnvironment().setActiveProfiles(env);
         serviceContext.refresh();
+        ((DefaultComponent)component).setServiceApplication(serviceContext);
         // 父上下文Start之后，应该为子下文准备好所有要import的对象
         // 所以，父上下文的 service package对象，应该在start事件内将所有import的bean导入过来
         serviceContext.start();
