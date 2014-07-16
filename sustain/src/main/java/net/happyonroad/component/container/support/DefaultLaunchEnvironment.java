@@ -19,6 +19,7 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.util.LogUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
@@ -55,6 +56,9 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             System.setProperty("app.home", home);
             logger.debug("app.home is not set, use user.dir as app.home: {}", home);
         }
+        home = FilenameUtils.normalize(System.getProperty("app.home"));
+        System.setProperty("app.home", home);
+
         String appHost = System.getProperty("app.host");
         if (!StringUtils.hasText(appHost)) {
             appHost = "localhost";
