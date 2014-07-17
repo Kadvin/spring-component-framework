@@ -19,8 +19,10 @@ public class ShutdownHook extends Thread {
     @Override
     public void run() {
         try {
-            logger.info("Try to shutdown gracefully");
-            main.exit();
+            if( !main.exiting() ){
+                logger.info("Try to shutdown gracefully");
+                main.exit();
+            }
         } catch (Exception ex) {
             logger.warn("Can't stop gracefully while detect the app is shutting down: " + ex.getMessage());
         }

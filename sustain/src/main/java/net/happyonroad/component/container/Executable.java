@@ -11,4 +11,6 @@ public interface Executable {
     void exit();
 
     void reload();
+
+    boolean exiting();
 }

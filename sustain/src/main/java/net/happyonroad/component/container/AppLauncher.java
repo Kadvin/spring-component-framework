@@ -137,6 +137,11 @@ public class AppLauncher extends Launcher implements Executable {
         }
     }
 
+    @Override
+    public boolean exiting() {
+        return exiting;
+    }
+
     /*重新加载*/
     public void reload() {
 

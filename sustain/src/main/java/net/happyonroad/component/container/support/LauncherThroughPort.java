@@ -47,6 +47,11 @@ public class LauncherThroughPort implements Executable {
     }
 
     @Override
+    public boolean exiting() {
+        return remote.exiting();
+    }
+
+    @Override
     public void reload() {
         remote.reload();
     }
