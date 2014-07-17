@@ -504,4 +504,13 @@ public class Dependency implements Versionize{
         }
         return null;
     }
+
+    public boolean hasExclusions() {
+        return exclusions != null && !exclusions.isEmpty();
+    }
+
+    public void exclude(List<Exclusion> exclusions) {
+        if( this.exclusions == null ) this.exclusions = new ArrayList<Exclusion>();
+        this.exclusions.addAll(exclusions);
+    }
 }

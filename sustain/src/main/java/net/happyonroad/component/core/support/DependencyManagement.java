@@ -22,12 +22,13 @@ public class DependencyManagement {
 
     public void merge(DependencyManagement another) {
         if( another == null || another.dependencies == null ) return;
-        getDependencies().addAll(another.getDependencies());
+        dependencies.addAll(another.getDependencies());
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void unmerge(DependencyManagement another) {
         if( another == null || another.dependencies == null ) return;
-        getDependencies().removeAll(another.getDependencies());
+        dependencies.removeAll(another.getDependencies());
     }
 
     public void qualify(Dependency dependency) {
@@ -37,5 +38,9 @@ public class DependencyManagement {
                 dependency.setExclusions(qualified.getExclusions()); return;
             }
         }
+    }
+
+    public boolean isEmpty() {
+        return dependencies == null || dependencies.isEmpty();
     }
 }

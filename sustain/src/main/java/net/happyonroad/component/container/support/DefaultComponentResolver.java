@@ -90,15 +90,28 @@ public class DefaultComponentResolver implements ComponentResolver {
             component.validate();
             //把各个解析出来的组件存储到仓库中，因为在解析 sub module时，其reference parent时会需要
             repository.addComponent(component);
+            //处理 dependency management scope = import的dependency（需要merge)
+            DependencyManagement dm = component.getDependencyManagement();
+            if( !dm.isEmpty() ){
+                //TO avoid concurrent modifications
+                List<Dependency> dependencies = new ArrayList<Dependency>(dm.getDependencies());
+                for(Dependency d : dependencies){
+                    d.interpolate(component);
+                    if( "import".equalsIgnoreCase(d.getScope())){
+                        Component importing = repository.resolveComponent(d);
+                        dm.merge(importing.getDependencyManagement());
+                    }
+                }
+            }
             //解析Parent信息
             parent = processParent(dependency, component, parent);
             //解析组件的基本动态属性，放在parent解析之后，这样可以获取到parent的属性
             component.interpolate();
             if( parent != null )
-              component.getDependencyManagement().merge(parent.getDependencyManagement());
+                dm.merge(parent.getDependencyManagement());
 
             //验证依赖信息
-            dependencyManagements.push(component.getDependencyManagement());
+            dependencyManagements.push(dm);
             try {
                 processDependencies(dependency, component);
             } finally {
@@ -202,11 +215,16 @@ public class DefaultComponentResolver implements ComponentResolver {
         List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
         for (Dependency depended : dependencies) {
             depended.reform();//move the artifactId prefix with dot into group Id
-            qualify(depended);
             if (dependency.exclude(depended)) {
                 logger.trace("Skip excluded {}", depended);
                 continue;
             }
+            //继承depended的依赖排除
+            if(dependency.hasExclusions()){
+                depended.exclude(dependency.getExclusions());
+            }
+            //继承组件的依赖排除
+            qualify(depended);
             if (!depended.isTest()) {//只要不是Test的，就都尝试解析
                 try {
                     Component dependedComponent = repository.resolveComponent(depended);
