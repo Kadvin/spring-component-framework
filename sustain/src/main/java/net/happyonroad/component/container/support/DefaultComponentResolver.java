@@ -15,9 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /** 解析pom xml的缺省实现对象 */
 public class DefaultComponentResolver implements ComponentResolver {
@@ -94,7 +92,7 @@ public class DefaultComponentResolver implements ComponentResolver {
             DependencyManagement dm = component.getDependencyManagement();
             if( !dm.isEmpty() ){
                 //TO avoid concurrent modifications
-                List<Dependency> dependencies = new ArrayList<Dependency>(dm.getDependencies());
+                Set<Dependency> dependencies = new HashSet<Dependency>(dm.getDependencies());
                 for(Dependency d : dependencies){
                     d.interpolate(component);
                     if( "import".equalsIgnoreCase(d.getScope())){

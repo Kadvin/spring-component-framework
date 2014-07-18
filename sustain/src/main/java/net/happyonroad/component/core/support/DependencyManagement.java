@@ -3,25 +3,25 @@
  */
 package net.happyonroad.component.core.support;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 中间对象，是在我没有很好的XStream转换技巧情况下的过渡方案
  */
 public class DependencyManagement {
     // Will be set by xstream
-    List<Dependency> dependencies;
+    Set<Dependency> dependencies;
 
 
-    public List<Dependency> getDependencies() {
-        if(dependencies == null )
-            dependencies = new ArrayList<Dependency>();
+    public Set<Dependency> getDependencies() {
+        if (dependencies == null)
+            dependencies = new HashSet<Dependency>();
         return dependencies;
     }
 
     public void merge(DependencyManagement another) {
-        if( another == null || another.dependencies == null ) return;
+        if (another == null || another.dependencies == null ) return;
         dependencies.addAll(another.getDependencies());
     }
 
@@ -35,7 +35,7 @@ public class DependencyManagement {
         if( dependencies == null ) return;
         for (Dependency qualified : dependencies) {
             if( qualified.accept(dependency)){
-                dependency.setExclusions(qualified.getExclusions()); return;
+                dependency.exclude(qualified.getExclusions()); return;
             }
         }
     }

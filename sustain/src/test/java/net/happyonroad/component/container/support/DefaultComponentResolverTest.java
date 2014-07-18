@@ -199,7 +199,7 @@ public class DefaultComponentResolverTest extends TestCase {
 
             //验证依赖的排除信息
             assertEquals(1, dependency.getExclusions().size());
-            Exclusion exclusion = dependency.getExclusions().get(0);
+            Exclusion exclusion = dependency.getExclusions().iterator().next();
             assertEquals("org.apache", exclusion.getGroupId());
             assertEquals("log4j", exclusion.getArtifactId());
         } finally {

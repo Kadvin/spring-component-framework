@@ -61,7 +61,7 @@ public class Dependency implements Versionize{
     private String scope;//See Component.SCOPE_XXX
 
     private Boolean         optional;
-    private List<Exclusion> exclusions;
+    private Set<Exclusion> exclusions;
 
     public Dependency() {
     }
@@ -182,11 +182,11 @@ public class Dependency implements Versionize{
         return Component.SCOPE_COMPILE.equalsIgnoreCase(getScope()) || getScope() == null;
     }
 
-    public List<Exclusion> getExclusions() {
+    public Set<Exclusion> getExclusions() {
         return exclusions;
     }
 
-    public void setExclusions(List<Exclusion> exclusions) {
+    public void setExclusions(Set<Exclusion> exclusions) {
         this.exclusions = exclusions;
     }
 
@@ -509,8 +509,9 @@ public class Dependency implements Versionize{
         return exclusions != null && !exclusions.isEmpty();
     }
 
-    public void exclude(List<Exclusion> exclusions) {
-        if( this.exclusions == null ) this.exclusions = new ArrayList<Exclusion>();
+    public void exclude(Collection<Exclusion> exclusions) {
+        if( exclusions == null ) return;
+        if( this.exclusions == null ) this.exclusions = new HashSet<Exclusion>();
         this.exclusions.addAll(exclusions);
     }
 }
