@@ -24,7 +24,9 @@ import java.util.*;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-/** The spring component packaging */
+/**
+ * 打包一个基于Spring Component 框架的项目
+ */
 @SuppressWarnings("UnusedDeclaration")
 @Mojo(name = "package", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class SpringComponentPackaging extends CopyDependenciesMojo {

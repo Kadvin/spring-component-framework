@@ -63,6 +63,10 @@
         </developer>
     </developers>
 
+    <modules>
+        <module>sustain</module>
+        <module>builder</module>
+    </modules>
 
     <build>
         <plugins>
@@ -177,11 +181,11 @@
     </build>
 
     <profiles>
+
         <profile>
-            <id>with-children</id>
+            <id>with-framework-example</id>
             <modules>
-                <module>sustain</module>
-                <module>builder</module>
+                <module>example</module>
             </modules>
         </profile>
 
@@ -279,13 +283,6 @@
                     <url>http://nexus.dnt.com.cn/nexus/content/repositories/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
-        </profile>
-
-        <profile>
-            <id>with-example</id>
-            <modules>
-                <module>example</module>
-            </modules>
         </profile>
 
     </profiles>
