@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>0.0.9-SNAPSHOT</version>
+        <version>0.0.9</version>
     </parent>
     <artifactId>caller</artifactId>
     <name>My App Caller</name>
