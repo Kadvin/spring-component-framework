@@ -7,6 +7,7 @@ import org.springframework.context.ApplicationContext;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -255,4 +256,14 @@ public interface Component extends Comparable<Component>, Versionize {
      * @return 服务上下文
      */
     ApplicationContext getServiceApplication();
+
+    /**
+     * 为组件设置额外的缺省manifest属性
+     *
+     * 这些属性会被实际配置的manifest属性覆盖
+     *                 主要用于配置缺省值，减少配置工作量
+     * @param key 额外的缺省属性key
+     * @param value 额外的缺省属性值
+     */
+    void setManifestAttribute(String key, String value);
 }

@@ -33,6 +33,8 @@ class ComponentJarFileComparator implements Comparator<File> {
             throw new RuntimeException("Can't resolve " + jar2.getPath(), e );
         }
 
-        return repository.compare(comp1, comp2);
+        int compare = repository.compare(comp1, comp2);
+        //System.out.printf("\t%s <=> %s = %d\n", comp1.getBriefId(), comp2.getBriefId(), compare);
+        return compare;
     }
 }

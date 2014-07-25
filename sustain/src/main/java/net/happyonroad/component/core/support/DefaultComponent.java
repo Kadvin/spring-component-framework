@@ -72,10 +72,11 @@ public class DefaultComponent implements Component, SelfNaming {
 
     private String name, description, url;
 
-    private Properties         properties;
-    private ClassLoader        classLoader;
-    private ApplicationContext serviceApplication;
-    private ApplicationContext application;
+    private Properties          properties;
+    private ClassLoader         classLoader;
+    private ApplicationContext  serviceApplication;
+    private ApplicationContext  application;
+    private Map<String, String> defaults;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -578,9 +579,20 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public String getManifestAttribute(String attributeName) {
-        if (this.resource == null)
-            return null;
-        return this.resource.getManifest().getMainAttributes().getValue(attributeName);
+        String value = null;
+        if (this.resource != null){
+            value = this.resource.getManifest().getMainAttributes().getValue(attributeName);
+        }
+        if( value == null && defaults != null ){
+            value = defaults.get(attributeName);
+        }
+        return value;
+    }
+
+    @Override
+    public void setManifestAttribute(String key, String value) {
+        if( this.defaults == null ) this.defaults = new HashMap<String, String>();
+        this.defaults.put(key, value);
     }
 
     public void validate() throws InvalidComponentNameException {
