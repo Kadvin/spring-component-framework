@@ -122,7 +122,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     protected AbstractApplicationContext resolveByConfig(Component component,
                                                          ClassRealm realm,
                                                          AbstractApplicationContext parent) {
-        String appConfig = component.getResource().getManifest().getMainAttributes().getValue(APP_CONFIG);
+        String appConfig = component.getManifestAttribute(APP_CONFIG);
         Class appConfigClass;
         try {
             appConfigClass = Class.forName(appConfig, true, component.getClassLoader());
@@ -136,8 +136,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     }
 
     protected boolean byConfig(Component component) {
-        ComponentResource resource = component.getResource();
-        String appConfig = resource.getManifest().getMainAttributes().getValue(APP_CONFIG);
+        String appConfig = component.getManifestAttribute(APP_CONFIG);
         return StringUtils.isNotBlank(appConfig);
     }
 
@@ -147,8 +146,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     }
 
     protected String getAppMessage(Component component){
-        ComponentResource resource = component.getResource();
-        return resource.getManifest().getMainAttributes().getValue(APP_MESSAGE);
+        return component.getManifestAttribute(APP_MESSAGE);
     }
 
 }

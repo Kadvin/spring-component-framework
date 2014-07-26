@@ -110,8 +110,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
     protected AbstractApplicationContext resolveByConfig(Component component,
                                                          ClassRealm realm,
                                                          AbstractApplicationContext parent) {
-        ComponentResource resource = component.getResource();
-        String serviceConfigName = resource.getManifest().getMainAttributes().getValue(SERVICE_CONFIG);
+        String serviceConfigName = component.getManifestAttribute(SERVICE_CONFIG);
         Class<? extends AbstractServiceConfig> serviceConfigClass;
         try {
             //noinspection unchecked
@@ -142,8 +141,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
     }
 
     protected boolean byConfig(Component component) {
-        ComponentResource resource = component.getResource();
-        String serviceConfig = resource.getManifest().getMainAttributes().getValue(SERVICE_CONFIG);
+        String serviceConfig = component.getManifestAttribute(SERVICE_CONFIG);
         return StringUtils.isNotBlank(serviceConfig) ;
     }
 
