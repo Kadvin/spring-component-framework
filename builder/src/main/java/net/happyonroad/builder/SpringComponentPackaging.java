@@ -22,6 +22,8 @@ import org.codehaus.plexus.util.FileUtils;
 import java.io.*;
 import java.util.*;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 /**
@@ -30,6 +32,9 @@ import java.util.zip.ZipEntry;
 @SuppressWarnings("UnusedDeclaration")
 @Mojo(name = "package", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class SpringComponentPackaging extends CopyDependenciesMojo {
+
+    private static final Pattern INTERPOLATE_PTN = Pattern.compile("\\$\\{([^}]+)\\}", Pattern.MULTILINE);
+
     @Parameter
     private File       output;
     @Parameter(defaultValue = "1099")
@@ -102,7 +107,13 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             for (String path : StringUtils.split(folders,",")) {
                 try {
                     File folder = new File(path);
-                    FileUtils.copyDirectoryStructure(folder, new File(output, folder.getName()));
+                    File dest = new File(output, folder.getName());
+                    FileUtils.copyDirectoryStructure(folder, dest);
+                    String[] propertyFiles = FileUtils.getFilesFromExtension(dest.getAbsolutePath(), new String[]{"properties"});
+                    Map<String, Object> projectProperties = getProjectProperties();
+                    for (String propertyFile : propertyFiles) {
+                        changeFile(propertyFile, projectProperties);
+                    }
                 } catch (IOException e) {
                     getLog().error("Can't copy user specified folder: " + path + " because of:" + e.getMessage());
                 }
@@ -147,8 +158,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         File libPath = new File(output, "lib");
         List<File> bootJars;
         try {
-            bootJars = FileUtils.getFiles(libPath,
-                                          "net.happyonroad.spring-component-framework-*.jar", null);
+            bootJars = FileUtils.getFiles(libPath, "net.happyonroad.spring-component-framework-*.jar", null);
         } catch (IOException e) {
             throw new MojoExecutionException("Can't search " + libPath.getPath() +
                                              " for net.happyonroad.spring-component-framework-*.jar");
@@ -248,10 +258,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                                                            "net.happyonroad.spring-component-framework-*.jar",
                                                            null, false);
             String bootJarName = "boot/" + bootJars.get(0);
-            Map<String, Object> replaces = new HashMap<String, Object>();
-            replaces.put("app.id", project.getArtifactId());
-            replaces.put("app.name", replaceSpaces(appName));
-            replaces.put("app.port", appPort);
+            Map<String, Object> replaces = getProjectProperties();
             replaces.put("app.boot", bootJarName);
             replaces.put("app.target", target);
             if(jvmOptions == null) jvmOptions = "";
@@ -293,16 +300,46 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     }
 
+    private Map<String, Object> getProjectProperties() {
+        Map<String, Object> replaces = new HashMap<String, Object>();
+        Properties projectProperties = project.getProperties();
+        for (String property : projectProperties.stringPropertyNames()) {
+            replaces.put(property, projectProperties.getProperty(property));
+        }
+        replaces.put("app.name", replaceSpaces(appName));
+        replaces.put("app.port", appPort);
+        return replaces;
+    }
+
     private Object replaceSpaces(String appName) {
         return appName.replaceAll("\\s", "_");
     }
 
     private void copyFile(File file, Map<String, Object> replaces) throws IOException {
         FileInputStream fis = new FileInputStream(file);
-        List lines = IOUtils.readLines(fis);
-        String content = StringUtils.join(lines, lineSeparator);
-        String interpolated = interpolate(content, replaces);
+        List<String> lines = IOUtils.readLines(fis);
+        String interpolated;
+        if( file.getName().toLowerCase().endsWith(".properties")){
+            interpolated = interpolate(lines, replaces);
+        }else{
+            String content = StringUtils.join(lines, lineSeparator);
+            interpolated = interpolate(content, replaces);
+        }
         FileUtils.fileWrite(new File(output, "config/" + file.getName()), interpolated);
+    }
+
+    private void changeFile(String path, Map<String, Object> replaces)throws IOException{
+        File file = new File(path);
+        FileInputStream fis = new FileInputStream(file);
+        List<String> lines = IOUtils.readLines(fis);
+        String interpolated;
+        if( file.getName().toLowerCase().endsWith(".properties")){
+            interpolated = interpolate(lines, replaces);
+        }else{
+            String content = StringUtils.join(lines, lineSeparator);
+            interpolated = interpolate(content, replaces);
+        }
+        FileUtils.fileWrite(file, interpolated);
     }
 
     private void copyResource(String resource, String path, Map<String, Object> replaces) throws IOException {
@@ -334,15 +371,39 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         return StringUtils.join(lines, lineSeparator);
     }
 
+    //interpolate xml, bat file content with ${}
     private String interpolate(String content, Map<String, Object> replaces) {
-        String newContent = content;
-        for (String key : replaces.keySet()) {
-            String compiledKey = key.replace(".", "\\.");
-            Object o = replaces.get(key);
-            newContent = newContent.replaceAll("\\$\\{" + compiledKey + "\\}", o == null ? "" : o.toString());
+        Matcher m = INTERPOLATE_PTN.matcher(content);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String variable = m.group(1);
+            Object replace = replaces.get(variable);
+            String replacement = replace == null ? "" : replace.toString();
+            m.appendReplacement(sb, replacement);
         }
-        return newContent;
+        m.appendTail(sb);
+        return sb.toString().trim();
     }
+
+    // interpolate properties file like: http.port=the.default.value
+    private String interpolate(List<String> lines, Map<String, Object> replaces) {
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if(!line.trim().startsWith("#") && line.contains("=")){
+                String[] array = line.split("=");
+                String key = array[0].trim();
+                String value = array[1];
+                value = interpolate(value, replaces);
+                if( replaces.containsKey(key)){
+                    value = replaces.get(key).toString();
+                }
+                lines.set(i, key + "=" + value);
+            }
+        }
+        return StringUtils.join(lines, lineSeparator);
+    }
+
+
 
     private void prepareFolder(String relativePath) throws IOException {
         File subFolder = new File(output, relativePath);
