@@ -118,7 +118,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
                                                                                         component.getClassLoader());
         } catch (ClassNotFoundException e) {
             throw new ServiceConfigurationException("The service config class: "
-                                                    +serviceConfigName+ " can't be loaded by: " + component);
+                                                    + serviceConfigName + " can't be loaded by: " + component);
         }
         AbstractServiceConfig serviceConfig;
         try {

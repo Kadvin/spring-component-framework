@@ -11,7 +11,16 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-/** 暴露服务的Bean对象 */
+/**
+ * <h1>将子component context中的服务暴露出来的Bean对象</h1>
+ *
+ * 本对象作为一个隐性的Bean定义在父Service Context中，但主要工作是监听子component context的事件
+ *
+ * <ol>
+ * <li>子Component Context Start之后，将需要暴露的对象注册出去
+ * <li>子component Context Stop之后，将已经暴露的对象回收回来
+ * </ol>
+ */
 public class SpringServiceExporter extends SpringServiceProxy {
 
     private String ref;

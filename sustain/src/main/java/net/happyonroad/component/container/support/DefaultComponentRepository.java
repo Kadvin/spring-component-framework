@@ -110,6 +110,13 @@ public class DefaultComponentRepository
         } catch (Exception e) {
             logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
         }
+        // 扫描 repository/lib 下的jar，这里面存放的是扩展包的依赖
+        File repositoryLibFolder = new File(repositoryFolder, "lib");
+        try {
+            scanJars(repositoryLibFolder);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir: {}", repositoryFolder, e.getMessage());
+        }
         logger.info(banner("Scanned jars"));
     }
 

@@ -120,8 +120,7 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
             List<File> jars = FileUtils.getFiles(libPath, "*.jar", null);
             for (File jar : jars) {
                 if (FileUtils.fileExists(targetRelease.getAbsolutePath() + "/lib/" + jar.getName()) ||
-                        FileUtils.fileExists(targetRelease.getAbsolutePath() + "/boot/" + jar.getName()) ||
-                        FileUtils.fileExists(libPath + "/" + jar.getName())) {
+                        FileUtils.fileExists(targetRelease.getAbsolutePath() + "/boot/" + jar.getName())) {
                     FileUtils.forceDelete(jar);
                 }
             }
@@ -137,10 +136,6 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
                     FileUtils.forceDelete(pom);
                 }
             }
-            poms = FileUtils.getFiles(libPath, "*.pom", null);
-            for (File pom : poms) {
-                pom.renameTo(pomsPath);
-            }
         } catch (IOException e) {
             throw new MojoExecutionException("Can't reduce depended lib/jars|poms: " + e.getMessage());
         }
@@ -153,7 +148,7 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
         try {
             List<File> pomFiles = FileUtils.getFiles(libPath, "*.pom", null);
             for (File pomFile : pomFiles) {
-                File newPomFile = new File(libPath, "poms/" + pomFile.getName());
+                File newPomFile = new File(repositoryFile, "poms/" + pomFile.getName());
                 File jarFile = new File(pomFile.getPath().replace(".pom", ".jar"));
                 Dependency dep;
                 try {

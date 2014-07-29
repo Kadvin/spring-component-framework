@@ -96,8 +96,12 @@ public class DefaultComponentResolver implements ComponentResolver {
                 for(Dependency d : dependencies){
                     d.interpolate(component);
                     if( "import".equalsIgnoreCase(d.getScope())){
-                        Component importing = repository.resolveComponent(d);
-                        dm.merge(importing.getDependencyManagement());
+                        try {
+                            Component importing = repository.resolveComponent(d);
+                            dm.merge(importing.getDependencyManagement());
+                        } catch (DependencyNotMeetException e) {
+                            logger.warn("Dependency with import scope is not supported fully {}", e.getMessage());
+                        }
                     }
                 }
             }

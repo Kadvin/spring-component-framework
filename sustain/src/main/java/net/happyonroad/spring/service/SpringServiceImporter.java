@@ -15,7 +15,19 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
-/** 导入服务的Bean对象 */
+/**
+ * <h1>为子component context导入服务的Bean对象</h1>
+ *
+ * 本对象作为一个隐性的Bean定义在父上下文：Service Context中
+ *
+ * <ol>
+ * <li>当Service Context Refresh的时候，从外部引入相应的bean,将其注册到当前的context里面
+ * <li>当Service Context Start的时候，让这些bean做好准备（如果有需要）
+ * <li>当Service Context Stop的时候，让这些bean拒绝服务（如果有需要）
+ * <li>当Service Context Close的时候，从context中卸除这些相应的bean
+ * </ol>
+ * TODO 应该用Spring的Factory Bean来实现这个Importer
+ */
 public class SpringServiceImporter extends SpringServiceProxy {
     private static Logger logger = LoggerFactory.getLogger(SpringServiceImporter.class);
 
