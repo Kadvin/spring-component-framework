@@ -4,7 +4,6 @@
 package net.happyonroad.spring;
 
 import net.happyonroad.component.core.Component;
-import net.happyonroad.spring.context.ComponentApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -23,12 +22,7 @@ public class SpringPathMatchingResourcePatternResolver extends PathMatchingResou
     private Component component;
 
     public SpringPathMatchingResourcePatternResolver(ResourceLoader loader) {
-        this(loader, null);
-    }
-
-    public SpringPathMatchingResourcePatternResolver(ResourceLoader loader, Component component) {
         super(loader);
-        this.component = component;
     }
 
     @Override
@@ -46,9 +40,9 @@ public class SpringPathMatchingResourcePatternResolver extends PathMatchingResou
         //不能搜索到依赖的包中，否则就破坏原本的隔离初衷
         if( locationPattern.startsWith(CLASSPATH_ALL_URL_PREFIX) && locationPattern.endsWith("**/*.class")){
             String pattern = locationPattern.substring(CLASSPATH_ALL_URL_PREFIX.length());
-            if( component == null ){
-                component = ((ComponentApplicationContext)getResourceLoader()).getComponent();
-            }
+//            if( component == null ){
+//                component = ((ComponentApplicationContext)getResourceLoader()).getComponent();
+//            }
             if (getPathMatcher().isPattern(pattern)) {
                 String rootDirPath = determineRootDir(pattern);
                 String subPattern = pattern.substring(rootDirPath.length());
@@ -70,5 +64,9 @@ public class SpringPathMatchingResourcePatternResolver extends PathMatchingResou
         } else {
             return super.getResources(locationPattern);
         }
+    }
+
+    public void setComponent(Component component) {
+        this.component = component;
     }
 }

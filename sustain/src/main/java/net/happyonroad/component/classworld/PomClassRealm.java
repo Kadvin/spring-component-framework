@@ -7,6 +7,7 @@ import net.happyonroad.component.core.Component;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 import org.codehaus.plexus.classworlds.strategy.Strategy;
+import org.springframework.core.io.Resource;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
@@ -28,6 +29,7 @@ import java.util.*;
 public class PomClassRealm extends ClassRealm
         implements Comparable<PomClassRealm>, SelfNaming {
     private static Map<String, Class> shortcuts = new HashMap<String, Class>();
+    static String CLASSPATH_THIS_URL_PREFIX = "classpath?:";
 
     PomClassWorld         pomWorld;
     private Component             component;
@@ -54,11 +56,25 @@ public class PomClassRealm extends ClassRealm
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public Component getComponent() {
         return component;
     }
 
-    // ------------------------------------------------------------
+    @Override
+    public URL getResource(String name) {
+        if(name.startsWith(CLASSPATH_THIS_URL_PREFIX)){
+            name = name.substring(CLASSPATH_THIS_URL_PREFIX.length());
+            Resource resource = getComponent().getResource().getLocalResourceUnder(name);
+            try {
+                return resource == null ? null : resource.getURL();
+            } catch (IOException e) {
+                return null;
+            }
+        }
+        return super.getResource(name);
+    }
+// ------------------------------------------------------------
     //     扩展功能，统计类加载情况
     // ------------------------------------------------------------
 

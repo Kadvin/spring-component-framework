@@ -90,4 +90,20 @@ public class ComponentJarResource extends ComponentResource {
         }
         return matches.toArray(new Resource[matches.size()]);
     }
+
+    @Override
+    public Resource getLocalResourceUnder(String path) {
+        Enumeration<JarEntry> entries = file.entries();
+        while (entries.hasMoreElements()) {
+            JarEntry entry = entries.nextElement();
+            if(entry.getName().equalsIgnoreCase(path)) {
+                try {
+                    return new UrlResource("jar:file:" + file.getName() +"!/" + entry.getName());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -5,6 +5,7 @@ package net.happyonroad.spring.context;
 
 import net.happyonroad.component.core.Component;
 import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
+import org.apache.commons.lang.reflect.FieldUtils;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
@@ -25,6 +26,7 @@ public class GenericServiceApplicationContext extends GenericApplicationContext
         ContextUtils.inheritParentProperties(parent, this);
         this.setClassLoader(realm);
         this.setDisplayName("Service Context for: [" + component.getDisplayName() + "]");
+        ContextUtils.applyComponentToResourcePatternResolver(this, component);
     }
 
     @Override

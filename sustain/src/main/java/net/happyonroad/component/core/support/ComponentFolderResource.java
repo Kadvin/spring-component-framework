@@ -97,4 +97,10 @@ public class ComponentFolderResource extends ComponentResource {
             return new Resource[]{new FileSystemResource(target)};
         }
     }
+
+    @Override
+    public Resource getLocalResourceUnder(String path) {
+        File target = new File(folder, path);
+        return new FileSystemResource(target);
+    }
 }

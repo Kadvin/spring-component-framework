@@ -73,4 +73,6 @@ public abstract class ComponentResource {
     //获取某个目录下所有的资源
     // 如果传入的是文件名称，则返回该文件对应的资源
     public abstract Resource[] getLocalResourcesUnder(String path);
+
+    public abstract Resource getLocalResourceUnder(String path);
 }

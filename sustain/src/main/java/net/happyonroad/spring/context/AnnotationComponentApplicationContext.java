@@ -26,6 +26,7 @@ public class AnnotationComponentApplicationContext extends AnnotationConfigAppli
         ContextUtils.inheritParentProperties(parent, this);
         this.setDisplayName("Application Context for: [" + component.getDisplayName() + "]");
         this.setClassLoader(realm);
+        ContextUtils.applyComponentToResourcePatternResolver(this, component);
     }
 
 

@@ -13,8 +13,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 /**
  * 基于XML的Spring Component Application Context
  */
-public class XmlComponentApplicationContext extends GenericXmlApplicationContext implements
-                                                                                 ComponentApplicationContext {
+public class XmlComponentApplicationContext extends GenericXmlApplicationContext
+        implements ComponentApplicationContext {
     private final Component component;
 
     public XmlComponentApplicationContext(Component component, ClassRealm realm, AbstractApplicationContext parent) {
@@ -24,6 +24,7 @@ public class XmlComponentApplicationContext extends GenericXmlApplicationContext
         this.setDisplayName("Application Context for: [" + component.getDisplayName() + "]");
         this.setValidating(false);
         this.setClassLoader(realm);
+        ContextUtils.applyComponentToResourcePatternResolver(this, component);
     }
 
     @Override

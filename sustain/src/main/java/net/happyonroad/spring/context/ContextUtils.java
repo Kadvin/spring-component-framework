@@ -3,11 +3,14 @@
  */
 package net.happyonroad.spring.context;
 
+import net.happyonroad.component.core.Component;
+import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
 import net.happyonroad.spring.support.SmartApplicationEventMulticaster;
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
@@ -70,12 +73,24 @@ class ContextUtils {
 
     }
 
+    public static void applyComponentToResourcePatternResolver(GenericApplicationContext context, Component component){
+        try {
+            SpringPathMatchingResourcePatternResolver rpr =
+                    (SpringPathMatchingResourcePatternResolver) FieldUtils.readField(context, "resourcePatternResolver", true);
+            rpr.setComponent(component);
+        } catch (IllegalAccessException e) {
+            throw new ApplicationContextException("Can't hacking the spring context for resourcePatternResolver", e);
+        }
+
+    }
+
     private static void setApplicationEventMulticaster(GenericApplicationContext context,
                                                          ApplicationEventMulticaster applicationEventMulticaster) {
         try {
             FieldUtils.writeField(context, "applicationEventMulticaster", applicationEventMulticaster, true);
         } catch (IllegalAccessException e) {
-            throw new RuntimeException("Can't hacking the spring context for applicationEventMulticaster", e);
+            throw new ApplicationContextException("Can't hacking the spring context for applicationEventMulticaster", e);
         }
     }
+
 }
