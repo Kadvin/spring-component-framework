@@ -120,7 +120,8 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
             List<File> jars = FileUtils.getFiles(libPath, "*.jar", null);
             for (File jar : jars) {
                 if (FileUtils.fileExists(targetRelease.getAbsolutePath() + "/lib/" + jar.getName()) ||
-                        FileUtils.fileExists(targetRelease.getAbsolutePath() + "/boot/" + jar.getName())) {
+                        FileUtils.fileExists(targetRelease.getAbsolutePath() + "/boot/" + jar.getName()) ||
+                        FileUtils.fileExists(repositoryFile.getAbsolutePath() + "/" + jar.getName())) {
                     FileUtils.forceDelete(jar);
                 }
             }

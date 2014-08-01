@@ -161,6 +161,8 @@
                             <docencoding>utf8</docencoding>
                             <charset>utf8</charset>
                             <locale>en_US</locale>
+                            <failOnError>false</failOnError>
+                            <skip>true</skip>
                         </configuration>
                     </execution>
                 </executions>
