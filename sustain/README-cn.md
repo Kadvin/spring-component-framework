@@ -6,7 +6,7 @@ spring-component-framework
 
 Spring component framework 是一个基于SpringFramework和Maven的组件化的微内核Java独立程序框架(未来版本将支持Web应用）。
 
-它能帮助你将应用程序切割成为独立的小块（一个Jar包就是一个模块），且对你的应用程序完全没有任何侵入性。
+它能帮助你将应用程序切割成为独立的小块（一个Jar包就是一个模块），且对你的应用程序**完全**没有任何侵入性。
 不需要像OSGi那样，需要实现BundleContext接口，了解MANEFEST.MF里面一堆Bundle-*语义
 
 在此之外，它还可以辅助你打包应用程序，并且在Maven的支持下，保持你的应用程序中在开发态与运行态的一致性。
@@ -37,7 +37,7 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
 我们可以将程序分为如下几个模块：
 
-```xml
+```XML
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
@@ -107,7 +107,7 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
 API项目的Maven Pom定义文件大致如下:
 
-```xml
+```XML
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
@@ -343,16 +343,19 @@ public class CLI {
 
 #### 1. 静态组件
 
-由于API项目在运行时没有主动创建/管理任何Java对象实例，它仅仅是提供一些接口/静态函数，常量给其他模块使用
+  由于API项目在运行时没有主动创建/管理任何Java对象实例，它仅仅是提供一些接口/静态函数，常量给其他模块使用
 
   所以我们视其为 **静态** 组件。
-  静态组件包应该被打包成为如下格式：
+  
+  静态组件包只需要按照Maven规范进行打包，将pom.xml文件放到META-INF/$groupId/$artifactId目录下，成为如下格式：
 
 ```
   path/to/com.myapp.api-0.0.1.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 一般性打包工具生成
-    |  |-pom.xml                   # 关键的静态组件标识，有个pom.xml（就是Maven项目的Pom)
+    |  |-com.myapp.api
+    |  |  |-api
+    |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
     |-com
     |  |-myapp
     |  |  |-api
@@ -361,14 +364,35 @@ public class CLI {
     |  |  |  |-CacheService.class
 ```
 
-Spring Component Framework在运行时，会根据META-INF/pom.xml文件的定义，为其解析相关依赖。
+Spring Component Framework在运行时，会根据pom.xml文件的定义，为其解析相关依赖。
 
 #### 2. 应用组件
 
 示例的客户端是作为一个独立的运行时程序运行，它通过RMI暴露服务给服务器调用（而不是进程内依赖）。
-组件规范规定，开发者应该在META-INF目录下配置一个application.xml，用Spring Context对这些Bean加以管理。
 
 我们将其定义为 **应用** 组件
+
+开发者有两种配置方式
+
+##### 一种基于XML
+
+在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
+
+打包之后的发布结构如下：
+
+```
+  path/to/com.myapp.api-0.0.1.jar!
+    |-META-INF
+    |  |-MANIFEST.MF               # 一般性打包工具生成
+    |  |-application.xml           # 相应Spring Context的Resource
+    |  |-com.myapp
+    |  |  |-api
+    |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
+    |-com
+    |  |-myapp
+    |  |  |-client
+    |  |  |  |-ClientImpl.class
+```
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -391,27 +415,77 @@ Spring Component Framework在运行时，会根据META-INF/pom.xml文件的定�
 </beans>  
 ```
 
-应用组件打包结果类似如下:
+
+##### 另外一种基于Annotation
+
+在Manifest里面增加App-Config指令：
+
+```
+App-Config: com.myapp.client.ClientAppConfig
+```
+
+相应的ClientAppConfig内容为：
+
+```JAVA
+  @Configuration
+  @ComponentScan("com.app.client")
+  public class ClientAppConfig{
+    @Bean 
+    public RmiServiceExporter clientExporter(){
+      RmiServiceExporter exporter = new RmiServiceExporter();
+      exporter.setServiceInterface(ClientAPI.class)
+      exporter.setServiceName("client");
+      exporter.setServicePort(1099);
+      exporter.setObject(clientImpl)
+    }
+  }
+```
+
+打包之后的文件形如：
 
 ```
   path/to/com.myapp.client-0.0.1.jar!
     |-META-INF
-    |  |-MANIFEST.MF
-    |  |-pom.xml                   # 静态组件标识
-    |  |-application.xml           # 应用组件标识
+    |  |-MANIFEST.MF               # 其中包括 App-Config指令
+    |  |-com.myapp
+    |  |  |-client
+    |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
     |-com
     |  |-myapp
     |  |  |-client
     |  |  |  |-ClientImpl.class
 ```
 
-Spring Component Framework在运行时加载该jar时，会根据application.xml创建一个Spring Context，并与该组件关联起来。
+Spring Component Framework在运行时加载该jar时，会根据application.xml 或者 ClientAppConfig 创建一个Spring Context，并与该组件关联起来。
 
 #### 3. 服务组件(扮演服务提供者角色)
 
 Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需要将其 **暴露** 给其他模块使用。
 
-我们将其视为 **服务** 组件，它需要在application.xml之外，再提供一个 **service.xml** 如下：
+我们将其视为 **服务** 组件，它需要在application context之外，再提供一个 **service context** 
+
+也有两种配置方式：
+
+##### XML配置方式：
+
+basis应该被打包成为带上service.xml的格式:
+
+```
+  path/to/com.myapp.basis-0.0.1.jar!
+    |-META-INF
+    |  |-MANIFEST.MF
+    |  |-com.myapp
+    |  |  |-basis
+    |  |  |  |-pom.xml             # 静态组件标识
+    |  |-application.xml           # 应用组件标识
+    |  |-service.xml               # 服务组件标识
+    |-com
+    |  |-myapp
+    |  |  |-basis
+    |  |  |  |-CacheServiceImpl.class
+```
+
+其service.xml内容如下：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -425,7 +499,7 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
 </service>
 ```
 
-其 application.xml 内容大致如下:
+其应用特征可以用XML方式配置，也可以用Annotation方式配置，假设XML方式，相应application.xml 内容大致如下:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -441,19 +515,47 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
 </beans>  
 ```
 
-最终，basis包应该被打包成为如下格式:
+##### Annotation配置方式
 
 ```
   path/to/com.myapp.basis-0.0.1.jar!
     |-META-INF
-    |  |-MANIFEST.MF
-    |  |-pom.xml                   # 静态组件标识
-    |  |-application.xml           # 应用组件标识
-    |  |-service.xml               # 服务组件标识
+    |  |-MANIFEST.MF               # 包括了 Service-Config 指令
+    |  |-com.myapp
+    |  |  |-basis
+    |  |  |  |-pom.xml             # 静态组件标识
     |-com
     |  |-myapp
     |  |  |-basis
     |  |  |  |-CacheServiceImpl.class
+```
+
+假设其Application特征也以Annotation方式配置，Manifest.MF内容如下：
+
+```
+App-Config: com.myapp.basis.BasicAppConfig
+Service-Config: com.myapp.basis.BasicServiceConfig
+```
+
+其中 BasicAppConfig 内容类似：
+
+```JAVA
+  @Configuration
+  @ComponentScan("com.myapp.basis")
+  public class BasicAppConfig{
+  }
+```
+
+BasicServiceConfig 内容如下：
+
+```
+  public class BasicServiceConfig extends DefaultServiceConfig{
+  
+    public void defineServices(){
+      super.defineServices();
+      exportService(CacheService.class);
+    }
+  }
 ```
 
 Spring Component Framework在加载这个jar包之后，会通过某种机制，将其声明的服务 **暴露** 出去给其他服务组件使用。
@@ -476,6 +578,14 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 </service>
 ```
 
+或者在其 Service Config 的 defineServices 函数里面做如下声明：
+
+```JAVA
+  public void defineServices(){
+    importService(CacheService.class);
+  }
+```
+
 其内部的application.xml大致如下:
 
 ```xml
@@ -492,15 +602,27 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 </beans>  
 ```
 
+或者其 App Config 写为:
+
+```
+  @Configuration
+  @ComponentScan("com.myapp.server")
+  public ServerAppConfig{
+  }
+```
+
 最后，它需要被打包成如下格式:
 
 ```
   path/to/com.myapp.server-0.0.1.jar!
     |-META-INF
-    |  |-MANIFEST.MF
-    |  |-pom.xml                   # 静态组件标识
-    |  |-application.xml           # 应用组件标识
-    |  |-service.xml               # 服务组件标识
+    |  |-MANIFEST.MF               # 可用 App-Config 指令代替 application.xml
+    |  |                           # 或者 Service-Config 指令代替 service.xml
+    |  |-com.myapp
+    |  |  |-server
+    |  |  |  |-pom.xml             # 静态组件标识
+    |  |-application.xml           # 应用组件标识 (optional) 
+    |  |-service.xml               # 服务组件标识 (optional) 
     |-com
     |  |-myapp
     |  |  |-server
@@ -535,6 +657,19 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
         <ref>someAppBeanNameOrId</ref>
     </export>
 </service>
+```
+
+或者相应Service-Config指令指示的类中：
+
+```JAVA
+ public class XxxServiceConfig extends DefaultServiceConfig{
+   public void defineServices(){
+     super.defineServices();
+     importService(ServiceA.class, "default");
+     importService(ServiceA.class, "myappServiceA");
+     exportService(ServiceB.class, "someapp", "someAppBeanNameOrId")
+   }
+ }
 ```
 
   * 当某个组件依赖的同一接口的服务实例可能存在多个时，服务组件的导入/导出关系可以通过 `hint` 节点进行限制  
@@ -598,14 +733,14 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 #### 2. 自动发布应用
 
 我们需要在实际运行时的主模块pom文件中声明对 spring-component-framework 的依赖，强烈建议将该依赖类型设置为 runtime
-  避免开发者在开发过程中直接使用spring-component-framework的静态API。
+  避免开发者在开发过程中直接使用spring-component-framework的静态API，从而引入不必要的侵入性。
 
 ```xml
 <dependencies>
   <dependency>
     <groupId>net.happyonroad</groupId>
     <artifactId>spring-component-framework</artifactId>
-    <version>0.0.1</version>
+    <version>0.1.0</version>
     <scope>runtime</scope>
   </dependency>
 </dependencies>
@@ -707,9 +842,121 @@ mvn package
 3. 扩展组件
 ------------
 
-### 3.1 定义一种扩展组件
-### 3.2 解析扩展组件
-### 3.3 为组件框架注入扩展机制
+### 3.1 了解扩展机制
+
+  本组件框架并不将组件局限为仅有的 `静态组件`, `应用组件`, `服务组件` 三类，资深的应用开发者可以在系统的原有语义下定义出新的组件类型。
+
+  为了定义新的组件类型，开发者必须了解组件的加载原理。
+  
+  实际上，系统加载组件时，会认为每个组件都具有`静态组件`特征，按照 maven的pom.xml指示的依赖关系构建相应的class load graph。
+
+  而后，`应用组件` `服务组件` 都是根据被解析的组件包中是否具备相应的特征(xml或者annotation directive)，由对应的 `Feature Resolver` 进行加载/卸载。
+  
+  系统只是内置了Application, Service两种特性，基本的加载顺序为：
+  
+| order | Feature Resolver |  
+|-------|------------------|
+| 10    | Static Feature Resolver |
+| 25    | Service Feature Resolver |
+| 30    | Application Feature Resolver |
+
+  系统基本的卸载顺序为：
+  
+| order | Feature Resolver |  
+|-------|------------------|
+| 70    | Application Feature Resolver |
+| 65    | Service Feature Resolver |
+| 100   | Static Feature Resolver |
+  
+ 增加新的扩展机制，也就包括了两个部分的内容
+ 
+ 3.2 定义扩展特征
+ 3.3 解析扩展特征
+
+以及最后一个实施的过程
+
+ 3.4 自动发布扩展
+
+### 3.2 定义扩展特征
+
+  可以要求开发者在最终的组件中提供相应的可识别的特征，如jar文件名，jar中文件信息，以及manifest里面的指令(directive)
+
+  这些特征应该与3.3节中Feature Resolver的 hasFeature(Component) 接口实现方法一致
+
+### 3.3 解析扩展特征
+
+1. 定义你的 Feature Resolver 类
+2. 在系统启动时，增加 -Dcomponent.feature.resolvers=fqn1,fqn2
+3. 实现相应的Feature Resolver
+
+实现 Feature Resolver时，需要考虑到其他feature的解析顺序，建议从 `AbstractFeatureResolver` 继承，实现如下几个主要方法：
+
+```java
+    /**
+     * 判断组件是否有本特性
+     *
+     * @param component 被判断的组件
+     * @return 是否有特性
+     */
+    boolean hasFeature(Component component);
+
+    /**
+     * 在特定的上下文中解析相应的组件
+     *
+     * @param component 被解析的组件
+     *
+     */
+    void resolve(Component component) throws Exception;
+
+    /**
+     * 在特定的上下文中卸载/释放相应的组件
+     * @param component 被卸载的组件
+     */
+    Object release(Component component) ;
+```
+
+
+### 3.4 自动发布扩展 
+
+与项目打包一样，扩展也需要被打包，并植入到目标系统中，打包的主要方式如下：
+
+```
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.happyonroad</groupId>
+                <artifactId>spring-component-builder</artifactId>
+                <version>${version.component-framework}</version>
+                <executions>
+                    <execution>
+                        <id>extend-app</id>
+                        <goals><goal>extend</goal></goals>
+                        <configuration>
+                            <targetRelease>${release.dir}</targetRelease>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>un_extend-app</id>
+                        <goals><goal>un_extend</goal></goals>
+                        <configuration>
+                            <targetRelease>${release.dir}</targetRelease>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+```
+
+其中的 targetRelease参数需要提供目标部署系统，我们将会扩展部署到相应 ${release.dir}/repository目录
+
+支持如下参数：
+
+1. targetRelease: 被扩展的系统
+2. extensionPath （默认值 就是 repository）: 扩展所在目录 
+3. copyDependencies (默认false): 是否需要将扩展的依赖也copy过去，为了提高扩展效率，默认为false，但对于引入了自身依赖的扩展包而言，这个选项必须设置为true
+ 
 
 4. 技术原理
 ---------------
