@@ -860,17 +860,17 @@ mvn package
   
 | order | Feature Resolver             |   内容         |
 |-------|------------------------------|----------------|
-| 10    | Static Feature Resolver      |  |
-| 25    | Service Feature Resolver     |  |
-| 30    | Application Feature Resolver |  |
+| 10    | Static Feature Resolver      | 构建组件需要的class loader |
+| 25    | Service Feature Resolver     | 根据 import 指令，将依赖的service对象组织到 service context中（留待可能的app context引用））；如果有子context started，根据export指令，将子context中的对象发布到服务注册表中，留待其他组件使用 |
+| 30    | Application Feature Resolver | 构建组件内的app context（为 service context的子context【如果有】） |
 
   系统基本的卸载顺序为：
   
-| order | Feature Resolver |  
-|-------|------------------|
-| 65    | Service Feature Resolver |
-| 70    | Application Feature Resolver |
-| 100   | Static Feature Resolver |
+| order | Feature Resolver             | 内容     |  
+|-------|------------------------------|---------|
+| 65    | Service Feature Resolver     | 关闭service context |
+| 70    | Application Feature Resolver | 关闭app context |
+| 100   | Static Feature Resolver      | 卸载 class loader |
   
  增加新的扩展机制，也就包括了两个部分的内容
  
