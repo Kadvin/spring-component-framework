@@ -353,7 +353,7 @@ public class CLI {
   path/to/com.myapp.api-0.0.1.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 一般性打包工具生成
-    |  |-com.myapp.api
+    |  |-com.myapp
     |  |  |-api
     |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
     |-com
@@ -374,7 +374,7 @@ Spring Component Framework在运行时，会根据pom.xml文件的定义，为�
 
 开发者有两种配置方式
 
-##### 一种基于XML
+##### 2.1 基于XML
 
 在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
 
@@ -393,6 +393,8 @@ Spring Component Framework在运行时，会根据pom.xml文件的定义，为�
     |  |  |-client
     |  |  |  |-ClientImpl.class
 ```
+
+application.xml文件内容：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -415,8 +417,7 @@ Spring Component Framework在运行时，会根据pom.xml文件的定义，为�
 </beans>  
 ```
 
-
-##### 另外一种基于Annotation
+##### 2.2 基于Annotation
 
 在Manifest里面增加App-Config指令：
 
@@ -436,7 +437,8 @@ App-Config: com.myapp.client.ClientAppConfig
       exporter.setServiceInterface(ClientAPI.class)
       exporter.setServiceName("client");
       exporter.setServicePort(1099);
-      exporter.setObject(clientImpl)
+      exporter.setObject(clientImpl);
+      return exporter;
     }
   }
 ```
@@ -466,7 +468,7 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
 
 也有两种配置方式：
 
-##### XML配置方式：
+##### 3.1 XML配置方式
 
 basis应该被打包成为带上service.xml的格式:
 
@@ -515,7 +517,7 @@ basis应该被打包成为带上service.xml的格式:
 </beans>  
 ```
 
-##### Annotation配置方式
+##### 3.2 Annotation配置方式
 
 ```
   path/to/com.myapp.basis-0.0.1.jar!
@@ -539,7 +541,7 @@ Service-Config: com.myapp.basis.BasicServiceConfig
 
 其中 BasicAppConfig 内容类似：
 
-```JAVA
+```java
   @Configuration
   @ComponentScan("com.myapp.basis")
   public class BasicAppConfig{
@@ -548,7 +550,7 @@ Service-Config: com.myapp.basis.BasicServiceConfig
 
 BasicServiceConfig 内容如下：
 
-```
+```java
   public class BasicServiceConfig extends DefaultServiceConfig{
   
     public void defineServices(){
@@ -557,6 +559,8 @@ BasicServiceConfig 内容如下：
     }
   }
 ```
+
+特别注意：  **Service Config 类不需要 用 @Configuration 标记，但需要从 DefaultServiceConfig继承**
 
 Spring Component Framework在加载这个jar包之后，会通过某种机制，将其声明的服务 **暴露** 出去给其他服务组件使用。
 
@@ -580,7 +584,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 
 或者在其 Service Config 的 defineServices 函数里面做如下声明：
 
-```JAVA
+```java
   public void defineServices(){
     importService(CacheService.class);
   }
@@ -604,7 +608,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 
 或者其 App Config 写为:
 
-```
+```java
   @Configuration
   @ComponentScan("com.myapp.server")
   public ServerAppConfig{
@@ -661,7 +665,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 
 或者相应Service-Config指令指示的类中：
 
-```JAVA
+```java
  public class XxxServiceConfig extends DefaultServiceConfig{
    public void defineServices(){
      super.defineServices();
@@ -852,20 +856,20 @@ mvn package
 
   而后，`应用组件` `服务组件` 都是根据被解析的组件包中是否具备相应的特征(xml或者annotation directive)，由对应的 `Feature Resolver` 进行加载/卸载。
   
-  系统只是内置了Application, Service两种特性，基本的加载顺序为：
+  与其他特性相比，系统只是内置了Application, Service两种特性，基本的加载顺序为：
   
-| order | Feature Resolver |  
-|-------|------------------|
-| 10    | Static Feature Resolver |
-| 25    | Service Feature Resolver |
-| 30    | Application Feature Resolver |
+| order | Feature Resolver             |   内容         |
+|-------|------------------------------|----------------|
+| 10    | Static Feature Resolver      |  |
+| 25    | Service Feature Resolver     |  |
+| 30    | Application Feature Resolver |  |
 
   系统基本的卸载顺序为：
   
 | order | Feature Resolver |  
 |-------|------------------|
-| 70    | Application Feature Resolver |
 | 65    | Service Feature Resolver |
+| 70    | Application Feature Resolver |
 | 100   | Static Feature Resolver |
   
  增加新的扩展机制，也就包括了两个部分的内容
