@@ -392,7 +392,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             if(!line.trim().startsWith("#") && line.contains("=")){
                 String[] array = line.split("=");
                 String key = array[0].trim();
-                String value = array[1];
+                // string like: neo4j.user= split array length == 1
+                String value = array.length == 2 ? array[1] : null;
                 value = interpolate(value, replaces);
                 if( replaces.containsKey(key)){
                     value = replaces.get(key).toString();
