@@ -393,7 +393,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                 String[] array = line.split("=");
                 String key = array[0].trim();
                 // string like: neo4j.user= split array length == 1
-                String value = array.length == 2 ? array[1] : null;
+                String value = array.length == 2 ? array[1] : "";
                 value = interpolate(value, replaces);
                 if( replaces.containsKey(key)){
                     value = replaces.get(key).toString();
