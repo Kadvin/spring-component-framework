@@ -4,7 +4,7 @@
     <parent>
         <groupId>dnt</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>net.happyonroad</groupId>
@@ -179,7 +179,7 @@
                 <version>${version.validation-api}</version>
             </dependency>
 
-
+            <!--Ant/Maven-->
             <dependency>
                 <groupId>org.apache.ant</groupId>
                 <artifactId>ant</artifactId>
