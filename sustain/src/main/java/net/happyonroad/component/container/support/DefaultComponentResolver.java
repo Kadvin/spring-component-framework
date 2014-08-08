@@ -88,29 +88,13 @@ public class DefaultComponentResolver implements ComponentResolver {
             component.validate();
             //把各个解析出来的组件存储到仓库中，因为在解析 sub module时，其reference parent时会需要
             repository.addComponent(component);
-            //处理 dependency management scope = import的dependency（需要merge)
-            DependencyManagement dm = component.getDependencyManagement();
-            if( !dm.isEmpty() ){
-                //TO avoid concurrent modifications
-                Set<Dependency> dependencies = new HashSet<Dependency>(dm.getDependencies());
-                for(Dependency d : dependencies){
-                    d.interpolate(component);
-                    if( "import".equalsIgnoreCase(d.getScope())){
-                        try {
-                            Component importing = repository.resolveComponent(d);
-                            dm.merge(importing.getDependencyManagement());
-                        } catch (DependencyNotMeetException e) {
-                            logger.warn("Dependency with import scope is not supported fully {}", e.getMessage());
-                        }
-                    }
-                }
-            }
             //解析Parent信息
             parent = processParent(dependency, component, parent);
             //解析组件的基本动态属性，放在parent解析之后，这样可以获取到parent的属性
             component.interpolate();
-            if( parent != null )
-                dm.merge(parent.getDependencyManagement());
+
+            //处理 dependency management scope = import的dependency（需要merge)
+            DependencyManagement dm = processDependencyManagement(component, parent);
 
             //验证依赖信息
             dependencyManagements.push(dm);
@@ -177,6 +161,28 @@ public class DefaultComponentResolver implements ComponentResolver {
             }
         }
         return parent;
+    }
+
+    DependencyManagement processDependencyManagement(DefaultComponent component, DefaultComponent parent) throws InvalidComponentNameException {
+        DependencyManagement dm = component.getDependencyManagement();
+        if( !dm.isEmpty() ){
+            //TO avoid concurrent modifications
+            Set<Dependency> dependencies = new HashSet<Dependency>(dm.getDependencies());
+            for(Dependency d : dependencies){
+                d.interpolate(component);
+                if( "import".equalsIgnoreCase(d.getScope())){
+                    try {
+                        Component importing = repository.resolveComponent(d);
+                        dm.merge(importing.getDependencyManagement());
+                    } catch (DependencyNotMeetException e) {
+                        logger.warn("Dependency with import scope is not supported fully {}", e.getMessage());
+                    }
+                }
+            }
+        }
+        if( parent != null )
+            dm.merge(parent.getDependencyManagement());
+        return dm;
     }
 
     protected void mergeDependencies(Component parent, DefaultComponent component) {

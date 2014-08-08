@@ -22,7 +22,7 @@ public class DependencyManagement {
 
     public void merge(DependencyManagement another) {
         if (another == null || another.dependencies == null ) return;
-        dependencies.addAll(another.getDependencies());
+        getDependencies().addAll(another.getDependencies());
     }
 
     @SuppressWarnings("UnusedDeclaration")

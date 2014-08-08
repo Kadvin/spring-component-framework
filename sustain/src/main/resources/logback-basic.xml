@@ -1,4 +1,7 @@
 <included>
+
+    <statusListener class="net.happyonroad.util.LogbackSilentStatusListener" />
+
     <jmxConfigurator/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
