@@ -379,7 +379,11 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             String variable = m.group(1);
             Object replace = replaces.get(variable);
             String replacement = replace == null ? "" : replace.toString();
-            m.appendReplacement(sb, replacement);
+            try {
+                m.appendReplacement(sb, replacement);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
         }
         m.appendTail(sb);
         return sb.toString().trim();
