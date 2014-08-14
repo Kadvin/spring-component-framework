@@ -14,7 +14,7 @@ import java.util.Set;
 /** the shared class loader for 3rd library  */
 public class ClassLoaderRepresentation extends ClassLoader {
 
-    private static SharedClassLoader sharedClassLoader = new SharedClassLoader();
+    private static SharedClassLoader sharedClassLoader = new SharedClassLoader(PomClassRealm.class.getClassLoader());
 
     private final Set<URL> urls;
 

@@ -12,8 +12,8 @@ import java.util.Set;
 class SharedClassLoader extends URLClassLoader{
     final Set<URL> allUrls;
 
-    public SharedClassLoader() {
-        super(new URL[0]);
+    public SharedClassLoader(ClassLoader classLoader) {
+        super(new URL[0], classLoader);
         allUrls = new HashSet<URL>();
     }
 
