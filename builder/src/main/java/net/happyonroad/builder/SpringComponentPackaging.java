@@ -276,7 +276,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                 jvmOptions += " -Dapp.prefix=" + appPrefix;
             }
             replaces.put("jvm.options", jvmOptions);
-            String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh"};
+            String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh", "check.sh"};
             for (String resource : resourceNames) {
                 copyResource(resource, "bin", replaces);
                 chmod(resource, "bin");

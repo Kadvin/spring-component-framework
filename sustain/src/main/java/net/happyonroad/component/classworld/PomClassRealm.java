@@ -237,7 +237,7 @@ public class PomClassRealm extends ClassRealm
         Component parent = component.getParent();
         if (parent == null || parent.isPlain()) {
             //采用一个隔离的Class Loader的根，而不是当前运行环境的根
-            return ClassLoader.getSystemClassLoader();
+            return PomClassRealm.class.getClassLoader();// ClassLoader.getSystemClassLoader();
         } else {
             return findOrCreateRealm(world, parent);
         }
