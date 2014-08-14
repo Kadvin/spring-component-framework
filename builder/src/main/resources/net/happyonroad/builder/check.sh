@@ -17,7 +17,7 @@ echo "Checking process: $system by $log_file, until $max seconds"
 for((i=0;i<$max;i++)) do
   sleep 1
   # check failed
-  process=`ps aux | grep $2 | grep -v grep`
+  process=`ps aux | grep $2 | grep -v grep | grep -v check.sh`
   if [ "$process" == "" ]; then
     echo "$system is stopped"
     exit 255
