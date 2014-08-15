@@ -298,6 +298,11 @@
                 </repository>
             </distributionManagement>
 
+
+        </profile>
+
+        <profile>
+            <id>opensource</id>
             <build>
                 <plugins>
                     <plugin>
@@ -320,7 +325,6 @@
             </build>
 
         </profile>
-
     </profiles>
 
 </project>

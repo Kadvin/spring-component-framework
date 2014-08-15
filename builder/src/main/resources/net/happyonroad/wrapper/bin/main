@@ -23,10 +23,11 @@
 #             script's ability to control the application.
 
 # Application
-APP_NAME="MSC"
-APP_LONG_NAME="Itsnow-msc"
+APP_NAME=#{app.name}
+APP_LONG_NAME=#{app.name}
 
 # Wrapper
+# The working dir when launch this executor should be the app.home, instead of bin
 WRAPPER_CMD="./wrapper"
 WRAPPER_CONF="../config/wrapper.conf"
 
@@ -35,7 +36,7 @@ WRAPPER_CONF="../config/wrapper.conf"
 PRIORITY=
 
 # Location of the pid file.
-PIDDIR="."
+PIDDIR="../logs"
 
 # PIDFILE_CHECK_PID tells the script to double check whether the pid in the pid
 #  file actually exists and belongs to this application.  When not set, only
