@@ -98,21 +98,13 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             properties = new Properties();
         }
         appTarget = String.format("%s.%s-%s", project.getGroupId(), project.getArtifactId(), project.getVersion());
-        try {
-            List<String> bootJars = FileUtils.getFileNames(new File(output, "boot"),
-                                                           "net.happyonroad.spring-component-framework-*.jar",
-                                                           null, false);
-            appBoot = "boot/" + bootJars.get(0);
-        } catch (IOException ex){
-            throw new MojoExecutionException("Can't find net.happyonroad.spring-component-framework");
-        }
     }
 
     private void prepareFolders() throws MojoExecutionException {
         if (!output.exists()) {
             FileUtils.mkdir(output.getAbsolutePath());
         }
-        String[] subFolders = {"bin", "boot", "lib", "lib/poms", "config", "repository"};
+        String[] subFolders = {"bin", "boot", "lib", "lib/poms", "config", "repository", "logs"};
         for (String relativePath : subFolders) {
             try {
                 prepareFolder(relativePath);
@@ -271,6 +263,10 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     private void generateScripts() throws MojoExecutionException {
         try {
+            List<String> bootJars = FileUtils.getFileNames(new File(output, "boot"),
+                                                           "net.happyonroad.spring-component-framework-*.jar",
+                                                           null, false);
+            appBoot = "boot/" + bootJars.get(0);
             Map<String, Object> replaces = getProjectProperties();
             if(jvmOptions == null) jvmOptions = "";
             if(debug > 0 ){
@@ -329,7 +325,11 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             renameFile(appHome +  "/bin/main", mainExecutor);
             chmod(new File(mainExecutor));
 
-            replaces.put("jvm.options", jvmOptions);
+            String[] jvmOptionArray = jvmOptions.split(" ");
+            for (int i = 0; i < jvmOptionArray.length; i++) {
+                String jvmOption = jvmOptionArray[i];
+                replaces.put("jvm.option." + (i+5), jvmOption);
+            }
 
             changeFileB(mainExecutor, replaces);
 
