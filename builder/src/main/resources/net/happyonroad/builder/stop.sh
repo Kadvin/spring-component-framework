@@ -17,9 +17,10 @@ java -Dapp.home=$APP_HOME \
      $APP_TARGET          \
      --stop
 
-process=`ps aux | grep $APP_NAME | grep -v grep | grep -v check.sh`
+process=`ps aux | grep $APP_NAME | grep -v grep | grep -v check.sh | awk '{print $2}'`
 if [ "$process" == "" ]; then
-    echo "$system is stopped"
+    echo "$APP_NAME is stopped already"
 else
+  echo "Force to stop $APP_NAME by pid = $process"
   kill -9 $process
 fi
