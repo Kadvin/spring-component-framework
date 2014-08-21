@@ -128,9 +128,11 @@ public class DefaultComponentRepository
         for (File jar : jars) {
             if(jar.getPath().endsWith("-sources.jar")){
                 logger.trace("Skip sources {}", jar.getPath());
+                continue;
             }
             if( jar.getName().equalsIgnoreCase("wrapper.jar")){
                 logger.trace("Skip wrapper.jar");
+                continue;
             }
             Dependency dependency = Dependency.parse(jar.getName());
             ComponentJarResource resource = new ComponentJarResource(dependency.getGroupId(),
