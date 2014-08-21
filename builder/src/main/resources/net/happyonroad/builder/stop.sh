@@ -16,3 +16,10 @@ java -Dapp.home=$APP_HOME \
      -jar $BOOTSTRAP_JAR  \
      $APP_TARGET          \
      --stop
+
+process=`ps aux | grep $APP_NAME | grep -v grep | grep -v check.sh`
+if [ "$process" == "" ]; then
+    echo "$system is stopped"
+else
+  kill -9 $process
+fi
