@@ -53,6 +53,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     private File       logbackFile;
     @Parameter
     private String     folders;
+    @Parameter
+    private String     files;
     //Debug port
     @Parameter(defaultValue = "0")
     private int        debug;
@@ -74,6 +76,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         initAppParams();
 
         prepareFolders();
+
+        prepareFiles();
 
         copyTargets();
 
@@ -131,6 +135,20 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         }
     }
 
+    private void prepareFiles() throws MojoExecutionException {
+        if(StringUtils.isNotBlank(files)){
+            for (String path : StringUtils.split(files,",")) {
+                try {
+                    File file = new File(path);
+                    File dest = new File(output, file.getName());
+                    FileUtils.copyFile(file, dest);
+                } catch (IOException e) {
+                    getLog().error("Can't copy user specified folder: " + path + " because of:" + e.getMessage());
+                }
+            }
+        }
+
+    }
     private void copyTargets() throws MojoExecutionException {
         String fileName = project.getGroupId() + "." + project.getArtifactId() + "-" + project.getVersion();
         File newTargetFile = new File(project.getBasedir(), "target/" + fileName + ".jar");
@@ -269,15 +287,17 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             appBoot = "boot/" + bootJars.get(0);
             Map<String, Object> replaces = getProjectProperties();
             if(jvmOptions == null) jvmOptions = "";
+            // don't put port(maybe replaced at last)
+            // it may affect sed
             if(debug > 0 ){
-                jvmOptions += " -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=" + debug;
+                jvmOptions += " -agentlib:jdwp=transport=dt_socket,server=y,address=" + debug + ",suspend=n";
             }
             if(jmx > 0 ){
                 jvmOptions += " -Dcom.sun.management.jmxremote" +
+                              " -Dcom.sun.management.jmxremote.port=" + jmx  +
                               " -Dcom.sun.management.jmxremote.local.only=false" +
                               " -Dcom.sun.management.jmxremote.authenticate=false" +
-                              " -Dcom.sun.management.jmxremote.ssl=false" +
-                              " -Dcom.sun.management.jmxremote.port=" + jmx;
+                              " -Dcom.sun.management.jmxremote.ssl=false";
             }
             if(StringUtils.isNotBlank(appPrefix)){
                 jvmOptions += " -Dapp.prefix=" + appPrefix;

@@ -28,7 +28,8 @@ for((i=0;i<$max;i++)) do
       echo "$system is running and ready"
       exit 0
     else
-      echo "$system is running but not ready"
+      #echo "$system is running but not ready"
+      printf "."
     fi
   fi
 done
