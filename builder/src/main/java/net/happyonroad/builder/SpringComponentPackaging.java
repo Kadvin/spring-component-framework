@@ -140,7 +140,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             for (String path : StringUtils.split(files,",")) {
                 try {
                     File file = new File(path);
-                    File dest = new File(output, file.getName());
+                    String relativePath = StringUtils.substringAfter(file.getAbsolutePath(), getProject().getBasedir().getAbsolutePath() + "/");
+                    File dest = new File(output, relativePath);
                     FileUtils.copyFile(file, dest);
                 } catch (IOException e) {
                     getLog().error("Can't copy user specified folder: " + path + " because of:" + e.getMessage());
