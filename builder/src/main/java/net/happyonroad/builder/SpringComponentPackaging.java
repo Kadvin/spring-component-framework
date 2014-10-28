@@ -21,6 +21,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -36,7 +37,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     private static final Pattern INTERPOLATE_PTN_A = Pattern.compile("\\$\\{([^}]+)\\}", Pattern.MULTILINE);
     private static final Pattern INTERPOLATE_PTN_B = Pattern.compile("#\\{([^}]+)\\}", Pattern.MULTILINE);
-
+    private static final Charset UTF8 = Charset.forName("UTF-8");
     @Parameter
     private File       output;
     @Parameter(defaultValue = "1099")
@@ -385,7 +386,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     private void copyFile(File file, Map<String, Object> replaces) throws IOException {
         FileInputStream fis = new FileInputStream(file);
-        List<String> lines = IOUtils.readLines(fis);
+        List<String> lines = IOUtils.readLines(fis, UTF8);
         String interpolated;
         if( file.getName().toLowerCase().endsWith(".properties")){
             interpolated = interpolate(lines, replaces, 'A');
@@ -406,7 +407,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     private void changeFile(String path, Map<String, Object> replaces, char mode)throws IOException{
         File file = new File(path);
         FileInputStream fis = new FileInputStream(file);
-        List<String> lines = IOUtils.readLines(fis);
+        List<String> lines = IOUtils.readLines(fis, UTF8);
         String interpolated;
         if( file.getName().toLowerCase().endsWith(".properties")){
             interpolated = interpolate(lines, replaces, mode);
@@ -427,7 +428,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         ClassLoader cl = getClass().getClassLoader();
         InputStream indexStream = cl.getResourceAsStream(resourcePath + ".index");
         try {
-            List<String> names = IOUtils.readLines(indexStream);
+            List<String> names = IOUtils.readLines(indexStream, UTF8);
             for (String name : names) {
                 InputStream stream = cl.getResourceAsStream(resourcePath + name);
                 try {
@@ -464,7 +465,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     private String read(String resource) throws IOException {
         InputStream stream = getClass().getResourceAsStream(resource);
-        List lines = IOUtils.readLines(stream);
+        List lines = IOUtils.readLines(stream, UTF8);
         return StringUtils.join(lines, lineSeparator);
     }
 

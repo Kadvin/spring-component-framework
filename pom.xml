@@ -4,12 +4,12 @@
     <parent>
         <groupId>dnt</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>net.happyonroad</groupId>
     <artifactId>spring-component-parent</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
     <packaging>pom</packaging>
 
     <name>Spring Service Framework</name>
