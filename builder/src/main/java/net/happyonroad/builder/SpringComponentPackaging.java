@@ -19,7 +19,6 @@ import org.apache.tools.ant.taskdefs.Jar;
 import org.apache.tools.ant.types.FileSet;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
-import org.omg.DynamicAny._DynArrayStub;
 
 import java.io.*;
 import java.nio.charset.Charset;
