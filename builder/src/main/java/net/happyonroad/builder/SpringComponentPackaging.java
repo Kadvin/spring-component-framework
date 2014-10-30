@@ -19,6 +19,7 @@ import org.apache.tools.ant.taskdefs.Jar;
 import org.apache.tools.ant.types.FileSet;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
+import org.omg.DynamicAny._DynArrayStub;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -498,7 +499,14 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                 String[] array = line.split("=");
                 String key = array[0].trim();
                 // string like: neo4j.user= split array length == 1
-                String value = array.length == 2 ? array[1] : "";
+                String value;
+                if(array.length == 2){
+                    value = array[1];
+                }else if(array.length == 1){
+                    value = "";
+                }else{
+                    continue;//don't touch them
+                }
                 value = interpolate(value, replaces, mode);
                 if( replaces.containsKey(key)){
                     value = replaces.get(key).toString();

@@ -23,7 +23,7 @@ for((i=0;i<$max;i++)) do
     exit 255
   else
     # check started
-    if grep -i "$system is started" $log_file
+    if grep -i "$system is started" $log_file 2>/dev/null
     then
       echo "$system is running and ready"
       exit 0
