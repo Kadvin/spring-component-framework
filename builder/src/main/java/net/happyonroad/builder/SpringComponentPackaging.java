@@ -163,8 +163,11 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             File output = new File(this.output, "lib/" + fileName + ".jar");
             if(newTargetFile.exists()){
                 FileUtils.copyFile(newTargetFile, output);
-            }else{
+            }else if (defaultTargetFile.exists()){
                 FileUtils.copyFile(defaultTargetFile, output);
+            }else{
+                // the project is empty
+                getLog().warn(fileName + ".jar is empty");
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Can't copy targets: " + e.getMessage());
