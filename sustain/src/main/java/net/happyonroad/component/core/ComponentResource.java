@@ -3,10 +3,14 @@
  */
 package net.happyonroad.component.core;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import java.util.jar.Manifest;
 
 /**
@@ -15,6 +19,10 @@ import java.util.jar.Manifest;
 public abstract class ComponentResource {
     protected final String groupId, artifactId;
     protected Manifest manifest;
+    //META-INF目录下INDEX.DETAIL文件的内容
+    // 如果没有该文件，或者该文件内容为空，则该对象为空数组
+    // 如果还没有初始化过indexes，则该对象为null
+    protected String[]  indexes;
 
     protected ComponentResource(String groupId, String artifactId) {
         this.groupId = groupId;
@@ -75,4 +83,49 @@ public abstract class ComponentResource {
     public abstract Resource[] getLocalResourcesUnder(String path);
 
     public abstract Resource getLocalResourceUnder(String path);
+
+    /**
+     * 判断本组件包是否被索引
+     *
+     * @return 存在META-INF/INDEX.DETAIL 文件即为被索引
+     */
+    public boolean isIndexed() {
+        if( indexes == null ){
+            InputStream stream = null;
+            try {
+                stream = getInputStream("META-INF/INDEX.DETAIL");
+                List<String> lines = IOUtils.readLines(stream);
+                //是否应该讲indexes hash化？
+                indexes = lines.toArray(new String[lines.size()]);
+                // to be quick searched
+                Arrays.sort(indexes);
+            } catch (Exception e) {
+                indexes = new String[0];
+            } finally {
+                IOUtils.closeQuietly(stream);
+            }
+        }
+        return indexes.length > 0 ;
+    }
+
+    /**
+     * 根据index信息，判断本组件包是否包含特点文件
+     * @param path 资源的路径
+     * @return 是否存在
+     */
+    public boolean contains(String path) {
+        if( isIndexed() ){
+            return Arrays.binarySearch(indexes, path) >= 0;
+        }else{
+            return getLocalResourceUnder(path) != null;
+        }
+    }
+
+    /**
+     * 获取资源url
+     * @param path 资源在组件包里面的路径
+     * @return 路径
+     */
+    public abstract URL getLocalResource(String path);
+
 }

@@ -5,12 +5,17 @@ package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.ResourceNotFoundException;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import sun.net.www.protocol.jar.Handler;
+import sun.net.www.protocol.jar.JarURLConnection;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,13 +27,18 @@ import java.util.jar.JarFile;
  */
 public class ComponentJarResource extends ComponentResource {
 
-    protected JarFile file;
+
+    private final JarFile          file;
 
     public ComponentJarResource(String groupId, String artifactId, File file) {
         super(groupId, artifactId);
         try {
-            this.file = new JarFile(file);
-            this.manifest = this.file.getManifest();
+            URL manifestUrl = new URL("jar:" + file.toURI().toURL() + "!/META-INF/MANIFEST.MF");
+            //借 connection对象生成 JarFile，这个jar file就被系统统一管理；
+            // 而后直接返回的 new URL("jar:file:xxx!/yyy") 读取stream时，就会复用这个系统管理的JarFile
+            JarURLConnection connection = new JarURLConnection(manifestUrl, new Handler());
+            this.file = connection.getJarFile();
+            this.manifest = connection.getManifest();
         } catch (IOException e) {
             throw new IllegalArgumentException("Bad component jar file: " + file.getPath(), e);
         }
@@ -81,7 +91,9 @@ public class ComponentJarResource extends ComponentResource {
             JarEntry entry = entries.nextElement();
             if(entry.getName().startsWith(path)) {
                 try {
-                    UrlResource resource = new UrlResource("jar:file:" + file.getName() +"!/" + entry.getName());
+                    String url = assemble(entry.getName());
+                    Resource resource = new JarInputStreamResource(url, file.getInputStream(entry));
+                    //UrlResource resource = new UrlResource("jar:file:" + file.getName() +"!/" + entry.getName());
                     matches.add(resource);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -93,17 +105,41 @@ public class ComponentJarResource extends ComponentResource {
 
     @Override
     public Resource getLocalResourceUnder(String path) {
-        Enumeration<JarEntry> entries = file.entries();
-        while (entries.hasMoreElements()) {
-            JarEntry entry = entries.nextElement();
-            if(entry.getName().equalsIgnoreCase(path)) {
-                try {
-                    return new UrlResource("jar:file:" + file.getName() +"!/" + entry.getName());
-                } catch (IOException e) {
-                    e.printStackTrace();
+        String url = assemble(path);
+        if( isIndexed() && Arrays.binarySearch(indexes, path) >= 0){
+            try {
+                return new JarInputStreamResource(url, file.getInputStream(file.getEntry(path)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else{
+            Enumeration<JarEntry> entries = file.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if(entry.getName().equalsIgnoreCase(path)) {
+                    try {
+                        return new JarInputStreamResource(url, file.getInputStream(entry));
+                        //return new UrlResource(url);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
         return null;
+    }
+
+    @Override
+    public URL getLocalResource(String path)  {
+        final String url = assemble(path);
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Can't create jar url: " + url);
+        }
+    }
+
+    private String assemble(String path){
+        return  "jar:file:" + file.getName() + "!/" + path;
     }
 }

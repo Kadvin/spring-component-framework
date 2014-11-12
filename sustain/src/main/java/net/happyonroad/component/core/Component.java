@@ -266,4 +266,5 @@ public interface Component extends Comparable<Component>, Versionize {
      * @param value 额外的缺省属性值
      */
     void setManifestAttribute(String key, String value);
+
 }

@@ -57,11 +57,11 @@ public class PomStrategy extends AbstractStrategy {
 
     @Override
     public URL getResource(String name) {
-        URL resource = pomRealm.loadResourceFromDepends(name);
+        URL resource = pomRealm.loadResourceFromSelf(name);
 
         if ( resource == null )
         {
-            resource = pomRealm.loadResourceFromSelf( name );
+            resource = pomRealm.loadResourceFromDepends( name );
 
             if ( resource == null )
             {

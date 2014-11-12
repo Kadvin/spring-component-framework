@@ -117,7 +117,7 @@ public class DefaultComponentRepository
         } catch (Exception e) {
             logger.error("Failed to scan {} dir: {}", repositoryFolder, e.getMessage());
         }
-        logger.info(banner("Scanned jars"));
+        logger.info(banner("Scanned  jars"));
     }
 
     private void scanJars(File folder) throws InvalidComponentNameException, IOException {

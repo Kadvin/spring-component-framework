@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -102,5 +104,14 @@ public class ComponentFolderResource extends ComponentResource {
     public Resource getLocalResourceUnder(String path) {
         File target = new File(folder, path);
         return new FileSystemResource(target);
+    }
+
+    @Override
+    public URL getLocalResource(String path) {
+        try {
+            return new File(folder, path).toURI().toURL();
+        } catch (MalformedURLException e){
+            throw new IllegalArgumentException("Can't create relative url by " + path);
+        }
     }
 }

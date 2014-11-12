@@ -4,6 +4,7 @@
 package net.happyonroad.component.classworld;
 
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.ComponentResource;
 import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 import org.codehaus.plexus.classworlds.strategy.Strategy;
@@ -113,6 +114,15 @@ public class PomClassRealm extends ClassRealm
         Class klass = super.loadClassFromParent(name);
         if(klass != null) loaded(name, "parent");
         return klass;
+    }
+
+    @Override
+    public URL loadResourceFromSelf(String name) {
+        ComponentResource resource = component.getResource();
+        if( resource.isIndexed() && resource.contains(name) ){
+            return resource.getLocalResource(name);
+        }
+        return super.loadResourceFromSelf(name);
     }
 
     public URL loadResourceFromDepends(String name) {

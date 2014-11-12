@@ -39,6 +39,8 @@ public class SpringComponentIndexDetails extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         if( project.getPackaging().equals("pom") ) return;
         File classesFolder = new File(project.getBasedir(), "target/classes");
+        //this project without src/target
+        if( !classesFolder.exists() ) return;
         Collection<File> details = FileUtils.listFiles(classesFolder, null, true);
         List<String> lines = new ArrayList<String>(details.size());
         for (File detail : details) {
