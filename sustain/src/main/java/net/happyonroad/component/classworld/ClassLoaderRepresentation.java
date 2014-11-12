@@ -3,6 +3,8 @@
  */
 package net.happyonroad.component.classworld;
 
+import net.happyonroad.component.container.AppLauncher;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -14,7 +16,7 @@ import java.util.Set;
 /** the shared class loader for 3rd library  */
 public class ClassLoaderRepresentation extends ClassLoader {
 
-    private static SharedClassLoader sharedClassLoader = new SharedClassLoader(PomClassRealm.class.getClassLoader());
+    private static SharedClassLoader sharedClassLoader = new SharedClassLoader(AppLauncher.class.getClassLoader());
 
     private final Set<URL> urls;
 
@@ -27,7 +29,7 @@ public class ClassLoaderRepresentation extends ClassLoader {
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         Class<?> theClass = sharedClassLoader.loadClass(name);
         URL hostUrl = sharedClassLoader.hostUrl(theClass);
-        if(hostUrl == null) //it's loaded by parent actually, not by the shared instance
+        if (hostUrl == null) //it's loaded by parent actually, not by the shared instance
             return theClass;
         if(accessible(hostUrl))
             return theClass;

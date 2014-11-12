@@ -4,7 +4,7 @@
 package net.happyonroad.component.container.support;
 
 import net.happyonroad.component.ComponentTestSupport;
-import net.happyonroad.component.classworld.PomClassRealm;
+
 import net.happyonroad.component.core.Component;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -49,7 +49,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @Test
     public void testLoadLibrary() throws Exception {
         target = repository.resolveComponent("spring.test.comp_1-0.0.1");
-        PomClassRealm realm = world.newRealm(target);
+        ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         URL url = realm.getResource("spring/test/api/ServiceUser.class");
@@ -75,7 +75,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @Test
     public void testLoadApplication() throws Exception {
         target = repository.resolveComponent("spring.test.comp_2-0.0.1");
-        PomClassRealm realm = world.newRealm(target);
+        ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         URL url = realm.getResource("spring/test/standalone/StandaloneUser.class");
@@ -112,7 +112,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @Test
     public void testLoadServiceWithExport() throws Exception {
         target = repository.resolveComponent("spring.test.comp_3-0.0.1");
-        PomClassRealm realm = world.newRealm(target);
+        ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         URL url = realm.getResource("spring/test/provider/TestServiceProvider.class");
@@ -149,7 +149,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @Test
     public void testLoadServiceWithImport() throws Exception {
         target = repository.resolveComponent("spring.test.comp_4-0.0.1");
-        PomClassRealm realm = world.newRealm(target);
+        ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         URL url = realm.getResource("spring/test/provider/TestServiceProvider.class");
@@ -185,7 +185,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @Test
     public void testLoadServiceWithExportAndImport() throws Exception {
         target = repository.resolveComponent("spring.test.comp_5-0.0.1");
-        PomClassRealm realm = world.newRealm(target);
+        ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         URL url = realm.getResource("spring/test/mixed/MixedServiceProvider.class");
@@ -222,7 +222,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @Test
     public void testScanComponents() throws Exception {
         target = repository.resolveComponent("spring.test.comp_7-0.0.1");
-        PomClassRealm realm = world.newRealm(target);
+        ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = target.getApplication();

@@ -3,7 +3,6 @@
  */
 package net.happyonroad.component;
 
-import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.support.DefaultComponentLoader;
 import net.happyonroad.component.container.support.DefaultComponentLoaderTest;
 import net.happyonroad.component.container.support.DefaultComponentRepository;
@@ -32,7 +31,6 @@ public class ComponentTestSupport {
 
     protected DefaultComponentLoader     loader;
     protected DefaultComponentRepository repository;
-    protected PomClassWorld              world;
     protected Component                  target;
 
 
@@ -48,8 +46,7 @@ public class ComponentTestSupport {
     @Before
     public void setUp() throws Exception {
         repository = new DefaultComponentRepository(tempFolder.getPath());
-        world = new PomClassWorld();
-        loader = new DefaultComponentLoader(repository, world);
+        loader = new DefaultComponentLoader(repository);
         repository.start();
     }
 

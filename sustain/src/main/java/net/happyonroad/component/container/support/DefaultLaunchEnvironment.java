@@ -3,8 +3,6 @@
  */
 package net.happyonroad.component.container.support;
 
-import net.happyonroad.component.classworld.PomClassRealm;
-import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.AppLauncher;
 import net.happyonroad.component.container.ComponentLoader;
 import net.happyonroad.component.container.Executable;
@@ -20,8 +18,6 @@ import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.util.LogUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -30,8 +26,6 @@ import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -87,11 +81,10 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
      * @return App Launcher对象
      */
     @Override
-    public AppLauncher createLauncher(Component component) throws IOException, ConfigurationException {
+    public AppLauncher createLauncher(Component component) throws IOException {
         AppLauncher launcher = new AppLauncher(component, this);
         //配置 class world
-        PomClassRealm mainRealm = launcher.configure();
-        this.loader = createLoader(mainRealm);
+        this.loader = createLoader(component);
         this.context = (ComponentContext) this.loader;
         return launcher;
     }
@@ -155,45 +148,18 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             port = 0;
         }
         Executable executable = configure(launcher, host, port);
-        try {
-            switch (mode) {
-                case MODE_START:
-                    start(executable);
-                    break;
-                case MODE_STOP:
-                    stop(executable);
-                    break;
-                case MODE_RELOAD:
-                    reload(executable);
-                    break;
-                default:
-                    start(executable);
-            }
-        } catch (InvocationTargetException e) {
-            ClassRealm realm = launcher.getWorld().getRealm(launcher.getMainRealmName());
-
-            URL[] constituents = realm.getURLs();
-
-            logger.info("---------------------------------------------------");
-
-            for (int i = 0; i < constituents.length; i++) {
-                logger.info("constituent[" + i + "]: " + constituents[i]);
-            }
-
-            logger.info("---------------------------------------------------");
-
-            // Decode ITE (if we can)
-            Throwable t = e.getTargetException();
-
-            if (t instanceof Exception) {
-                throw (Exception) t;
-            }
-            if (t instanceof Error) {
-                throw (Error) t;
-            }
-
-            // Else just toss the ITE
-            throw e;
+        switch (mode) {
+            case MODE_START:
+                start(executable);
+                break;
+            case MODE_STOP:
+                stop(executable);
+                break;
+            case MODE_RELOAD:
+                reload(executable);
+                break;
+            default:
+                start(executable);
         }
     }
 
@@ -242,14 +208,10 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             logger.warn("You should configure a MBeanExporter in main app context");
             return;
         }
-        PomClassWorld world = context.getWorld();
-        exporter.registerManagedResource(world, world.getObjectName());
         Set<Component> components =repository.getComponents();
         for (Component comp : components) {
             if( repository.isApplication(comp.getGroupId())){
-                PomClassRealm cl = (PomClassRealm) comp.getClassLoader();
                 exporter.registerManagedResource(comp, ((DefaultComponent) comp).getObjectName());
-                if( cl != null )exporter.registerManagedResource(cl, cl.getObjectName());
             }
         }
     }
@@ -293,14 +255,14 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         return new DefaultComponentRepository(home);
     }
 
-    protected ComponentLoader createLoader(PomClassRealm mainRealm) {
-        DefaultComponentLoader loader = new DefaultComponentLoader(repository, (PomClassWorld) mainRealm.getWorld());
+    protected ComponentLoader createLoader(Component component) {
+        DefaultComponentLoader loader = new DefaultComponentLoader(repository);
         String featureResolvers = System.getProperty("component.feature.resolvers");
         if(StringUtils.hasText(featureResolvers)){
             for(String resolverFqn: featureResolvers.split(",")){
                 try{
                     banner("Found extended feature resolver: " + resolverFqn);
-                    Class resolverClass = Class.forName(resolverFqn, true, mainRealm);
+                    Class resolverClass = Class.forName(resolverFqn, true, component.getClassLoader());
                     FeatureResolver resolver = (FeatureResolver) resolverClass.newInstance();
                     loader.registerResolver(resolver);
                 }catch (Exception ex){

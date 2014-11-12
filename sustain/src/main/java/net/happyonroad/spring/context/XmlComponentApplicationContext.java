@@ -5,7 +5,6 @@ package net.happyonroad.spring.context;
 
 import net.happyonroad.component.core.Component;
 import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -17,7 +16,7 @@ public class XmlComponentApplicationContext extends GenericXmlApplicationContext
         implements ComponentApplicationContext {
     private final Component component;
 
-    public XmlComponentApplicationContext(Component component, ClassRealm realm, AbstractApplicationContext parent) {
+    public XmlComponentApplicationContext(Component component, ClassLoader realm, AbstractApplicationContext parent) {
         this.setParent(parent); /*It accept null*/
         this.component = component;
         ContextUtils.inheritParentProperties(parent, this);

@@ -13,7 +13,6 @@ import net.happyonroad.spring.context.XmlComponentApplicationContext;
 import net.happyonroad.spring.exception.ApplicationConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.beans.BeansException;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -47,7 +46,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     @Override
     public void resolve(Component component) throws IOException {
         logger.debug("Resolving {} {} feature", component, getName());
-        ClassRealm realm = resolveContext.getClassRealm(component.getId());
+        ClassLoader realm = resolveContext.getClassRealm(component.getId());
         AbstractApplicationContext parent = (AbstractApplicationContext) resolveContext.getServiceFeature(component);
         if (parent == null)
             parent = combineDependedApplicationAsParentContext(component);
@@ -92,7 +91,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
      * @return 加载出来的应用程序上下文
      */
     protected AbstractApplicationContext resolveByXml(Component component,
-                                                      ClassRealm realm,
+                                                      ClassLoader realm,
                                                       AbstractApplicationContext parent) {
         InputStream applicationStream = null;
         try {
@@ -120,7 +119,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
      * @return 加载出来的应用程序上下文
      */
     protected AbstractApplicationContext resolveByConfig(Component component,
-                                                         ClassRealm realm,
+                                                         ClassLoader realm,
                                                          AbstractApplicationContext parent) {
         String appConfig = component.getManifestAttribute(APP_CONFIG);
         Class appConfigClass;

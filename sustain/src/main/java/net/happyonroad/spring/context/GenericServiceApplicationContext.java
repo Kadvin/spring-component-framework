@@ -5,8 +5,6 @@ package net.happyonroad.spring.context;
 
 import net.happyonroad.component.core.Component;
 import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
-import org.apache.commons.lang.reflect.FieldUtils;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -19,7 +17,7 @@ public class GenericServiceApplicationContext extends GenericApplicationContext
 
     private final Component component;
     public GenericServiceApplicationContext(Component component,
-                                            ClassRealm realm,
+                                            ClassLoader realm,
                                             AbstractApplicationContext parent) {
         this.setParent(parent); /*It accept null*/
         this.component = component;

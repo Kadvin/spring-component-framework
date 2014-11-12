@@ -3,7 +3,6 @@
  */
 package net.happyonroad.spring;
 
-import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.ComponentLoader;
 import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.support.DefaultComponentLoader;
@@ -17,10 +16,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class MockComponentWorldConfig {
-    @Bean
-    public PomClassWorld testComponentWorld(){
-        return new PomClassWorld();
-    }
 
     @Bean
     public ComponentRepository testComponentRepository(){
@@ -33,6 +28,6 @@ public class MockComponentWorldConfig {
 
     @Bean
     public ComponentLoader testComponentLoader(){
-        return new DefaultComponentLoader(testComponentRepository(), testComponentWorld());
+        return new DefaultComponentLoader(testComponentRepository());
     }
 }

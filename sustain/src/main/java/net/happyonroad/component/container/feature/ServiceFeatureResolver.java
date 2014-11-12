@@ -15,7 +15,6 @@ import net.happyonroad.spring.exception.ServiceConfigurationException;
 import net.happyonroad.spring.service.AbstractServiceConfig;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.InputStreamResource;
@@ -50,7 +49,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
     @Override
     public void resolve(Component component) throws IOException {
         logger.debug("Resolving {} {} feature", component, getName());
-        ClassRealm realm = resolveContext.getClassRealm(component.getId());
+        ClassLoader realm = resolveContext.getClassRealm(component.getId());
         AbstractApplicationContext parentContext = combineDependedApplicationAsParentContext(component);
         //根据service.xml为其构建parent context
         AbstractApplicationContext serviceContext;
@@ -88,7 +87,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
     }
 
     protected AbstractApplicationContext resolveByXml(Component component,
-                                                      ClassRealm realm,
+                                                      ClassLoader realm,
                                                       AbstractApplicationContext parent) {
         InputStream serviceStream = null;
         try {
@@ -108,7 +107,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
     }
 
     protected AbstractApplicationContext resolveByConfig(Component component,
-                                                         ClassRealm realm,
+                                                         ClassLoader realm,
                                                          AbstractApplicationContext parent) {
         String serviceConfigName = component.getManifestAttribute(SERVICE_CONFIG);
         Class<? extends AbstractServiceConfig> serviceConfigClass;

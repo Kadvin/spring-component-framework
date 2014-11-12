@@ -3,7 +3,6 @@
  */
 package net.happyonroad.component.core;
 
-import net.happyonroad.component.classworld.PomClassRealm;
 import net.happyonroad.spring.context.ComponentApplicationContext;
 import net.happyonroad.spring.context.ServiceApplicationContext;
 
@@ -62,12 +61,12 @@ public class Features {
         setFeature(SERVICE_FEATURE, context);
     }
 
-    public PomClassRealm getLibraryFeature(){
+    public ClassLoader getLibraryFeature(){
         return getFeature(STATIC_FEATURE);
     }
 
 
-    public void setServiceFeature(PomClassRealm realm){
+    public void setServiceFeature(ClassLoader realm){
         setFeature(STATIC_FEATURE, realm);
     }
 

@@ -60,4 +60,6 @@ public interface ComponentRepository{
      * @return 所有已经解析的组件
      */
     Set<Component> getComponents();
+
+    String getMainComponentId();
 }

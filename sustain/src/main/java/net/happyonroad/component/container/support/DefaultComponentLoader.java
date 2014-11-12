@@ -3,7 +3,6 @@
  */
 package net.happyonroad.component.container.support;
 
-import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.ComponentLoader;
 import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.ServiceRegistry;
@@ -14,7 +13,6 @@ import net.happyonroad.component.core.*;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -29,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultComponentLoader implements ComponentLoader, ComponentContext {
     private Logger logger = LoggerFactory.getLogger(DefaultComponentLoader.class);
 
-    /*package*/ final PomClassWorld            world;
     /*package*/ final List<FeatureResolver>    featureResolvers;
     /*package*/ final List<FeatureResolver>    reverseResolvers;
     /*package*/ final Map<Component, Features> loadedFeatures;
@@ -39,9 +36,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
 
 
     public DefaultComponentLoader(ComponentRepository repository,
-                                  PomClassWorld world,
                                   FeatureResolver... resolvers) {
-        this.world = world;
         this.repository = repository;
         loadedFeatures = new ConcurrentHashMap<Component, Features>();
         registry = new DefaultServiceRegistry();
@@ -95,7 +90,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public ClassRealm getLibraryFeature(Component component) {
+    public ClassLoader getLibraryFeature(Component component) {
         Features features = loadedFeatures.get(component);
         if (features == null) return null;
         return features.getLibraryFeature();
@@ -133,13 +128,19 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public ClassRealm getClassRealm(String componentId) {
-        return world.getClassRealm(componentId);
+    public ClassLoader getClassRealm(String componentId) {
+        try {
+            return repository.resolveComponent(componentId).getClassLoader();
+        } catch (DependencyNotMeetException e) {
+            throw new IllegalArgumentException("The component " + componentId + " is not exist", e);
+        } catch (InvalidComponentNameException e) {
+            throw new IllegalArgumentException("The component " + componentId + " is invalid", e);
+        }
     }
 
     @Override
     public ApplicationContext getMainApp() {
-        String id = world.getMainComponentId();
+        String id = repository.getMainComponentId();
         Component component;
         try {
             component = repository.resolveComponent(id);
@@ -162,11 +163,6 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     @Override
     public ComponentRepository getComponentRepository() {
         return repository;
-    }
-
-    @Override
-    public PomClassWorld getWorld() {
-        return world;
     }
 
     /**

@@ -3,7 +3,6 @@ package net.happyonroad.component.container;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
 
 import java.io.IOException;
 
@@ -11,7 +10,7 @@ import java.io.IOException;
  * 启动环境
  */
 public interface LaunchEnvironment {
-    AppLauncher createLauncher(Component component) throws IOException, ConfigurationException;
+    AppLauncher createLauncher(Component component) throws IOException;
 
     void execute(AppLauncher launcher, String[] args) throws Exception;
 

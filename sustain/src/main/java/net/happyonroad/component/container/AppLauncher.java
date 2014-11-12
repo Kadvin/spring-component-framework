@@ -3,22 +3,16 @@
  */
 package net.happyonroad.component.container;
 
-import net.happyonroad.component.classworld.PomClassRealm;
-import net.happyonroad.component.classworld.PomClassWorld;
 import net.happyonroad.component.container.support.DefaultLaunchEnvironment;
 import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentException;
-import org.codehaus.plexus.classworlds.launcher.ConfigurationException;
-import org.codehaus.plexus.classworlds.launcher.Launcher;
-import org.codehaus.plexus.classworlds.realm.DuplicateRealmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
 import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 
@@ -36,7 +30,7 @@ import static net.happyonroad.util.LogUtils.banner;
  * <ol><li>加载<li>启动<li>停止<li>卸载</ol>
  * </p>
  */
-public class AppLauncher extends Launcher implements Executable {
+public class AppLauncher implements Executable {
     private static       Logger logger     = LoggerFactory.getLogger(AppLauncher.class.getName());
     private static final String CMD_EXIT   = "exit";
     private static final String CMD_RELOAD = "reload";
@@ -45,43 +39,24 @@ public class AppLauncher extends Launcher implements Executable {
 
     protected LaunchEnvironment environment;
     protected Component         mainComponent;
-    protected PomClassWorld     pomWorld;
+    //protected PomClassWorld     pomWorld;
     private   boolean           exiting;
 
-    public AppLauncher(Component theMainComponent, LaunchEnvironment environment) {
+    public AppLauncher(Component mainComponent, LaunchEnvironment environment) {
         super();
-        if (theMainComponent == null) {
+        if (mainComponent == null) {
             throw new IllegalArgumentException("The main component must been specified!");
         }
-        this.mainComponent = theMainComponent;
-        String theMainClassName = this.mainComponent.getManifestAttribute("Main-Class");
-        setAppMain(theMainClassName, this.mainComponent.getId());
+        this.mainComponent = mainComponent;
+        //String theMainClassName = this.mainComponent.getManifestAttribute("Main-Class");
+        //setAppMain(theMainClassName, this.mainComponent.getId());
         this.environment = environment;
-        super.world = this.pomWorld = new PomClassWorld();
-        this.pomWorld.setMainComponentId(this.mainComponent.getId());
+        //super.world = this.pomWorld = new PomClassWorld();
+        //this.pomWorld.setMainComponentId(this.mainComponent.getId());
     }
 
-    // ------------------------------------------------------------
-    //     扩展父类的成员方法
-    // ------------------------------------------------------------
-
-    /**
-     * 配置当前的Launch环境
-     *
-     * @throws IOException
-     * @throws ConfigurationException
-     */
-    public PomClassRealm configure() throws IOException, ConfigurationException {
-        try {
-            logger.info(banner("Configuring main realm for {}", this.mainComponent));
-            //根据组件的父子关系,依赖关系,包含关系，建立相应的 realm 关系
-            PomClassRealm realm = pomWorld.newRealm(this.mainComponent);
-            logger.info(banner("Configured  main realm {}", realm));
-            return realm;
-        } catch (DuplicateRealmException e) {
-            //or throw CyclicDependencyException ?
-            throw new ConfigurationException("The component [" + this.mainRealmName + "] has been configured!");
-        }
+    public ClassLoader getMainClassLoader(){
+        return this.mainComponent.getClassLoader();
     }
 
     /**
@@ -91,7 +66,7 @@ public class AppLauncher extends Launcher implements Executable {
     public void start() throws Exception {
         try {
             //主线程设置为该class loader，可以让RMI序列化的时候工作
-            Thread.currentThread().setContextClassLoader(this.pomWorld.getMainRealm());
+            Thread.currentThread().setContextClassLoader(getMainClassLoader());
             logger.info(banner("Loading components starts from {}", this.mainComponent));
             environment.load(this.mainComponent);
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
@@ -102,13 +77,6 @@ public class AppLauncher extends Launcher implements Executable {
             processCommands();
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-        }
-        //最后，如果目标jar定义了入口Main-Class
-        // 再给目标这个入口函数调用机会
-        //  此时，组件的一般性加载工作已经完成
-        if (this.mainClassName != null) {
-            logger.info(banner("Callback target jar's main-class: {}", this.mainClassName));
-            super.launch(new String[0]);
         }
     }
 
@@ -319,7 +287,7 @@ public class AppLauncher extends Launcher implements Executable {
             //      启动系统(在当前进程内启动系统)
             //      停止系统(通过本机Socket停止另外一个已经在运行的系统)
             environment.execute(launcher, newArgs);
-            return launcher.getExitCode();
+            return 0;
         }catch (ComponentException ex){
             logger.error("{} : {}", ex.getPath(), ex.getRootCause().getMessage());
             return -1;

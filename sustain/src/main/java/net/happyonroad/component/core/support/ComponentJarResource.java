@@ -5,7 +5,6 @@ package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.ResourceNotFoundException;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import sun.net.www.protocol.jar.Handler;
 import sun.net.www.protocol.jar.JarURLConnection;

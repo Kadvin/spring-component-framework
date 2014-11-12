@@ -4,7 +4,6 @@
 package net.happyonroad.spring.context;
 
 import net.happyonroad.component.core.Component;
-import org.codehaus.plexus.classworlds.realm.ClassRealm;
 import org.springframework.context.support.AbstractApplicationContext;
 
 /**
@@ -22,7 +21,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 public class XmlServiceApplicationContext extends XmlComponentApplicationContext
         implements ServiceApplicationContext {
 
-    public XmlServiceApplicationContext(Component component, ClassRealm resourceLoader, AbstractApplicationContext parent) {
+    public XmlServiceApplicationContext(Component component, ClassLoader resourceLoader, AbstractApplicationContext parent) {
         super(component, resourceLoader, parent);
         this.setDisplayName("Service Context for: [" + component.getDisplayName() + "]");
     }

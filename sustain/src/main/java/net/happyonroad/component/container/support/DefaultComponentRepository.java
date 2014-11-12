@@ -36,9 +36,12 @@ public class DefaultComponentRepository
     private static FilenameFilter jarFilter = new FilenameFilterBySuffix(".jar");
     private static FilenameFilter pomFilter = new FilenameFilterBySuffix(".pom");
 
+    private static DefaultComponentRepository sharedInstance;
+
     private Logger logger = LoggerFactory.getLogger(DefaultComponentRepository.class);
 
     private File                  home;
+    private String mainComponentId;
     private Set<Component>        components;
     private Map<Dependency, File> cache;
 
@@ -50,6 +53,7 @@ public class DefaultComponentRepository
      * @param home 应用根路径
      */
     public DefaultComponentRepository(String home) {
+        sharedInstance = this;
         this.home = new File(home);
         File libFolder = new File(home, "lib");
         if (!libFolder.exists()) {
@@ -65,13 +69,17 @@ public class DefaultComponentRepository
         resolver = new DefaultComponentResolver(this);
     }
 
-    // ------------------------------------------------------------
+    @Override
+    public String getMainComponentId() {
+        return mainComponentId;
+    }
+// ------------------------------------------------------------
     //     本身的Lifecycle方法
     // ------------------------------------------------------------
 
 
     /** 启动时预加载 lib目录, lib/poms 下所有的组件信息 */
-    public void start()  {
+    public void start() {
         logger.info(banner("Scanning jars"));
         //先寻找 boot/*.jar，将其预加载为component
         File bootFolder = new File(home, "boot");
@@ -214,8 +222,26 @@ public class DefaultComponentRepository
     @Override
     public Component resolveComponent(String strDependency)
             throws DependencyNotMeetException, InvalidComponentNameException {
+        if( this.mainComponentId == null ) mainComponentId = strDependency;
         Dependency dependency = Dependency.parse(strDependency);
         return resolveComponent(dependency);
+    }
+
+
+    public File componentFile(String strDependency) throws InvalidComponentNameException {
+        logger.trace("Finding {}", strDependency);
+        Dependency dependency = Dependency.parse(strDependency);
+        Set<Dependency> dependencies = cache.keySet();
+        for (Dependency dep : dependencies) {
+            if( dependency.accept(dep) )
+            {
+                File file = cache.get(dependency);
+                logger.trace("Found   {}", file.getAbsolutePath());
+                return file;
+            }
+        }
+        logger.trace("Missing  {}", strDependency);
+        return null;
     }
 
     /**
@@ -294,4 +320,7 @@ public class DefaultComponentRepository
         }else return 0;
     }
 
+    public static DefaultComponentRepository getRepository() {
+        return sharedInstance;
+    }
 }

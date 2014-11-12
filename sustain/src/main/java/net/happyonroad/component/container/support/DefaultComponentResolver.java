@@ -394,6 +394,7 @@ public class DefaultComponentResolver implements ComponentResolver {
         if (!dependency.accept(comp))
             throw new InvalidComponentNameException("The component file name: " + jarOrPomFilePath.getName() +
                                                     " conflict with its inner pom: " + comp.toString());
+        comp.setClassLoader(new ComponentClassLoader(comp));
         return comp;
     }
 
