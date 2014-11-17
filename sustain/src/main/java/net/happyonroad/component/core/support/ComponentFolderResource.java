@@ -27,12 +27,12 @@ import java.util.jar.Manifest;
 public class ComponentFolderResource extends ComponentResource {
     protected File folder;
 
-    public ComponentFolderResource(String groupId, String artifactId, String folder) {
-        super(groupId, artifactId);
-        if( folder == null ){
-            throw new IllegalArgumentException("The component folder can't be null");
-        }
-        this.folder = new File(folder);
+    public ComponentFolderResource(String groupId,
+                                   String artifactId,
+                                   String version,
+                                   File folder) {
+        super(groupId, artifactId, version, folder.getName());
+        this.folder = folder;
         if( !this.folder.exists() )
             throw new IllegalArgumentException("The component folder: " + folder + " is not exist!");
         try{

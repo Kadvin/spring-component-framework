@@ -3,7 +3,8 @@
  */
 package net.happyonroad.component.classworld;
 
-import net.happyonroad.component.container.AppLauncher;
+
+import net.happyonroad.component.core.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,7 +17,7 @@ import java.util.Set;
 /** the shared class loader for 3rd library  */
 public class ClassLoaderRepresentation extends ClassLoader {
 
-    private static SharedClassLoader sharedClassLoader = new SharedClassLoader(AppLauncher.class.getClassLoader());
+    private static SharedClassLoader sharedClassLoader = new SharedClassLoader(Component.class.getClassLoader());
 
     private final Set<URL> urls;
 
@@ -27,6 +28,18 @@ public class ClassLoaderRepresentation extends ClassLoader {
 
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
+        Class<?> theClass = sharedClassLoader.loadClass(name);
+        URL hostUrl = sharedClassLoader.hostUrl(theClass);
+        if (hostUrl == null) //it's loaded by parent actually, not by the shared instance
+            return theClass;
+        if(accessible(hostUrl))
+            return theClass;
+        else
+            throw new ClassNotFoundException(name);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
         Class<?> theClass = sharedClassLoader.loadClass(name);
         URL hostUrl = sharedClassLoader.hostUrl(theClass);
         if (hostUrl == null) //it's loaded by parent actually, not by the shared instance
@@ -60,8 +73,16 @@ public class ClassLoaderRepresentation extends ClassLoader {
     private boolean accessible(URL resourceUrl) {
         if(resourceUrl == null)
             return false;
+        if( System.getProperty("framework.launch", "shell").equalsIgnoreCase("ide"))
+            return true;
+        String resourcePath = resourceUrl.toString();
+        // system visible
+        for (URL url : sharedClassLoader.sysUrls) {
+            if( resourcePath.contains(url.getFile()))
+                return true;
+        }
         for (URL url : urls) {
-            if( resourceUrl.toString().contains(url.toString()))
+            if( resourcePath.contains(url.getFile()))
                 return true;
         }
         return false;

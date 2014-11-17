@@ -18,15 +18,20 @@ import java.util.jar.Manifest;
  */
 public abstract class ComponentResource {
     protected final String groupId, artifactId;
-    protected Manifest manifest;
+    private final String   version;
+    private final String   fileName;
+    protected     Manifest manifest;
     //META-INF目录下INDEX.DETAIL文件的内容
     // 如果没有该文件，或者该文件内容为空，则该对象为空数组
     // 如果还没有初始化过indexes，则该对象为null
-    protected String[]  indexes;
+    protected     String[] indexes;
+    protected     String[] dependencies;
 
-    protected ComponentResource(String groupId, String artifactId) {
+    protected ComponentResource(String groupId, String artifactId, String version, String fileName) {
         this.groupId = groupId;
         this.artifactId = artifactId;
+        this.version = version;
+        this.fileName = fileName;
     }
 
 
@@ -40,6 +45,14 @@ public abstract class ComponentResource {
 
     public String getArtifactId(){
         return artifactId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getFileName() {
+        return fileName;
     }
 
     public InputStream getPomStream() throws IOException {
@@ -128,4 +141,20 @@ public abstract class ComponentResource {
      */
     public abstract URL getLocalResource(String path);
 
+    public String[] getDependencies(){
+        if( dependencies == null ){
+            InputStream stream = null;
+            try {
+                stream = getInputStream("META-INF/INDEX.DEPENDS");
+                List<String> lines = IOUtils.readLines(stream);
+                //是否应该讲indexes hash化？
+                dependencies = lines.toArray(new String[lines.size()]);
+            } catch (Exception e) {
+                dependencies = new String[0];
+            } finally {
+                IOUtils.closeQuietly(stream);
+            }
+        }
+        return dependencies;
+    }
 }

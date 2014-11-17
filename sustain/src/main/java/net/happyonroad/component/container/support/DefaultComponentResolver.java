@@ -21,7 +21,7 @@ import java.util.*;
 public class DefaultComponentResolver implements ComponentResolver {
     protected XStream                    xmlResolver;
     protected MutableComponentRepository repository;
-    private Logger                      logger               =
+    private Logger                      logger                =
             LoggerFactory.getLogger(DefaultComponentResolver.class.getName());
     //应该用一个DM的merge/unmerge，但是现在这么做会失败，需要debug
     private Stack<DependencyManagement> dependencyManagements = new Stack<DependencyManagement>();
@@ -354,8 +354,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                 if (!comp.isAggregating()) {
                     File jarFile = digJarFilePath(jarOrPomFilePath);
                     if (jarFile != null) {
-                        ComponentJarResource jarResource = new ComponentJarResource(dependency.getGroupId(),
-                                                                                    dependency.getArtifactId(), jarFile);
+                        ComponentJarResource jarResource = new ComponentJarResource(dependency, jarFile.getName());
                         comp.setResource(jarResource);
                     } else {
                         logger.warn("Can't find jar file for {}", comp);
@@ -370,8 +369,10 @@ public class DefaultComponentResolver implements ComponentResolver {
                 } catch (IOException ex) {/**/}
             }
         } else {
-            ComponentJarResource jarResource = new ComponentJarResource(dependency.getGroupId(),
-                                                                        dependency.getArtifactId(), jarOrPomFilePath);
+            if( dependency.getVersion() == null ){
+                dependency.setVersion(basic.getVersion());
+            }
+            ComponentJarResource jarResource = new ComponentJarResource(dependency, jarOrPomFilePath.getName());
             try {
                 stream = jarResource.getPomStream();
                 comp = (DefaultComponent) resolveComponent(dependency, stream);

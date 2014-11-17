@@ -143,20 +143,24 @@ public class DefaultComponentRepository
                 continue;
             }
             Dependency dependency = Dependency.parse(jar.getName());
-            ComponentJarResource resource = new ComponentJarResource(dependency.getGroupId(),
-                                                                     dependency.getArtifactId(), jar);
+            //先放到cache里面，避免构建 component jar resource时无法寻址
+            cache.put(dependency, jar);
             InputStream stream = null;
+            ComponentJarResource resource = null;
             try {
+                resource = new ComponentJarResource(dependency, jar.getName());
                 stream = resource.getPomStream();
                 //只有存在 pom.xml 的jar包才直接解析
                 //而不存在 pom.xml 的jar包，需要依赖 poms里面的定义进行解析
-                cache.put(dependency, jar);
+            } catch (IOException e) {
+                cache.remove(dependency);
             } catch (ResourceNotFoundException e) {
                 //Not cache it by the concrete jar
+                cache.remove(dependency);
                 //logger.error("Error while read :" + jar.getPath(), e);
             } finally {
                 try {
-                    resource.close();
+                    if(resource != null ) resource.close();
                     if (stream != null) stream.close();
                 } catch (IOException e) {
                     logger.error("Error while close:" + jar.getPath(), e);
@@ -227,22 +231,6 @@ public class DefaultComponentRepository
         return resolveComponent(dependency);
     }
 
-
-    public File componentFile(String strDependency) throws InvalidComponentNameException {
-        logger.trace("Finding {}", strDependency);
-        Dependency dependency = Dependency.parse(strDependency);
-        Set<Dependency> dependencies = cache.keySet();
-        for (Dependency dep : dependencies) {
-            if( dependency.accept(dep) )
-            {
-                File file = cache.get(dependency);
-                logger.trace("Found   {}", file.getAbsolutePath());
-                return file;
-            }
-        }
-        logger.trace("Missing  {}", strDependency);
-        return null;
-    }
 
     /**
      * 从当前已经解析的组件中找到符合依赖的组件列表，这不会触发实际解析动作

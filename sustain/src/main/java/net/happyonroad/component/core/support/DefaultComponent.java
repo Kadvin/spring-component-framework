@@ -3,6 +3,7 @@
  */
 package net.happyonroad.component.core.support;
 
+import net.happyonroad.component.container.support.ComponentClassLoader;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.Versionize;
@@ -17,11 +18,11 @@ import org.springframework.jmx.export.naming.SelfNaming;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import java.util.*;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,11 +73,11 @@ public class DefaultComponent implements Component, SelfNaming {
 
     private String name, description, url;
 
-    private Properties          properties;
-    private ClassLoader         classLoader;
-    private ApplicationContext  serviceApplication;
-    private ApplicationContext  application;
-    private Map<String, String> defaults;
+    private Properties           properties;
+    private ComponentClassLoader classLoader;
+    private ApplicationContext   serviceApplication;
+    private ApplicationContext   application;
+    private Map<String, String>  defaults;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -118,7 +119,7 @@ public class DefaultComponent implements Component, SelfNaming {
         }
 
         if (type == null) {
-            throw new InvalidComponentException(groupId, artifactId, getVersion(), type, "The type cannot be empty.");
+            throw new InvalidComponentException(groupId, artifactId, getVersion(), "null", "The type cannot be empty.");
         }
 
         if (version == null) {
@@ -258,6 +259,46 @@ public class DefaultComponent implements Component, SelfNaming {
             /*ignore*/
             return null;
         }
+    }
+
+    @Override
+    public URL getURL() {
+        try {
+            String fileName;
+            if( resource == null ){
+                fileName = file.getName().replace(".pom", ".jar");
+            }else{
+                fileName = resource.getFileName();
+            }
+            return new URL("component:" + fileName);
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("Can't construct the component url");
+        }
+    }
+
+    @Override
+    public Set<URL> getLibURLs() {
+        Set<URL> urls = new HashSet<URL>();
+        String[] strings = resource == null ? new String[0] : resource.getDependencies();
+        for (String line : strings) {
+            try {
+                if( isApplication(line) ) continue;
+                urls.add(new URL("component:" + line));
+            } catch (Exception e) {
+                throw new IllegalStateException("The " + this + " META-INF/INDEX.DEPENDS: " + line + " is invalid");
+            }
+        }
+        return urls;
+    }
+
+    @Override
+    public List<String> getAppBriefIds() {
+        List<String> briefIds = new ArrayList<String>();
+        String[] strings = resource == null ? new String[0] : resource.getDependencies();
+        for (String line : strings) {
+            if( isApplication(line) ) briefIds.add(line);
+        }
+        return briefIds;
     }
 
     public ComponentResource getResource() {
@@ -580,10 +621,10 @@ public class DefaultComponent implements Component, SelfNaming {
     @Override
     public String getManifestAttribute(String attributeName) {
         String value = null;
-        if (this.resource != null){
+        if (this.resource != null) {
             value = this.resource.getManifest().getMainAttributes().getValue(attributeName);
         }
-        if( value == null && defaults != null ){
+        if (value == null && defaults != null) {
             value = defaults.get(attributeName);
         }
         return value;
@@ -591,7 +632,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public void setManifestAttribute(String key, String value) {
-        if( this.defaults == null ) this.defaults = new HashMap<String, String>();
+        if (this.defaults == null) this.defaults = new HashMap<String, String>();
         this.defaults.put(key, value);
     }
 
@@ -606,9 +647,9 @@ public class DefaultComponent implements Component, SelfNaming {
 
 
     public void splitVersionAndClassifier() {
-        if( version.contains("-") ){
+        if (version.contains("-")) {
             String[] vac = this.version.split("-");
-            if(!vac[1].contains("SNAPSHOT")){
+            if (!vac[1].contains("SNAPSHOT")) {
                 this.version = vac[0];
                 this.classifier = vac[1];
                 return;
@@ -680,23 +721,23 @@ public class DefaultComponent implements Component, SelfNaming {
         return DefaultComponent.isApplication(getGroupId());
     }
 
-    static public boolean isApplication(String groupId) {
+    static public boolean isApplication(String briefId) {
         //这个属性可以通过设置 app.prefix系统属性进行干预，支持多个prefix用分号分隔
         //当符合该条件的模块没有被解析出来时，系统将会停止解析，抛出异常；
         //而不符合该条件的模块，往往是第三方未用到的模块，解析失败不应该停止
         String prefixes = System.getProperty("app.prefix", "dnt.");
         String[] strings = prefixes.split(";");
         for (String prefix : strings) {
-            if (groupId.startsWith(prefix)) return true;
+            if (briefId.startsWith(prefix)) return true;
         }
         return false;
     }
 
-    public ClassLoader getClassLoader() {
+    public ComponentClassLoader getClassLoader() {
         return classLoader;
     }
 
-    public void setClassLoader(ClassLoader classLoader) {
+    public void setClassLoader(ComponentClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 

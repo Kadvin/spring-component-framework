@@ -33,6 +33,9 @@ public class ComponentTestSupport {
     protected DefaultComponentRepository repository;
     protected Component                  target;
 
+    static {
+        System.setProperty("framework.launch", "ide");
+    }
 
     @AfterClass
     public static void tearDownTotal() throws Exception {
@@ -45,6 +48,7 @@ public class ComponentTestSupport {
 
     @Before
     public void setUp() throws Exception {
+        System.setProperty("app.home", tempFolder.getAbsolutePath());
         repository = new DefaultComponentRepository(tempFolder.getPath());
         loader = new DefaultComponentLoader(repository);
         repository.start();

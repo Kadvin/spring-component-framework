@@ -9,7 +9,6 @@ import org.springframework.core.io.Resource;
 import sun.net.www.protocol.jar.Handler;
 import sun.net.www.protocol.jar.JarURLConnection;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -29,28 +28,27 @@ public class ComponentJarResource extends ComponentResource {
 
     private final JarFile          file;
 
-    public ComponentJarResource(String groupId, String artifactId, File file) {
-        super(groupId, artifactId);
+    public ComponentJarResource(Dependency dependency, String briefId) {
+        this(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), briefId);
+    }
+
+    public ComponentJarResource(String groupId, String artifactId, String version, String briefId) {
+        super(groupId, artifactId, version, briefId);
         try {
-            URL manifestUrl = new URL("jar:" + file.toURI().toURL() + "!/META-INF/MANIFEST.MF");
+            URL manifestUrl = new URL(assemble("META-INF/MANIFEST.MF"));
             //借 connection对象生成 JarFile，这个jar file就被系统统一管理；
             // 而后直接返回的 new URL("jar:file:xxx!/yyy") 读取stream时，就会复用这个系统管理的JarFile
             JarURLConnection connection = new JarURLConnection(manifestUrl, new Handler());
             this.file = connection.getJarFile();
             this.manifest = connection.getManifest();
         } catch (IOException e) {
-            throw new IllegalArgumentException("Bad component jar file: " + file.getPath(), e);
+            throw new IllegalArgumentException("Bad component: " + getFileName(), e);
         }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 额外扩展的对外方法
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @SuppressWarnings("UnusedDeclaration")
-    public File getFile() {
-        return new File(file.getName());
-    }
 
     public void close(){
         this.manifest.clear();
@@ -138,7 +136,8 @@ public class ComponentJarResource extends ComponentResource {
         }
     }
 
+    // replace file protocol to component
     private String assemble(String path){
-        return  "jar:file:" + file.getName() + "!/" + path;
+        return  "jar:component:" + getFileName() + "!/" + path;
     }
 }

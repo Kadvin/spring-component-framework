@@ -1,5 +1,6 @@
 package net.happyonroad.component.core;
 
+import net.happyonroad.component.container.support.ComponentClassLoader;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.DependencyManagement;
 import org.springframework.context.ApplicationContext;
@@ -7,7 +8,6 @@ import org.springframework.context.ApplicationContext;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -99,6 +99,13 @@ public interface Component extends Comparable<Component>, Versionize {
     URL getFileURL();
 
     /**
+     * 得到该组件的url，形如: component:org.apache.maven-1.2.3.jar
+     *
+     * @return 该组件的url
+     */
+    URL getURL();
+
+    /**
      * 用于读取组件内部文件流的资源封装
      *
      * @return 组件资源接口对象
@@ -109,7 +116,7 @@ public interface Component extends Comparable<Component>, Versionize {
      * 获得相应的类加载器
      * @return 类加载器
      */
-    ClassLoader getClassLoader();
+    ComponentClassLoader getClassLoader();
 
     /**
      * 组件依赖关系
@@ -267,4 +274,7 @@ public interface Component extends Comparable<Component>, Versionize {
      */
     void setManifestAttribute(String key, String value);
 
+    Set<URL> getLibURLs();
+
+    List<String> getAppBriefIds();
 }

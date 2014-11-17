@@ -41,6 +41,16 @@ public abstract class AbstractFeatureResolver implements FeatureResolver {
     }
 
     @Override
+    public void beforeResolve(Component component) {
+        // do nothing
+    }
+
+    @Override
+    public void afterResolve(Component component) {
+        // do nothing
+    }
+
+    @Override
     public Object release(Component component) {
         logger.debug("Release {} {} feature", component, getName());
         return resolveContext.removeFeature(component, getName());

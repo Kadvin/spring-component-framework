@@ -37,6 +37,10 @@ public interface FeatureResolver {
      */
     boolean hasFeature(Component component);
 
+    void beforeResolve(Component component);
+
+    void afterResolve(Component component);
+
     /**
      * 在特定的上下文中解析相应的组件
      *

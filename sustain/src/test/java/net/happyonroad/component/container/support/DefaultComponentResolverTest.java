@@ -10,8 +10,10 @@ import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.Exclusion;
 import junit.framework.TestCase;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -41,6 +43,13 @@ public class DefaultComponentResolverTest extends TestCase {
         repository = new DefaultComponentRepository(home);
         resolver = repository.resolver;
     }
+
+    @Override
+    public void setUp() throws Exception {
+        String home = System.getProperty("java.io.tmpdir") + File.separator + "DefaultComponentResolverTest";
+        System.setProperty("app.home", home);
+    }
+
     // ------------------------------------------------------------
     // 测试 Component resolveComponent(InputStream pomDotXml);
     // ------------------------------------------------------------
@@ -259,9 +268,11 @@ public class DefaultComponentResolverTest extends TestCase {
     public void testResolveComponentFromJarFile() throws Exception {
         Component theParent = new DefaultComponent("spring", "aggregation", "0.0.1", null, "pom");
         repository.addComponent(theParent);
+        copyPom("spring.aggregation.sample-1.0.0.pom", repository.getHome());
         Component compTechnology = new DefaultComponent("spring", "component-framework", "0.0.1", null, "jar");
         repository.addComponent(compTechnology);
         File jarFile = getResourceFile("jars/spring.aggregation.sample-1.0.0.jar");
+        FileUtils.copyFile(jarFile, new File(repository.getHome(), "lib/" + jarFile.getName()));
         Component component = resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.jar"), jarFile);
         assertEquals("spring.aggregation", component.getGroupId());
         assertEquals("sample", component.getArtifactId());
@@ -413,4 +424,12 @@ public class DefaultComponentResolverTest extends TestCase {
         //TODO 判断资源是不是包含在jar包中，如果被包含，则把该资源写到临时目录，而后生成面向临时目录的文件
         return new File(resource.getPath());
     }
+
+    protected static void copyPom(String pomName, String root) throws IOException {
+        URL source = DefaultComponentLoaderTest.class.getClassLoader().getResource("poms/" + pomName );
+        assert source != null;
+        File destination = new File(root, "lib/poms/" + pomName );
+        FileUtils.copyURLToFile(source, destination);
+    }
+
 }

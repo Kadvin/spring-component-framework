@@ -278,10 +278,21 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 throw new IOException("The component " + component + " without resource");
             }
             logger.trace("Actual loading {}", component);
+            List<FeatureResolver> resolvers = new ArrayList<FeatureResolver>(featureResolvers.size());
             for (FeatureResolver featureResolver : featureResolvers) {
                 if (featureResolver.hasFeature(component)) {
-                    featureResolver.resolve(component);
+                    resolvers.add(featureResolver);
                 }
+            }
+
+            for (FeatureResolver featureResolver : resolvers) {
+                featureResolver.beforeResolve(component);
+            }
+            for (FeatureResolver featureResolver : resolvers) {
+                featureResolver.resolve(component);
+            }
+            for (FeatureResolver featureResolver : resolvers) {
+                featureResolver.afterResolve(component);
             }
             loaded(component);
         }

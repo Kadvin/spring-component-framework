@@ -3,10 +3,8 @@
  */
 package net.happyonroad.component.container.feature;
 
-import net.happyonroad.component.container.support.ComponentClassLoader;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.Features;
-import net.happyonroad.component.core.support.DefaultComponent;
 
 /** 静态特性解析 */
 public class StaticFeatureResolver extends AbstractFeatureResolver{
@@ -29,10 +27,7 @@ public class StaticFeatureResolver extends AbstractFeatureResolver{
     public void resolve(Component component) {
         if( component.isPlain()) return;
         logger.debug("Resolving {} {} feature", component, getName());
-        ClassLoader realm = new ComponentClassLoader(component);
-        if(component instanceof DefaultComponent){
-            ((DefaultComponent)component).setClassLoader(realm);
-        }
+        ClassLoader realm = component.getClassLoader();
         resolveContext.registerFeature(component, getName(), realm);
     }
 }

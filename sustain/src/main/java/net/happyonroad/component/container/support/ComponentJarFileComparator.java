@@ -34,7 +34,7 @@ class ComponentJarFileComparator implements Comparator<File> {
         }
 
         int compare = repository.compare(comp1, comp2);
-        //System.out.printf("\t%s <=> %s = %d\n", comp1.getBriefId(), comp2.getBriefId(), compare);
+        //System.out.printf("\t%s <=> %s = %d\n", comp1.getFileName(), comp2.getFileName(), compare);
         return compare;
     }
 }
