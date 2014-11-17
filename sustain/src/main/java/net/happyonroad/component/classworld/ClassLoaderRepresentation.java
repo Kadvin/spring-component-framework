@@ -5,9 +5,12 @@ package net.happyonroad.component.classworld;
 
 
 import net.happyonroad.component.core.Component;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -24,6 +27,8 @@ public class ClassLoaderRepresentation extends ClassLoader {
     public ClassLoaderRepresentation(Set<URL> urls) {
         sharedClassLoader.addURLs(urls);
         this.urls = urls;
+        // all accessible urls
+        this.urls.addAll(sharedClassLoader.sysUrls);
     }
 
     @Override
@@ -75,17 +80,22 @@ public class ClassLoaderRepresentation extends ClassLoader {
             return false;
         if( System.getProperty("framework.launch", "shell").equalsIgnoreCase("ide"))
             return true;
-        String resourcePath = resourceUrl.toString();
-        // system visible
-        for (URL url : sharedClassLoader.sysUrls) {
-            if( resourcePath.contains(url.getFile()))
-                return true;
+        try {
+            URL compUrl = convertAsComponentUrl(resourceUrl);
+            return urls.contains(compUrl);
+        } catch (MalformedURLException e) {
+            return true;
         }
-        for (URL url : urls) {
-            if( resourcePath.contains(url.getFile()))
-                return true;
-        }
-        return false;
+    }
+
+    private URL convertAsComponentUrl(URL resourceUrl) throws MalformedURLException {
+        String file = resourceUrl.getFile();
+        if( file.contains(":"))
+            file = file.substring(file.lastIndexOf(':') + 1);
+        if( file.contains( "!/") )
+            file = StringUtils.substringBefore(file, "!/");
+        file = FilenameUtils.getName(file);
+        return new URL("component:" + file);
     }
 
     @Override
@@ -97,9 +107,5 @@ public class ClassLoaderRepresentation extends ClassLoader {
             if(accessible(url)) urls.add(url);
         }
         return Collections.enumeration(urls);
-    }
-
-    public static Set<URL> getThirdpartURLs() {
-        return sharedClassLoader.allUrls;
     }
 }

@@ -4,23 +4,39 @@
 package net.happyonroad.component.classworld;
 
 import junit.framework.Assert;
+import net.happyonroad.component.ComponentTestSupport;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 
 /** Test the class loader representation */
-public class ClassLoaderRepresentationTest {
+public class ClassLoaderRepresentationTest extends ComponentTestSupport {
     ClassLoaderRepresentation jdomRepresentation, antRepresentation;
+
+    @BeforeClass
+    public static void prepareResources()throws Exception{
+        URL jdomUrl = ClassLoaderRepresentationTest.class.getClassLoader().getResource("jars/jdom.jdom-1.0.jar");
+        assert jdomUrl != null;
+        URL antUrl = ClassLoaderRepresentationTest.class.getClassLoader().getResource("jars/ant-contrib.ant-contrib-20020829.jar");
+        assert antUrl != null;
+        FileUtils.copyURLToFile(jdomUrl, new File(tempFolder, "lib/jdom.jdom-1.0.jar"));
+        FileUtils.copyURLToFile(antUrl, new File(tempFolder, "lib/ant-contrib.ant-contrib-20020829.jar"));
+    }
 
     @Before
     public void setUp() throws Exception {
-        URL jdomUrl = getClass().getClassLoader().getResource("jars/jdom.jdom-1.0.jar");
-        URL antUrl = getClass().getClassLoader().getResource("jars/ant-contrib.ant-contrib-20020829.jar");
+        super.setUp();
+        URL jdomUrl = new URL("component:jdom.jdom-1.0.jar");
+        URL antUrl = new URL("component:ant-contrib.ant-contrib-20020829.jar");
         HashSet<URL> jdomSet = new HashSet<URL>();
         jdomSet.add(jdomUrl);
         HashSet<URL> antSet = new HashSet<URL>();
@@ -96,20 +112,12 @@ public class ClassLoaderRepresentationTest {
     @Ignore("new mechanism make every representation accessible to system cl")
     public void testGetResources() throws Exception {
         Enumeration<URL> en = jdomRepresentation.getResources("META-INF/MANIFEST.MF");
-        Collection<URL> urls = asCollection(en);
+        Collection<URL> urls = Collections.list(en);
         Assert.assertEquals(1, urls.size());
 
         en = antRepresentation.getResources("META-INF/MANIFEST.MF");
-        urls = asCollection(en);
+        urls = Collections.list(en);
         Assert.assertEquals(1, urls.size());
     }
 
-    protected Collection<URL> asCollection(Enumeration<URL> en){
-        Collection<URL> urls = new HashSet<URL>();
-        while (en.hasMoreElements()) {
-            URL url = en.nextElement();
-            urls.add(url);
-        }
-        return urls;
-    }
 }
