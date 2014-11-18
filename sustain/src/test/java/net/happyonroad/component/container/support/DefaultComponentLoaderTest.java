@@ -6,6 +6,7 @@ package net.happyonroad.component.container.support;
 import net.happyonroad.component.ComponentTestSupport;
 
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -20,7 +21,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @BeforeClass
     public static void setUpTotal() throws Exception {
         System.setProperty("app.prefix","dnt.;spring.test");
-
+        URL.setURLStreamHandlerFactory(ComponentURLStreamHandlerFactory.getFactory());
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
         createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
         createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);

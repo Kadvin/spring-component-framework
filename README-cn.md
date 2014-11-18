@@ -456,6 +456,7 @@ App-Config: com.myapp.client.ClientAppConfig
     |  |-myapp
     |  |  |-client
     |  |  |  |-ClientImpl.class
+    |  |  |  |-ClientAppConfig.class
 ```
 
 Spring Component Framework在运行时加载该jar时，会根据application.xml 或者 ClientAppConfig 创建一个Spring Context，并与该组件关联起来。
@@ -530,6 +531,8 @@ basis应该被打包成为带上service.xml的格式:
     |  |-myapp
     |  |  |-basis
     |  |  |  |-CacheServiceImpl.class
+    |  |  |  |-BasicAppConfig.class
+    |  |  |  |-BasicServiceConfig.class
 ```
 
 假设其Application特征也以Annotation方式配置，Manifest.MF内容如下：
@@ -615,7 +618,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
   }
 ```
 
-最后，它需要被打包成如下格式:
+最后，它需要被打包成如下格式(XML Based):
 
 ```
   path/to/com.myapp.server-0.0.1.jar!
@@ -625,12 +628,30 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
     |  |-com.myapp
     |  |  |-server
     |  |  |  |-pom.xml             # 静态组件标识
-    |  |-application.xml           # 应用组件标识 (optional) 
-    |  |-service.xml               # 服务组件标识 (optional) 
+    |  |-application.xml           # 应用组件标识
+    |  |-service.xml               # 服务组件标识
     |-com
     |  |-myapp
     |  |  |-server
     |  |  |  |-ServerImpl.class
+```
+
+或者(annotation based)
+
+```
+  path/to/com.myapp.server-0.0.1.jar!
+    |-META-INF
+    |  |-MANIFEST.MF               # App-Config: com.myapp.server.ServerAppConfig
+    |  |                           # Service-Config: com.myapp.server.ServerServiceConfig
+    |  |-com.myapp
+    |  |  |-server
+    |  |  |  |-pom.xml             # 静态组件标识
+    |-com
+    |  |-myapp
+    |  |  |-server
+    |  |  |  |-ServerImpl.class
+    |  |  |  |-ServerAppConfig.class
+    |  |  |  |-ServerServiceConfig.class
 ```
 
 #### 5. 服务组件(混合)
@@ -762,9 +783,14 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
         <artifactId>spring-component-builder</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <executions>
+
+          <execution>
+            <id>index-detail</id>
+            <goals><goal>detail</goal></goals>
+          </execution>
+
           <execution>
             <id>package-app</id>
-            <phase>package</phase>
             <goals><goal>package</goal></goals>
             <configuration>
               <outputDirectory>path/to/${project.artifactId}</outputDirectory>
@@ -773,7 +799,6 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 
           <execution>
             <id>clean-app</id>
-            <phase>clean</phase>
             <goals><goal>clean</goal></goals>
             <configuration>
               <outputDirectory>path/to/${project.artifactId}</outputDirectory>
@@ -785,7 +810,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
   </build>
 ```
 
-该插件默认在maven package阶段工作，当你在示例程序(client/server)的根目录执行:
+该插件三个任务默认在maven的package/process-classes/clean阶段工作，作用分别为索引/打包/清除，当你在示例程序(client/server)的根目录执行:
 
 ```bash
 mvn package
@@ -984,6 +1009,7 @@ mvn package
 所以，本组件框架把jar包内部的对象管理直接限定在使用Spring，而把依赖管理绑定在Maven的战车上。
 
 在实际开发过程中，我们还参考了Maven所使用的Plexus IOC容器，甚至直接使用了其底层的Classworlds做Jar之间的Class Path管理。
+(1.0.0 版本之后，为了加速系统启动，并简化结构，改写了class loader，不再使用 plexus的class loader)
 
 关于Spring Plugin，我在开发本组件框架之前，对其进行了考察，但我发现Spring-Plugin与本项目有着不同的关注点。
 

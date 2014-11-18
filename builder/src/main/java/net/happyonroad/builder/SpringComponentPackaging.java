@@ -49,7 +49,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     @Parameter
     private Properties properties;
     @Parameter
-    private File       propertiesFile;
+    private String     propertyFiles;
     @Parameter
     private File       logbackFile;
     @Parameter
@@ -124,11 +124,11 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                     File folder = new File(path);
                     File dest = new File(output, folder.getName());
                     FileUtils.copyDirectoryStructure(folder, dest);
-                    String[] propertyFiles = FileUtils.getFilesFromExtension(dest.getAbsolutePath(), new String[]{"properties"});
-                    Map<String, Object> projectProperties = getProjectProperties();
-                    for (String propertyFile : propertyFiles) {
-                        changeFileA(propertyFile, projectProperties);
-                    }
+//                    String[] propertyFiles = FileUtils.getFilesFromExtension(dest.getAbsolutePath(), new String[]{"properties"});
+//                    Map<String, Object> projectProperties = getProjectProperties();
+//                    for (String propertyFile : propertyFiles) {
+//                        changeFileA(propertyFile, projectProperties);
+//                    }
                 } catch (IOException e) {
                     getLog().error("Can't copy user specified folder: " + path + " because of:" + e.getMessage());
                 }
@@ -314,12 +314,14 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                 chmod(resource, "bin");
             }
             if(logbackFile != null && logbackFile.exists()){
-                copyFile(logbackFile, replaces);
+                copyPropertyFile(logbackFile, replaces);
             }else{
                 copyResource("logback.xml", "config", replaces);
             }
-            if(propertiesFile != null && propertiesFile.exists()){
-                copyFile(propertiesFile, replaces);
+            if(propertyFiles != null){
+                for (String path : propertyFiles.split(",")) {
+                    copyPropertyFile(new File(path), replaces);
+                }
             }else{
                 File propertiesFile = new File(output, "config/" + project.getArtifactId() + ".properties");
                 FileOutputStream fos = new FileOutputStream(propertiesFile);
@@ -387,7 +389,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         return appName.replaceAll("\\s", "_");
     }
 
-    private void copyFile(File file, Map<String, Object> replaces) throws IOException {
+    private void copyPropertyFile(File file, Map<String, Object> replaces) throws IOException {
         FileInputStream fis = new FileInputStream(file);
         List<String> lines = IOUtils.readLines(fis, UTF8);
         String interpolated;
@@ -397,7 +399,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             String content = StringUtils.join(lines, lineSeparator);
             interpolated = interpolate(content, replaces, 'A');
         }
-        FileUtils.fileWrite(new File(output, "config/" + file.getName()), interpolated);
+        String relative = StringUtils.substringAfter(file.getAbsolutePath(), project.getBasedir().getAbsolutePath() + File.separator);
+        FileUtils.fileWrite(new File(output, relative), interpolated);
     }
 
     private void changeFileA(String path, Map<String, Object> replaces)throws IOException{

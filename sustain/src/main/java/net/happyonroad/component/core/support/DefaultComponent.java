@@ -263,8 +263,8 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public URL getURL() {
+        String fileName = null;
         try {
-            String fileName;
             if( resource == null ){
                 fileName = file.getName().replace(".pom", ".jar");
             }else{
@@ -272,7 +272,7 @@ public class DefaultComponent implements Component, SelfNaming {
             }
             return new URL("component:" + fileName);
         } catch (MalformedURLException e) {
-            throw new IllegalStateException("Can't construct the component url");
+            throw new IllegalStateException("Can't construct the component url: " + fileName, e);
         }
     }
 

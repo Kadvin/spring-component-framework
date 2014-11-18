@@ -206,6 +206,20 @@ public class Dependency implements Versionize{
         return String.format("%s.%s%s%s%s", gs, as, vs, cs, ts);
     }
 
+    public String toSimpleString(){
+        String as = artifactId == null ? "<undefined>" : artifactId;
+        String vs = version != null && version.length() > 0 ? "-" + version : null;
+        if(vs == null ){
+            if( range != null )
+                vs = "-" + range.toString();
+            else
+                vs = "-<undefined>";
+        }
+        String cs = classifier != null && classifier.length() > 0 ? "." + classifier : "";
+        String ts = type != null && type.length() > 0 ? "." + type : "";
+        return String.format("%s%s%s%s", as, vs, cs, ts);
+    }
+
     /**
      * 根据文件全名称解析依赖信息
      *

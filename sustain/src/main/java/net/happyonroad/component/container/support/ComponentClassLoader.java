@@ -7,6 +7,7 @@ import net.happyonroad.component.classworld.LoadUnit;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -87,9 +88,11 @@ public class ComponentClassLoader extends URLClassLoader {
         Iterator<URL> it = resources.iterator();
         while (it.hasNext()) {
             URL url = it.next();
-            if( url.toString().contains("spring-component-framework")){
+            String path = url.toString();
+            if( path.contains("spring-component-framework") || path.contains(ideCpFeature)){
                 special = url;
                 it.remove();
+                break;
             }
         }
         if( special != null ) resources.add(0, special);
@@ -127,5 +130,6 @@ public class ComponentClassLoader extends URLClassLoader {
         return unit;
     }
 
+    static String ideCpFeature = "sustain" + File.separator + "target" + File.separator + "classes" + File.separator;
 
 }

@@ -7,6 +7,9 @@ import net.happyonroad.component.container.support.DefaultLaunchEnvironment;
 import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentException;
+import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
+import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.reflect.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
@@ -15,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.net.URL;
 
 import static net.happyonroad.util.LogUtils.banner;
 
@@ -251,6 +255,11 @@ public class AppLauncher implements Executable {
             args[0] = strings[strings.length - 1];
         }
         try {
+            // When started by Service wrapper, the context class loader is URLClassLoader of wrapper.jar
+            //  but this main class is loaded by the framework jar's ClassLoader(FactoryClassLoader)
+            Thread.currentThread().setContextClassLoader(AppLauncher.class.getClassLoader());
+            // To register the url handler by current context class loader, instead of system bootstrap class loader
+            URL.setURLStreamHandlerFactory(ComponentURLStreamHandlerFactory.getFactory());
             int exitCode = mainWithExitCode(args);
             System.exit(exitCode);
         } catch (LaunchException e) {
