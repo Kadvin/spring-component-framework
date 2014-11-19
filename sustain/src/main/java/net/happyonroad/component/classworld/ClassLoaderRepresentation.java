@@ -24,7 +24,8 @@ public class ClassLoaderRepresentation extends ClassLoader {
 
     private static SharedClassLoader sharedClassLoader = new SharedClassLoader(AppLauncher.class.getClassLoader());
 
-    static String mavenFeature = File.separator + ".m2" + File.separator + "repository" + File.separator;
+    static String mavenFeature1 =  "/.m2/repository/";
+    static String mavenFeature2 =  "\\.m2\\repository\\";
 
     private final Set<URL> urls;
 
@@ -163,9 +164,15 @@ public class ClassLoaderRepresentation extends ClassLoader {
         if(path.startsWith(System.getProperty("app.home", System.getProperty("user.dir")))){
             return "component:" + FilenameUtils.getName(path);
         }else {
-            if (path.contains(mavenFeature)){
-                path = StringUtils.substringAfter(path,mavenFeature);
-                String[] segments = StringUtils.split(path, File.separator);
+            if (path.contains(mavenFeature1) || path.contains(mavenFeature2) ){
+                String[] segments;
+                if( path.contains(mavenFeature1) ){
+                    path = StringUtils.substringAfter(path,mavenFeature1);
+                    segments = StringUtils.split(path, "/");
+                }else{
+                    path = StringUtils.substringAfter(path,mavenFeature2);
+                    segments = StringUtils.split(path, "\\");
+                }
                 String artifactAndVersion = segments[segments.length-1];
                 String[] groups = new String[segments.length-3];
                 System.arraycopy(segments, 0, groups, 0, groups.length);
