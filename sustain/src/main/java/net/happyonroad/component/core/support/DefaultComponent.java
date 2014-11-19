@@ -228,39 +228,6 @@ public class DefaultComponent implements Component, SelfNaming {
         return file;
     }
 
-    @ManagedAttribute
-    @Override
-    public URL getFileURL() {
-        if (file == null) {
-            return null;
-        }
-        try {
-            if (isAggregating()) {
-                return null;
-            } else if (file.isFile()) {
-                if (file.getName().endsWith(".pom")) {
-                    String fileName = file.getName();
-                    fileName = fileName.replaceFirst("\\.pom$", ".jar");
-                    File jarFile = new File(file.getParentFile().getParent(), fileName);
-                    if (jarFile.exists())
-                        return jarFile.toURI().toURL();
-                    else
-                        return null;
-                } else if (file.getName().endsWith(".jar")) {
-                    return file.toURI().toURL();
-                } else {
-                    //unknown file type, return file url as default
-                    return file.toURI().toURL();
-                }
-            } else { //folder
-                return file.toURI().toURL();
-            }
-        } catch (MalformedURLException e) {
-            /*ignore*/
-            return null;
-        }
-    }
-
     @Override
     public URL getURL() {
         String fileName = null;
@@ -487,22 +454,6 @@ public class DefaultComponent implements Component, SelfNaming {
         return all;
     }
 
-    @ManagedAttribute
-    @Override
-    public Set<URL> getDependedPlainURLs() {
-        Set<URL> plainUrls = new HashSet<URL>();
-        if (getParent() != null) {
-            plainUrls.addAll(getParent().getDependedPlainURLs());
-        }
-        List<Component> depends = getDependedComponents();
-        for (Component depend : depends) {
-            if (depend.isPlain() && depend.getFileURL() != null) {
-                plainUrls.add(depend.getFileURL());
-            }
-            plainUrls.addAll(depend.getDependedPlainURLs());
-        }
-        return plainUrls;
-    }
 
 
     public void setDependedComponents(List<Component> dependedComponents) {

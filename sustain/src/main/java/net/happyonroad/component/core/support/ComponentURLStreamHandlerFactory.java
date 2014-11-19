@@ -3,7 +3,6 @@
  */
 package net.happyonroad.component.core.support;
 
-import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import sun.net.www.protocol.component.Handler;
 
 import java.io.File;
@@ -45,19 +44,6 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
         if (componentFiles == null) initFastIndexes();
         File file = new File(realFile);
         componentFiles.put(url.getFile(), file);
-        try {
-            /*
-             * Jar File 内部竟然会:
-             *  origin = new URL("component:org.jboss.logging.jboss-logging-3.1.1.GA.jar")
-             *  try to open
-             *    new URL(origin, "jboss-logging-3.1.1.GA.jar")
-             *  所以需要把 jboss-logging-3.1.1.GA.jar ->  org.jboss.logging.jboss-logging-3.1.1.GA.jar
-             */
-            Dependency dep = Dependency.parse(url.getFile());
-            componentFiles.put(dep.toSimpleString(), file);
-        } catch (InvalidComponentNameException e) {
-            //skip it
-        }
     }
 
     /**

@@ -86,17 +86,6 @@ public interface Component extends Comparable<Component>, Versionize {
      */
     File getFile();
 
-    /**
-     * 获取到该组件对应的Jar的url
-     * <ul>
-     * <li>如果组件是jar形态，则直接返回对应文件的url
-     * <li>如果是pom的形态，且上级目录存在对应的jar，则返回上级目录的jar
-     * <li>如果上级目录不存在对应的jar，则返回null
-     * </ul>
-     *
-     * @return jar的url
-     */
-    URL getFileURL();
 
     /**
      * 得到该组件的url，形如: component:org.apache.maven-1.2.3.jar
@@ -228,13 +217,6 @@ public interface Component extends Comparable<Component>, Versionize {
      * @return 是否
      */
     boolean isPlain();
-
-    /**
-     * 获得该组件所依赖的第三方包的url列表（所有）
-     *
-     * @return 第三方包url列表，如果没有依赖，也应该返回一个空数组
-     */
-    Set<URL> getDependedPlainURLs();
 
     /**
      * 判断一个组件是不是依赖于另外一个组件
