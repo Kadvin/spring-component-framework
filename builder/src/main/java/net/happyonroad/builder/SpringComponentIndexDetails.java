@@ -57,6 +57,7 @@ public class SpringComponentIndexDetails extends AbstractFromDependenciesMojo {
         for (File detail : details) {
             String line = StringUtils.substringAfter(detail.getAbsolutePath(),
                                                      classesFolder.getAbsolutePath() + File.separator);
+            line = line.replaceAll("\\\\", "/");
             lines.add(line);
         }
         File detailFile = new File(classesFolder, "META-INF/INDEX.DETAIL");
