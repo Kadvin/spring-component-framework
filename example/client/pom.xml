@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </parent>
     <artifactId>client</artifactId>
     <name>My App Client</name>

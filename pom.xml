@@ -9,11 +9,11 @@
     </parent>
     <groupId>net.happyonroad</groupId>
     <artifactId>spring-component-parent</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
 
     <name>Spring Service Framework</name>
-    <url>http://github.com/Kadvin/spring-component-parent</url>
+    <url>https://github.com/Kadvin/spring-component-framework</url>
     <description>
         The spring component framework is used to setup a plugin based, micro-kernel, standalone application
         (today, we will support webapp in later releases) which is based on SpringFramework.

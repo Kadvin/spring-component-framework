@@ -673,6 +673,7 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     static public boolean isApplication(String briefId) {
+        if( briefId.startsWith("net.happyonroad") ) return true;
         //这个属性可以通过设置 app.prefix系统属性进行干预，支持多个prefix用分号分隔
         //当符合该条件的模块没有被解析出来时，系统将会停止解析，抛出异常；
         //而不符合该条件的模块，往往是第三方未用到的模块，解析失败不应该停止
