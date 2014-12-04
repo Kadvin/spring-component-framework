@@ -92,9 +92,10 @@ public class AppLauncher implements Executable {
         }
         //noinspection finally
         try {
-            logger.info(banner("Unload the main component {}", this.mainComponent));
+            logger.info(banner("Unloading the main component {}", this.mainComponent));
             exiting = true;
             environment.unload(this.mainComponent);
+            logger.info(banner("Unloaded  the main component {}", this.mainComponent));
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
@@ -283,9 +284,9 @@ public class AppLauncher implements Executable {
 
         Component mainComponent = null;
         try {
-            logger.info(banner("Resolving starts from {}", args[0]));
+            logger.debug(banner("Resolving starts from {}", args[0]));
             mainComponent = environment.resolveComponent(args[0]);
-            logger.info(banner("Resolved  starts from {}", args[0]));
+            logger.debug(banner("Resolved  starts from {}", args[0]));
 
             AppLauncher launcher = environment.createLauncher(mainComponent);
             //去掉主入口参数之后，将其余参数传入

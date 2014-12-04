@@ -175,7 +175,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                         Component importing = repository.resolveComponent(d);
                         dm.merge(importing.getDependencyManagement());
                     } catch (DependencyNotMeetException e) {
-                        logger.warn("Dependency with import scope is not supported fully {}", e.getMessage());
+                        logger.debug("Dependency with import scope is not supported fully {}", e.getMessage());
                     }
                 }
             }

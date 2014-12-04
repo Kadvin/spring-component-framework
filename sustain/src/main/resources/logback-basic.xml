@@ -17,6 +17,7 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
+    <logger name="/" level="WARN"/>
     <logger name="ch.qos.logback" level="ERROR"/>
     <logger name="org" level="WARN"/>
     <logger name="com" level="WARN"/>
@@ -32,4 +33,11 @@
     
     <logger name="net.happyonroad" level="INFO"/>
     <logger name="net.happyonroad.spring" level="WARN"/>
+    <logger name="net.happyonroad.component.container.support" level="WARN" />
+    <logger name="net.happyonroad.platform.repository.support.MybatisRepositoryScanner" level="ERROR" />
+    <logger name="net.happyonroad.platform.web.support.ExtendedRequestMappingHandlerMapping" level="WARN" />
+    <logger name="net.happyonroad.platform.services.MybatisFeatureResolver" level="WARN" />
+    <logger name="net.happyonroad.platform.services.SpringMvcFeatureResolver" level="WARN" />
+    <logger name="net.happyonroad.spring.service.SpringServicePackage" level="WARN" />
+    <logger name="net.happyonroad.component.container.support.DefaultServiceRegistry" level="WARN" />
 </included>
