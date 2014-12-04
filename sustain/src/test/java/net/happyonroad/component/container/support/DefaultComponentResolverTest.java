@@ -5,14 +5,17 @@ package net.happyonroad.component.container.support;
 
 import net.happyonroad.component.container.ComponentResolver;
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.Exclusion;
 import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
+import org.springframework.core.io.FileSystemResource;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -273,7 +276,8 @@ public class DefaultComponentResolverTest extends TestCase {
         repository.addComponent(compTechnology);
         File jarFile = getResourceFile("jars/spring.aggregation.sample-1.0.0.jar");
         FileUtils.copyFile(jarFile, new File(repository.getHome(), "lib/" + jarFile.getName()));
-        Component component = resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.jar"), jarFile);
+        Component component = resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.jar"),
+                                                        new FileSystemResource(jarFile));
         assertEquals("spring.aggregation", component.getGroupId());
         assertEquals("sample", component.getArtifactId());
         assertEquals("1.0.0", component.getVersion());
@@ -300,7 +304,8 @@ public class DefaultComponentResolverTest extends TestCase {
         repository.addComponent(compTechnology);
 
         File pomFile = getResourceFile("poms/spring.aggregation.sample-1.0.0.pom");
-        Component component = resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.pom"), pomFile);
+        Component component = resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.pom"),
+                                                        new FileSystemResource(pomFile));
         assertEquals("spring.aggregation", component.getGroupId());
         assertEquals("sample", component.getArtifactId());
         assertEquals("1.0.0", component.getVersion());
@@ -328,10 +333,11 @@ public class DefaultComponentResolverTest extends TestCase {
     public void testResolveComponentFromFileWithInvalidName() throws Exception {
         File jarFile = getResourceFile("jars/invalid.component.jar");
         try {
-            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0"), jarFile);
+            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0"),
+                                      new FileSystemResource(jarFile));
             fail("it should raise invalid component name exception");
         } catch (InvalidComponentNameException e) {
-            System.err.println(e);
+            System.out.println(e.getMessage());
         }
 
     }
@@ -340,16 +346,17 @@ public class DefaultComponentResolverTest extends TestCase {
      * 测试目的：
      *   测试解析lib目录下某个名字虽然符合规范，但pom.xml内部无效（不存在)的第三方jar包
      * 验证方式：
-     *   应该抛出 InvalidComponentException
+     *   应该抛出 DependencyNotMeetException
      * @throws Exception
      */
     public void testResolveComponentFromFileWithInvalidContent() throws Exception {
         File pomFile = getResourceFile("poms/invalid.component.pom");
         try {
-            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0"), pomFile);
+            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0"),
+                                      new FileInputStream(pomFile));
             fail("it should raise invalid component name exception");
-        } catch (InvalidComponentNameException e) {
-            System.err.println(e);
+        } catch (DependencyNotMeetException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -368,10 +375,11 @@ public class DefaultComponentResolverTest extends TestCase {
 
         File jarFile = getResourceFile("jars/spring.aggregation.sample-conflict-1.0.0.jar");
         try {
-            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.jar"), jarFile);
+            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.jar"),
+                                      new FileSystemResource(jarFile));
             fail("it should raise invalid component name exception");
         } catch (InvalidComponentNameException e) {
-            System.err.println(e);
+            System.out.println(e.getMessage());
         }
     }
 
@@ -390,10 +398,11 @@ public class DefaultComponentResolverTest extends TestCase {
 
         File pomFile = getResourceFile("poms/spring.aggregation.sample-1.0.0-conflict.pom");
         try {
-            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.pom"), pomFile);
+            resolver.resolveComponent(Dependency.parse("spring.aggregation.sample-1.0.0.pom"),
+                                      new FileSystemResource(pomFile));
             fail("it should raise invalid component name exception");
         } catch (InvalidComponentNameException e) {
-            System.err.println(e);
+            System.out.println(e.getMessage());
         }
     }
 
@@ -408,7 +417,7 @@ public class DefaultComponentResolverTest extends TestCase {
 
         File pomFile = getResourceFile("poms/javax.servlet.javax.servlet-api-3.1.0.pom");
         Dependency dependency = Dependency.parse("javax.servlet.javax.servlet-api-3.1.0.pom");
-        Component component = resolver.resolveComponent(dependency, pomFile);
+        Component component = resolver.resolveComponent(dependency, new FileSystemResource(pomFile));
         assertEquals("javax.servlet", component.getGroupId());
         assertEquals("javax.servlet-api", component.getArtifactId());
         assertEquals("3.1.0", component.getVersion());

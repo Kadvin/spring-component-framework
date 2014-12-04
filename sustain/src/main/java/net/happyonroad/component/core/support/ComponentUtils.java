@@ -108,7 +108,7 @@ public final class ComponentUtils
                                          component.getClassifier(),component.getType());
         clone.setRelease(component.isRelease());
         clone.setResolvedVersion(component.getVersion());
-        clone.setFile( component.getFile() );
+        clone.setUnderlyingResource(component.getUnderlyingResource());
 
         return clone;
     }

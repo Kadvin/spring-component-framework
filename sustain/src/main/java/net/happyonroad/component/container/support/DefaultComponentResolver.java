@@ -11,8 +11,10 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.*;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
 
 import java.io.*;
 import java.util.*;
@@ -336,23 +338,26 @@ public class DefaultComponentResolver implements ComponentResolver {
     }
 
     @Override
-    public Component resolveComponent(final Dependency dependency, File jarOrPomFilePath)
+    public Component resolveComponent(final Dependency dependency, Resource resource)
             throws InvalidComponentNameException, DependencyNotMeetException {
-        logger.debug("Resolving {} from {}", dependency, jarOrPomFilePath);
-        Dependency basic = Dependency.parse(jarOrPomFilePath.getName());
+        logger.debug("Resolving {} from {}", dependency, resource);
+        String originName = resource.getFilename();
+        if( originName == null ) originName = resource.getDescription();
+        String fileName = FilenameUtils.getName(originName);
+        Dependency basic = Dependency.parse(fileName);
         if (!dependency.accept(basic)) {
-            throw new InvalidComponentNameException("The component file name: " + jarOrPomFilePath.getName() +
+            throw new InvalidComponentNameException("The component file name: " + fileName +
                                                     " does not satisfy the dependency: " + dependency);
         }
         DefaultComponent comp;
         InputStream stream = null;
-        if (jarOrPomFilePath.getName().endsWith(".pom")) {
+        if (fileName.endsWith(".pom")) {
             try {
-                stream = new FileInputStream(jarOrPomFilePath);
+                stream = resource.getInputStream();
                 comp = (DefaultComponent) resolveComponent(dependency, stream);
-                comp.setFile(jarOrPomFilePath);
+                comp.setUnderlyingResource(resource);
                 if (!comp.isAggregating()) {
-                    File jarFile = digJarFilePath(jarOrPomFilePath);
+                    File jarFile = digJarFilePath(fileName);
                     if (jarFile != null) {
                         ComponentJarResource jarResource = new ComponentJarResource(dependency, jarFile.getName());
                         comp.setResource(jarResource);
@@ -360,8 +365,8 @@ public class DefaultComponentResolver implements ComponentResolver {
                         logger.warn("Can't find jar file for {}", comp);
                     }
                 }
-            } catch (FileNotFoundException e) {
-                throw new IllegalArgumentException("The pom file does not exist: " + jarOrPomFilePath.getPath());
+            } catch (IOException e) {
+                throw new IllegalArgumentException("The pom file does not exist: " + fileName);
             } finally {
                 try {
                     if (stream != null)
@@ -372,11 +377,11 @@ public class DefaultComponentResolver implements ComponentResolver {
             if( dependency.getVersion() == null ){
                 dependency.setVersion(basic.getVersion());
             }
-            ComponentJarResource jarResource = new ComponentJarResource(dependency, jarOrPomFilePath.getName());
+            ComponentJarResource jarResource = new ComponentJarResource(dependency, fileName);
             try {
                 stream = jarResource.getPomStream();
                 comp = (DefaultComponent) resolveComponent(dependency, stream);
-                comp.setFile(jarOrPomFilePath);
+                comp.setUnderlyingResource(resource);
                 comp.setResource(jarResource);
             } catch (IOException e) {
                 throw new InvalidComponentException(dependency.getGroupId(), dependency.getArtifactId(),
@@ -393,17 +398,17 @@ public class DefaultComponentResolver implements ComponentResolver {
             comp.setType(dependency.getType());
 
         if (!dependency.accept(comp))
-            throw new InvalidComponentNameException("The component file name: " + jarOrPomFilePath.getName() +
+            throw new InvalidComponentNameException("The component file name: " + fileName +
                                                     " conflict with its inner pom: " + comp.toString());
         comp.setClassLoader(new ComponentClassLoader(comp));
         return comp;
     }
 
-    protected File digJarFilePath(File pomFile) {
+    protected File digJarFilePath(String fileName) {
         String[] folders = {"lib", "repository", "boot"};
         String home = repository.getHome();
         for (String folder : folders) {
-            String path = String.format("%s/%s/%s", home, folder, pomFile.getName());
+            String path = String.format("%s/%s/%s", home, folder, fileName);
             path = path.replace(".pom", ".jar");
             File file = new File(path);
             if (file.exists()) return file;

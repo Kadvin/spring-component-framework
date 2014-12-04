@@ -12,6 +12,7 @@ import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.Resource;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.export.naming.SelfNaming;
@@ -19,7 +20,6 @@ import org.springframework.jmx.export.naming.SelfNaming;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.util.*;
-import java.io.File;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -57,7 +57,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     private String classifier;//snapshot, release, javadoc, source, java4, java5, java6, or other feature...
 
-    private File                 file;//对应的实际文件
+    private Resource             underlyingResource;//对应的实际文件
     private ComponentResource    resource;//对应的资源文件
     //DependencyManagement声明的是所有可能的依赖，但解析过程中，不应该触发它们被解析
     private DependencyManagement dependencyManagement;
@@ -214,8 +214,8 @@ public class DefaultComponent implements Component, SelfNaming {
         this.type = type;
     }
 
-    public void setFile(File file) {
-        this.file = file;
+    public void setUnderlyingResource(Resource underlyingResource) {
+        this.underlyingResource = underlyingResource;
     }
 
     public void setResource(ComponentResource resource) {
@@ -224,8 +224,8 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @ManagedAttribute
     @Override
-    public File getFile() {
-        return file;
+    public Resource getUnderlyingResource() {
+        return underlyingResource;
     }
 
     @Override
@@ -233,7 +233,9 @@ public class DefaultComponent implements Component, SelfNaming {
         String fileName = null;
         try {
             if( resource == null ){
-                fileName = file.getName().replace(".pom", ".jar");
+                String originName = underlyingResource.getFilename();
+                if( originName == null ) originName = underlyingResource.getDescription();
+                fileName = originName.replace(".pom", ".jar");
             }else{
                 fileName = resource.getFileName();
             }

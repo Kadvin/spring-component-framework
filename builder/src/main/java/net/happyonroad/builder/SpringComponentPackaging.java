@@ -4,8 +4,12 @@
 package net.happyonroad.builder;
 
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.AndFileFilter;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.maven.artifact.resolver.filter.CumulativeScopeArtifactFilter;
@@ -23,6 +27,7 @@ import org.codehaus.plexus.util.io.RawInputStreamFacade;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,7 +42,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     private static final Pattern INTERPOLATE_PTN_A = Pattern.compile("\\$\\{([^}]+)\\}", Pattern.MULTILINE);
     private static final Pattern INTERPOLATE_PTN_B = Pattern.compile("#\\{([^}]+)\\}", Pattern.MULTILINE);
-    private static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final Charset UTF8              = Charset.forName("UTF-8");
     @Parameter
     private File       output;
     @Parameter(defaultValue = "1099")
@@ -87,11 +92,18 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         //清除与jar重复的pom文件
         movePoms();
 
+        //将 lib/poms repository/poms 目录下的pom文件归并到一个压缩文件中
+        //以免用户修改其中的内容，导致系统不能运行
+        sealPoms(new File(output, "lib"));
+        sealPoms(new File(output, "repository"));
+
         moveBootstrapJar();
 
         generateScripts();
 
         generateWrapper();
+
+        generateFrontendResources();
     }
 
     private void initAppParams() throws MojoExecutionException {
@@ -118,8 +130,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                                                  relativePath + " in " + output.getPath());
             }
         }
-        if(StringUtils.isNotBlank(folders)){
-            for (String path : StringUtils.split(folders,",")) {
+        if (StringUtils.isNotBlank(folders)) {
+            for (String path : StringUtils.split(folders, ",")) {
                 try {
                     File folder = new File(path);
                     File dest = new File(output, folder.getName());
@@ -137,11 +149,12 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
     private void prepareFiles() throws MojoExecutionException {
-        if(StringUtils.isNotBlank(files)){
-            for (String path : StringUtils.split(files,",")) {
+        if (StringUtils.isNotBlank(files)) {
+            for (String path : StringUtils.split(files, ",")) {
                 try {
                     File file = new File(path);
-                    String relativePath = StringUtils.substringAfter(file.getAbsolutePath(), getProject().getBasedir().getAbsolutePath() + "/");
+                    String relativePath = StringUtils
+                            .substringAfter(file.getAbsolutePath(), getProject().getBasedir().getAbsolutePath() + "/");
                     File dest = new File(output, relativePath);
                     FileUtils.copyFile(file, dest);
                 } catch (IOException e) {
@@ -151,21 +164,22 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         }
 
     }
+
     private void copyTargets() throws MojoExecutionException {
         String fileName = project.getGroupId() + "." + project.getArtifactId() + "-" + project.getVersion();
         File newTargetFile = new File(project.getBasedir(), "target/" + fileName + ".jar");
-        File defaultTargetFile = new File( project.getBasedir(),
-                                    "target/" + project.getArtifactId() + "-" + project.getVersion() + ".jar");
+        File defaultTargetFile = new File(project.getBasedir(),
+                                          "target/" + project.getArtifactId() + "-" + project.getVersion() + ".jar");
         try {
             //copy main pom
             FileUtils.copyFile(project.getFile(), new File(output, "lib/poms/" + fileName + ".pom"));
             //copy jar
             File output = new File(this.output, "lib/" + fileName + ".jar");
-            if(newTargetFile.exists()){
+            if (newTargetFile.exists()) {
                 FileUtils.copyFile(newTargetFile, output);
-            }else if (defaultTargetFile.exists()){
+            } else if (defaultTargetFile.exists()) {
                 FileUtils.copyFile(defaultTargetFile, output);
-            }else{
+            } else {
                 // the project is empty
                 getLog().warn(fileName + ".jar is empty");
             }
@@ -218,7 +232,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         }
     }
 
-    private void movePoms() throws MojoExecutionException{
+    private void movePoms() throws MojoExecutionException {
         File libPath = new File(output, "lib");
         File tempFolder = new File(libPath, "temp");
         try {
@@ -233,13 +247,13 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                     throw new MojoExecutionException("Can't parse component from:" + pomFile);
                 }
                 String pomXmlPath = "META-INF/maven/" + dep.getGroupId() + "/" + dep.getArtifactId();
-                if( jarFile.exists() ){
+                if (jarFile.exists()) {
                     JarFile jar = new JarFile(jarFile);
                     ZipEntry mavenFolder = jar.getEntry(pomXmlPath);
                     jar.close();
-                    if( mavenFolder != null ){
+                    if (mavenFolder != null) {
                         FileUtils.forceDelete(pomFile);
-                    }else{
+                    } else {
                         File pomFolder = new File(tempFolder, pomXmlPath);
                         FileUtils.forceMkdir(pomFolder);
                         newPomFile = new File(pomFolder, "pom.xml");
@@ -251,7 +265,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                         lines.add("artifactId=" + dep.getArtifactId());
                         File pomProperties = new File(pomFolder, "pom.properties");
                         boolean created = pomProperties.createNewFile();
-                        if( !created ) throw new MojoExecutionException("Can't create " + pomProperties.getPath());
+                        if (!created) throw new MojoExecutionException("Can't create " + pomProperties.getPath());
                         FileOutputStream pomPropertiesStream = new FileOutputStream(pomProperties, false);
                         try {
                             IOUtils.writeLines(lines, "\n", pomPropertiesStream);
@@ -273,8 +287,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                             FileUtils.forceDelete(tempFolder);
                         }
                     }
-                }
-                else{
+                } else {
                     FileUtils.rename(pomFile, newPomFile);
                 }
             }
@@ -284,6 +297,31 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     }
 
+    private void sealPoms(File parent) {
+        File pomsPath = new File(parent, "poms");
+        if( !pomsPath.exists() ) return;
+        File pomsJar = new File(parent, "poms.jar");
+        try {
+            Jar ant = new Jar();
+            ant.setProject(ANT_PROJECT);
+            ant.setUpdate(true);
+            ant.setDestFile(pomsJar);
+            FileSet fs = new FileSet();
+            fs.setProject(ANT_PROJECT);
+            fs.setDir(pomsPath);
+            ant.add(fs);
+            ant.execute();
+        } finally {
+            try {
+                FileUtils.forceDelete(pomsPath);
+            } catch (IOException e) {
+                //skip it
+            }
+        }
+
+    }
+
+
     private void generateScripts() throws MojoExecutionException {
         try {
             List<String> bootJars = FileUtils.getFileNames(new File(output, "boot"),
@@ -291,20 +329,20 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                                                            null, false);
             appBoot = "boot/" + bootJars.get(0);
             Map<String, Object> replaces = getProjectProperties();
-            if(jvmOptions == null) jvmOptions = "";
+            if (jvmOptions == null) jvmOptions = "";
             // don't put port(maybe replaced at last)
             // it may affect sed
-            if(debug > 0 ){
+            if (debug > 0) {
                 jvmOptions += " -agentlib:jdwp=transport=dt_socket,server=y,address=" + debug + ",suspend=n";
             }
-            if(jmx > 0 ){
+            if (jmx > 0) {
                 jvmOptions += " -Dcom.sun.management.jmxremote" +
-                              " -Dcom.sun.management.jmxremote.port=" + jmx  +
+                              " -Dcom.sun.management.jmxremote.port=" + jmx +
                               " -Dcom.sun.management.jmxremote.local.only=false" +
                               " -Dcom.sun.management.jmxremote.authenticate=false" +
                               " -Dcom.sun.management.jmxremote.ssl=false";
             }
-            if(StringUtils.isNotBlank(appPrefix)){
+            if (StringUtils.isNotBlank(appPrefix)) {
                 jvmOptions += " -Dapp.prefix=" + appPrefix;
             }
             replaces.put("jvm.options", jvmOptions);
@@ -313,16 +351,16 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                 copyResource(resource, "bin", replaces);
                 chmod(resource, "bin");
             }
-            if(logbackFile != null && logbackFile.exists()){
+            if (logbackFile != null && logbackFile.exists()) {
                 copyPropertyFile(logbackFile, replaces);
-            }else{
+            } else {
                 copyResource("logback.xml", "config", replaces);
             }
-            if(propertyFiles != null){
+            if (propertyFiles != null) {
                 for (String path : propertyFiles.split(",")) {
                     copyPropertyFile(new File(path), replaces);
                 }
-            }else{
+            } else {
                 File propertiesFile = new File(output, "config/" + project.getArtifactId() + ".properties");
                 FileOutputStream fos = new FileOutputStream(propertiesFile);
                 properties.store(fos, appName + " Properties");
@@ -334,8 +372,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     }
 
-    private void generateWrapper() throws MojoExecutionException{
-        if( !wrapper ) {
+    private void generateWrapper() throws MojoExecutionException {
+        if (!wrapper) {
             getLog().warn("Skip generate wrapper");
             return;
         }
@@ -347,15 +385,15 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             Map<String, Object> replaces = getProjectProperties();
             String appHome = (String) replaces.get("app.home");
             String appName = (String) replaces.get("app.name");
-            String mainExecutor = appHome +  "/bin/" + StringUtils.lowerCase(appName);
+            String mainExecutor = appHome + "/bin/" + StringUtils.lowerCase(appName);
 
-            renameFile(appHome +  "/bin/main", mainExecutor);
+            renameFile(appHome + "/bin/main", mainExecutor);
             chmod(new File(mainExecutor));
 
             String[] jvmOptionArray = jvmOptions.split(" ");
             for (int i = 0; i < jvmOptionArray.length; i++) {
                 String jvmOption = jvmOptionArray[i];
-                replaces.put("jvm.option." + (i+5), jvmOption);
+                replaces.put("jvm.option." + (i + 5), jvmOption);
             }
 
             changeFileB(mainExecutor, replaces);
@@ -366,6 +404,55 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         }
 
     }
+
+    private void generateFrontendResources() throws MojoExecutionException {
+        IOFileFilter appCompFilter = new IOFileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return DefaultComponent.isApplication(FileUtils.basename(file.getName()));
+            }
+
+            @Override
+            public boolean accept(File dir,
+                                  String name) {
+                return DefaultComponent.isApplication(name);
+            }
+        };
+        AndFileFilter filter = new AndFileFilter(new WildcardFileFilter("*.jar"), appCompFilter);
+        Collection<File> libJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "lib"), filter, null );
+        Collection<File> repositoryJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "repository"),
+                                                                                    filter, null);
+        // TODO 没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
+        for (File componentJar : libJars) {
+            extractFrontendResources(componentJar);
+        }
+        for (File componentJar : repositoryJars) {
+            extractFrontendResources(componentJar);
+        }
+    }
+
+    private void extractFrontendResources(File componentJar) throws MojoExecutionException {
+        getLog().info("Extract frontend resources from:" + componentJar);
+        try {
+            JarFile jarFile = new JarFile(componentJar);
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                if( entry.getName().startsWith("frontend")){
+                    File file = new File(output, "webapp/" + entry.getName());
+                    InputStream stream = jarFile.getInputStream(entry);
+                    if( entry.isDirectory() )
+                        FileUtils.mkdir(file.getAbsolutePath());
+                    else
+                        org.apache.commons.io.FileUtils.copyInputStreamToFile(stream, file);
+                }
+            }
+            jarFile.close();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Can't extract frontend resources from " + componentJar.getName() , e );
+        }
+    }
+
 
     private void renameFile(String from, String to) throws IOException {
         FileUtils.rename(new File(from), new File(to));
@@ -393,31 +480,33 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         FileInputStream fis = new FileInputStream(file);
         List<String> lines = IOUtils.readLines(fis, UTF8);
         String interpolated;
-        if( file.getName().toLowerCase().endsWith(".properties")){
+        if (file.getName().toLowerCase().endsWith(".properties")) {
             interpolated = interpolate(lines, replaces, 'A');
-        }else{
+        } else {
             String content = StringUtils.join(lines, lineSeparator);
             interpolated = interpolate(content, replaces, 'A');
         }
-        String relative = StringUtils.substringAfter(file.getAbsolutePath(), project.getBasedir().getAbsolutePath() + File.separator);
+        String relative = StringUtils
+                .substringAfter(file.getAbsolutePath(), project.getBasedir().getAbsolutePath() + File.separator);
         FileUtils.fileWrite(new File(output, relative), interpolated);
     }
 
-    private void changeFileA(String path, Map<String, Object> replaces)throws IOException{
+    private void changeFileA(String path, Map<String, Object> replaces) throws IOException {
         changeFile(path, replaces, 'A');
     }
-    private void changeFileB(String path, Map<String, Object> replaces)throws IOException{
+
+    private void changeFileB(String path, Map<String, Object> replaces) throws IOException {
         changeFile(path, replaces, 'B');
     }
 
-    private void changeFile(String path, Map<String, Object> replaces, char mode)throws IOException{
+    private void changeFile(String path, Map<String, Object> replaces, char mode) throws IOException {
         File file = new File(path);
         FileInputStream fis = new FileInputStream(file);
         List<String> lines = IOUtils.readLines(fis, UTF8);
         String interpolated;
-        if( file.getName().toLowerCase().endsWith(".properties")){
+        if (file.getName().toLowerCase().endsWith(".properties")) {
             interpolated = interpolate(lines, replaces, mode);
-        }else{
+        } else {
             String content = StringUtils.join(lines, lineSeparator);
             interpolated = interpolate(content, replaces, mode);
         }
@@ -430,7 +519,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         FileUtils.fileWrite(new File(output, path + "/" + resource), interpolated);
     }
 
-    private void copyResources(String resourcePath, String path) throws IOException{
+    private void copyResources(String resourcePath, String path) throws IOException {
         ClassLoader cl = getClass().getClassLoader();
         InputStream indexStream = cl.getResourceAsStream(resourcePath + ".index");
         try {
@@ -454,12 +543,13 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
     private void chmod(File script) {
-        if(!SystemUtils.IS_OS_WINDOWS){
+        if (!SystemUtils.IS_OS_WINDOWS) {
             try {
                 Process process = Runtime.getRuntime().exec(new String[]{"chmod", "u+x", script.getAbsolutePath()});
                 process.waitFor();
-                if(process.exitValue() != 0){
-                    System.err.println("Can't chmod u+x for " + script.getPath() + ", exit value =" + process.exitValue());
+                if (process.exitValue() != 0) {
+                    System.err.println(
+                            "Can't chmod u+x for " + script.getPath() + ", exit value =" + process.exitValue());
                 }
             } catch (IOException e) {
                 System.err.println("Can't chmod u+x for " + script.getPath() + ", because of:" + e.getMessage());
@@ -484,7 +574,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             String variable = m.group(1);
             Object replace = replaces.get(variable);
             String replacement = replace == null ? "" : replace.toString();
-            if( pattern.matcher(replacement).find() )
+            if (pattern.matcher(replacement).find())
                 replacement = interpolate(replacement, replaces, mode);
             try {
                 m.appendReplacement(sb, replacement);
@@ -500,20 +590,20 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     private String interpolate(List<String> lines, Map<String, Object> replaces, char mode) {
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
-            if(!line.trim().startsWith("#") && line.contains("=")){
+            if (!line.trim().startsWith("#") && line.contains("=")) {
                 String[] array = line.split("=");
                 String key = array[0].trim();
                 // string like: neo4j.user= split array length == 1
                 String value;
-                if(array.length == 2){
+                if (array.length == 2) {
                     value = array[1];
-                }else if(array.length == 1){
+                } else if (array.length == 1) {
                     value = "";
-                }else{
+                } else {
                     continue;//don't touch them
                 }
                 value = interpolate(value, replaces, mode);
-                if( replaces.containsKey(key)){
+                if (replaces.containsKey(key)) {
                     value = replaces.get(key).toString();
                 }
                 lines.set(i, key + "=" + value);
@@ -523,11 +613,11 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
 
-
     private void prepareFolder(String relativePath) throws IOException {
         File subFolder = new File(output, relativePath);
         if (subFolder.exists()) {
-            FileUtils.cleanDirectory(subFolder);
+            // don't clean it, because extension is build before release now
+            // FileUtils.cleanDirectory(subFolder);
         } else {
             FileUtils.forceMkdir(subFolder);
         }

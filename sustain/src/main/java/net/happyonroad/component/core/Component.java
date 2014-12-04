@@ -4,6 +4,7 @@ import net.happyonroad.component.container.support.ComponentClassLoader;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.DependencyManagement;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.net.URL;
@@ -84,7 +85,7 @@ public interface Component extends Comparable<Component>, Versionize {
      *
      * @return 组件文件
      */
-    File getFile();
+    Resource getUnderlyingResource();
 
 
     /**

@@ -54,7 +54,9 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
      */
     public File getMappingFile(URL url) throws IOException {
         if (componentFiles == null) initFastIndexes();
-        File componentFile = componentFiles.get(url.getFile());
+        String fileName = url.getFile();
+        if( !fileName.endsWith(".jar") ) fileName = fileName + ".jar";
+        File componentFile = componentFiles.get(fileName);
         if( componentFile == null )
         {
             // 当第一次建立的快速索引中没有相应文件时
@@ -64,7 +66,7 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
             if( componentFile == null ) componentFile = guessFile(url, "repository/lib");
             if( componentFile == null ) componentFile = guessFile(url, "boot");
             if( componentFile == null )
-                throw new IOException("there is no component named as " + url.getFile());
+                throw new IOException("there is no component named as " + fileName);
         }
         return componentFile;
     }
