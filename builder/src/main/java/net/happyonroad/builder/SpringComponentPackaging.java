@@ -460,6 +460,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             Map<String, Object> replaces = new HashMap<String, Object>();
             replaces.put("project.version", project.getVersion());
             replaces.put("build.timestamp", sdf.format(new Date()));
+            Dependency dep = Dependency.parse(FileUtils.filename(componentJar.getPath()));
+            String source = dep.getGroupId() + "." + dep.getArtifactId();
             JarFile jarFile = new JarFile(componentJar);
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
@@ -478,12 +480,12 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                         }else{
                             org.apache.commons.io.FileUtils.copyInputStreamToFile(stream, file);
                         }
-                        mappings.setProperty(entry.getName(), FileUtils.filename(componentJar.getPath()));
+                        mappings.setProperty(entry.getName(), source);
                     }
                 }
             }
             jarFile.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new MojoExecutionException("Can't extract frontend resources from " + componentJar.getName() , e );
         }
     }
