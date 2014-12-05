@@ -26,6 +26,7 @@ import org.codehaus.plexus.util.io.RawInputStreamFacade;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -40,9 +41,10 @@ import java.util.zip.ZipEntry;
 @Mojo(name = "package", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class SpringComponentPackaging extends CopyDependenciesMojo {
 
-    private static final Pattern INTERPOLATE_PTN_A = Pattern.compile("\\$\\{([^}]+)\\}", Pattern.MULTILINE);
-    private static final Pattern INTERPOLATE_PTN_B = Pattern.compile("#\\{([^}]+)\\}", Pattern.MULTILINE);
-    private static final Charset UTF8              = Charset.forName("UTF-8");
+    private static final Pattern          INTERPOLATE_PTN_A = Pattern.compile("\\$\\{([^}]+)\\}", Pattern.MULTILINE);
+    private static final Pattern          INTERPOLATE_PTN_B = Pattern.compile("#\\{([^}]+)\\}", Pattern.MULTILINE);
+    private static final Charset          UTF8              = Charset.forName("UTF-8");
+    private static final SimpleDateFormat sdf               = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     @Parameter
     private File       output;
     @Parameter(defaultValue = "1099")
@@ -61,6 +63,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     private String     folders;
     @Parameter
     private String     files;
+    @Parameter
+    private String     frontendNodeModules;
     //Debug port
     @Parameter(defaultValue = "0")
     private int        debug;
@@ -406,6 +410,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
     private void generateFrontendResources() throws MojoExecutionException {
+        Properties mappings = new Properties();
         IOFileFilter appCompFilter = new IOFileFilter() {
             @Override
             public boolean accept(File file) {
@@ -424,16 +429,37 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                                                                                     filter, null);
         // TODO 没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
         for (File componentJar : libJars) {
-            extractFrontendResources(componentJar);
+            extractFrontendResources(componentJar, mappings);
         }
         for (File componentJar : repositoryJars) {
-            extractFrontendResources(componentJar);
+            extractFrontendResources(componentJar, mappings);
+        }
+
+        if( StringUtils.isNotBlank(frontendNodeModules) && FileUtils.fileExists(frontendNodeModules)){
+            try {
+                FileUtils.copyDirectoryStructure(new File(frontendNodeModules),
+                                                 new File(output, "webapp/frontend/node_modules"));
+            } catch (IOException e) {
+                getLog().warn("Can't copy node modules", e);
+            }
+        }
+        FileOutputStream mappingStream = null;
+        try {
+            mappingStream = new FileOutputStream(new File(output, "webapp/frontend/.mappings"));
+            mappings.store(mappingStream, "frontend mappings");
+        } catch (Exception ex){
+            throw new MojoExecutionException("Can't generate mapping file");
+        } finally {
+            IOUtils.closeQuietly(mappingStream);
         }
     }
 
-    private void extractFrontendResources(File componentJar) throws MojoExecutionException {
+    private void extractFrontendResources(File componentJar, Properties mappings) throws MojoExecutionException {
         getLog().info("Extract frontend resources from:" + componentJar);
         try {
+            Map<String, Object> replaces = new HashMap<String, Object>();
+            replaces.put("project.version", project.getVersion());
+            replaces.put("build.timestamp", sdf.format(new Date()));
             JarFile jarFile = new JarFile(componentJar);
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
@@ -443,8 +469,17 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                     InputStream stream = jarFile.getInputStream(entry);
                     if( entry.isDirectory() )
                         FileUtils.mkdir(file.getAbsolutePath());
-                    else
-                        org.apache.commons.io.FileUtils.copyInputStreamToFile(stream, file);
+                    else{
+                        if( entry.getName().endsWith("config.js")){
+                            List<String> strings = IOUtils.readLines(stream);
+                            String content = StringUtils.join(strings, "\n");
+                            content = interpolate(content, replaces, 'A');
+                            org.apache.commons.io.FileUtils.write(file, content);
+                        }else{
+                            org.apache.commons.io.FileUtils.copyInputStreamToFile(stream, file);
+                        }
+                        mappings.setProperty(entry.getName(), FileUtils.filename(componentJar.getPath()));
+                    }
                 }
             }
             jarFile.close();
