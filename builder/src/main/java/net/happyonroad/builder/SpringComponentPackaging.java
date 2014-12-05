@@ -446,7 +446,17 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         FileOutputStream mappingStream = null;
         try {
             mappingStream = new FileOutputStream(new File(output, "webapp/frontend/.mappings"));
-            mappings.store(mappingStream, "frontend mappings");
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\n");
+            Set<String> names = mappings.stringPropertyNames();
+            for (String name : names) {
+                sb.append(String.format("  \"%s\" : \"%s\",\n", name, mappings.getProperty(name)));
+            }
+            //delete the last ,\n
+            sb.deleteCharAt(sb.length()-1);
+            sb.deleteCharAt(sb.length()-1);
+            sb.append("\n}\n");
+            IOUtils.write(sb.toString(), mappingStream);
         } catch (Exception ex){
             throw new MojoExecutionException("Can't generate mapping file");
         } finally {
@@ -455,7 +465,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
     private void extractFrontendResources(File componentJar, Properties mappings) throws MojoExecutionException {
-        getLog().info("Extract frontend resources from:" + componentJar);
+        getLog().debug("Extract frontend resources from:" + componentJar);
         try {
             Map<String, Object> replaces = new HashMap<String, Object>();
             replaces.put("project.version", project.getVersion());
