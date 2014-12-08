@@ -6,6 +6,7 @@ package net.happyonroad.builder;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.AndFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -95,6 +96,14 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
         //清除与jar重复的pom文件
         movePoms();
+
+        //将repository/lib下面的第三方包与lib下面的归并
+        // 因为现在是先extending，而后再packing
+        reduceLibs();
+
+        // 如果repository依赖的第三方包也是一个repository
+        //  则将其从 repository/lib 提升到 repository 层次
+        moveRepositoryLibs();
 
         //将 lib/poms repository/poms 目录下的pom文件归并到一个压缩文件中
         //以免用户修改其中的内容，导致系统不能运行
@@ -300,6 +309,57 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         }
 
     }
+
+    private void reduceLibs() throws MojoExecutionException {
+        File repositoryLibPath = new File(output, "repository/lib");
+        if (!repositoryLibPath.exists()) return;
+
+        File repositoryPomsPath = new File(output, "repository/poms");
+        if (!repositoryPomsPath.exists()) repositoryPomsPath.mkdirs();
+
+        try {
+            //Reduce jar with boot, lib, repository
+            List<File> jars = FileUtils.getFiles(repositoryLibPath, "*.jar", null);
+            for (File jar : jars) {
+                if (FileUtils.fileExists(output + "/lib/" + jar.getName()) ||
+                        FileUtils.fileExists(output + "/boot/" + jar.getName()) ||
+                        FileUtils.fileExists(output + "/repository/" + jar.getName())) {
+                    FileUtils.forceDelete(jar);
+                }
+            }
+            List<File> poms = FileUtils.getFiles(repositoryPomsPath, "*.pom", null);
+            // Reduce pom with lib/poms, lib, boot, repository
+            for (File pom : poms) {
+                String jarName = pom.getName().replace(".pom", ".jar");
+                if (FileUtils.fileExists(output + "/lib/poms/" + pom.getName()) ||
+                        FileUtils.fileExists(output + "/lib/" + jarName) ||
+                        FileUtils.fileExists(output + "/boot/" + jarName) ||
+                        FileUtils.fileExists(output + "repository/" + jarName)
+                        ) {
+                    FileUtils.forceDelete(pom);
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Can't reduce depended lib/jars|poms: " + e.getMessage());
+        }
+    }
+
+    private void moveRepositoryLibs() throws MojoExecutionException {
+        File repositoryLibPath = new File(output, "repository/lib");
+        if (!repositoryLibPath.exists()) return;
+        try {
+            List<File> jars = FileUtils.getFiles(repositoryLibPath, "*.jar", null);
+            for (File jar : jars) {
+                String fileName = FilenameUtils.getName(jar.getName());
+                if( DefaultComponent.isApplication(fileName) ){
+                    FileUtils.rename(jar, new File(output, "repository/" + fileName));
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Can't move repository lib: " + e.getMessage());
+        }
+    }
+
 
     private void sealPoms(File parent) {
         File pomsPath = new File(parent, "poms");
