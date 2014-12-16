@@ -222,9 +222,13 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         loader.unload(component);
     }
 
+    public List<ApplicationContext> getApplications(){
+        return context.getApplicationFeatures();
+    }
+
     void publishContainerStartedEvent() {
         banner("The component container is started");
-        List<ApplicationContext> applications = context.getApplicationFeatures();
+        List<ApplicationContext> applications = getApplications();
         ContainerStartedEvent event = new ContainerStartedEvent(this);
         for (ApplicationContext application : applications) {
             application.publishEvent(event);

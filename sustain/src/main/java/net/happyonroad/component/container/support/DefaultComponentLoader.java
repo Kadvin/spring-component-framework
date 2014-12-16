@@ -280,6 +280,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             logger.trace("Actual loading {}", component);
             List<FeatureResolver> resolvers = new ArrayList<FeatureResolver>(featureResolvers.size());
             for (FeatureResolver featureResolver : featureResolvers) {
+                featureResolver.applyDefaults(component);
                 if (featureResolver.hasFeature(component)) {
                     resolvers.add(featureResolver);
                 }

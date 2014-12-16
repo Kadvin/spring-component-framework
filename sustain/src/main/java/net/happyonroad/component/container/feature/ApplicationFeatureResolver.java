@@ -39,6 +39,16 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     }
 
     @Override
+    public void applyDefaults(Component component) {
+        super.applyDefaults(component);
+        String appConfig = component.getManifestAttribute(APP_CONFIG);
+        if( appConfig == null && readComponentDefaultConfig(component, "A").contains("A")){
+            appConfig = System.getProperty("default.app.config", "net.happyonroad.platform.config.DefaultAppConfig");
+        }
+        component.setManifestAttribute(APP_CONFIG, appConfig);
+    }
+
+    @Override
     public boolean hasFeature(Component component) {
         return byConfig(component) || byXml(component);
     }

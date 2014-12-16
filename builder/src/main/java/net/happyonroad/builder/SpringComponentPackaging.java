@@ -431,7 +431,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
                 fos.close();
             }
         } catch (IOException e) {
-            throw new MojoExecutionException("Can't generate script");
+            throw new MojoExecutionException("Can't generate script", e);
         }
 
     }

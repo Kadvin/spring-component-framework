@@ -3,8 +3,10 @@ package net.happyonroad.component.container;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import org.springframework.context.ApplicationContext;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 启动环境
@@ -15,6 +17,12 @@ public interface LaunchEnvironment {
     void execute(AppLauncher launcher, String[] args) throws Exception;
 
     Component resolveComponent(String strDependency) throws DependencyNotMeetException, InvalidComponentNameException;
+
+    /**
+     * 获得所有的组件应用contexts
+     * @return 组件应用context列表
+     */
+    List<ApplicationContext> getApplications();
 
     void shutdown();
 

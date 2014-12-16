@@ -41,6 +41,21 @@ public abstract class AbstractFeatureResolver implements FeatureResolver {
     }
 
     @Override
+    public void applyDefaults(Component component) {
+        //DO NOTHING NOW
+    }
+
+    protected String readComponentDefaultConfig(Component component, String trueRepresents){
+        String defaultConfig = component.getManifestAttribute(DEFAULT_CONFIG);
+        if( defaultConfig != null ) {
+            defaultConfig = defaultConfig.toUpperCase();
+            if (defaultConfig.equalsIgnoreCase("true")) defaultConfig = trueRepresents;
+            return defaultConfig;
+        }else
+            return "";
+    }
+
+    @Override
     public void beforeResolve(Component component) {
         // do nothing
     }

@@ -42,6 +42,16 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
     }
 
     @Override
+    public void applyDefaults(Component component) {
+        super.applyDefaults(component);
+        String serviceConfig = component.getManifestAttribute(SERVICE_CONFIG);
+        if( serviceConfig == null && readComponentDefaultConfig(component, "S").contains("S")){
+            serviceConfig = System.getProperty("default.db.repository", "dnt.*.repository");
+        }
+        component.setManifestAttribute(SERVICE_CONFIG, serviceConfig);
+    }
+
+    @Override
     public boolean hasFeature(Component component) {
         return byConfig(component) || byXml(component);
     }

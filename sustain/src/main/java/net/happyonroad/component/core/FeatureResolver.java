@@ -6,6 +6,8 @@ package net.happyonroad.component.core;
 /** 组件的特性解析器 */
 public interface FeatureResolver {
 
+    final String DEFAULT_CONFIG         = "Default-Config";
+
     Features AggregatingFlag = new Features("Aggregating", new Object());
     Features PlainFlag = new Features("Plain", new Object());
 
@@ -28,6 +30,12 @@ public interface FeatureResolver {
      * @return priority
      */
     int getUnloadOrder();
+
+    /**
+     * 在判断组件是否包含特定特性之前，先判断是否有缺省特性
+     * @param component 被判断的组件
+     */
+    void applyDefaults(Component component);
 
     /**
      * 判断组件是否有本特性
@@ -54,4 +62,5 @@ public interface FeatureResolver {
      * @param component 被卸载的组件
      */
     Object release(Component component) ;
+
 }
