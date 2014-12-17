@@ -17,7 +17,7 @@ public class JarInputStreamResource extends InputStreamResource {
     private final URL url;
 
     public JarInputStreamResource(String url, InputStream inputStream) throws MalformedURLException {
-        super(inputStream);
+        super(inputStream, url);
         this.url = new URL(url);
     }
 
