@@ -46,7 +46,7 @@ public interface ComponentRepository{
      *
      * @param candidateComponentJars 候选组件的文件
      */
-    void sortCandidates(File[] candidateComponentJars);
+    void sortCandidates(File[] candidateComponentJars) throws DependencyNotMeetException, InvalidComponentNameException;
 
     /**
      * 根据组件的依赖情况，进行排序，被依赖的组件被排在前面

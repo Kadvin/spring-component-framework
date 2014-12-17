@@ -37,7 +37,7 @@ import static net.happyonroad.util.LogUtils.banner;
  * 请注意，该对象的工作依赖系统环境变量 app.home
  */
 public class DefaultComponentRepository
-        implements MutableComponentRepository, Comparator<Component> {
+        implements MutableComponentRepository {
     private static FilenameFilter jarFilter = new FilenameFilterBySuffix(".jar");
     private static FilenameFilter pomFilter = new FilenameFilterBySuffix(".pom");
 
@@ -313,13 +313,84 @@ public class DefaultComponentRepository
     }
 
     @Override
-    public void sortCandidates(File[] candidateComponentJars) {
-        Arrays.sort(candidateComponentJars, new ComponentJarFileComparator(this));
+    public void sortCandidates(File[] candidateComponentJars)
+            throws DependencyNotMeetException, InvalidComponentNameException {
+        final List<Component> components = new ArrayList<Component>(candidateComponentJars.length);
+        final Map<File, Component> mapping = new HashMap<File, Component>();
+        for (File file : candidateComponentJars) {
+            Component component = resolveComponent(file.getName());
+            components.add(component);
+            mapping.put(file, component);
+        }
+        sortComponents(components);
+        Arrays.sort(candidateComponentJars, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                return positionOf(f1) - positionOf(f2);
+            }
+
+            private int positionOf(File file) {
+                Component component = mapping.get(file);
+                return components.indexOf(component);
+            }
+        });
     }
 
+    /**
+     * 基于依赖关系进行排序，最多被依赖的组件排在最前面，没有被依赖的排在最后面
+     * <pre>
+     * 这个排序算法不能基于java的quick sort，默认快速排序，排到前面的，不会再和后面的继续比较
+     *
+     * 基本的算法原理是：
+     * 先为components集合构建一个相互之间的依赖关系，map结构
+     *
+     * </pre>
+     * @param components 被排序的组件
+     */
     @Override
     public void sortComponents(List<Component> components) {
-        Collections.sort(components, this);
+        //将组件集合之间的依赖关系以map的形式展现出来
+        Map<Component, List<Component>> dependencies = dependsMap(components);
+        //清空待排序的components，用于做结果的容器
+        components.clear();
+        //基于依赖关系进行处理
+        arrange(components, dependencies);
+    }
+
+    Map<Component, List<Component>> dependsMap(List<Component> components) {
+        Map<Component, List<Component>> dependencies = new HashMap<Component, List<Component>>();
+        for (Component component : components) {
+            List<Component> depends = new ArrayList<Component>();
+            for (Component other : components) {
+                if( component == other ) continue;
+                if( component.dependsOn(other) )
+                    depends.add(other);
+            }
+            dependencies.put(component, depends);
+        }
+        return dependencies;
+    }
+
+    void arrange(List<Component> result, Map<Component, List<Component>> dependencies) {
+        Iterator<Map.Entry<Component, List<Component>>> it = dependencies.entrySet().iterator();
+        boolean cycled = true;
+        while (it.hasNext()) {
+            Map.Entry<Component, List<Component>> entry = it.next();
+            if( entry.getValue().isEmpty() ){
+                cycled = false;
+                //从依赖数组中移除当前这个没有依赖任何其他组件的对象关系
+                it.remove();
+                //并将对象放到结果集合头部
+                result.add(entry.getKey());
+                //而后将所有其他的依赖关系中指向该记录的清除掉
+                for (List<Component> list : dependencies.values()) {
+                    list.remove(entry.getKey());
+                }
+            }
+        }
+        if( cycled ) throw new IllegalArgumentException("There are cycle dependencies in: "
+                                                        + Arrays.toString(dependencies.keySet().toArray()));
+        if( !dependencies.isEmpty() ) arrange(result, dependencies);
     }
 
     // ------------------------------------------------------------
@@ -347,14 +418,6 @@ public class DefaultComponentRepository
         return home.getPath();
     }
 
-    @Override
-    public int compare(Component comp1, Component comp2) {
-        if(comp1.dependsOn(comp2)){
-            return 1;//priority to another
-        }else if(comp2.dependsOn(comp1)){
-            return -1;
-        }else return 0;
-    }
 
     public static DefaultComponentRepository getRepository() {
         return sharedInstance;

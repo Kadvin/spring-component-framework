@@ -3,6 +3,7 @@
  */
 package net.happyonroad.builder;
 
+import net.happyonroad.component.container.support.DefaultComponentRepository;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
@@ -103,7 +104,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
         // 如果repository依赖的第三方包也是一个repository
         //  则将其从 repository/lib 提升到 repository 层次
-        moveRepositoryLibs();
+        //moveRepositoryLibs();
 
         //将 lib/poms repository/poms 目录下的pom文件归并到一个压缩文件中
         //以免用户修改其中的内容，导致系统不能运行
@@ -344,7 +345,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         }
     }
 
-    private void moveRepositoryLibs() throws MojoExecutionException {
+    void moveRepositoryLibs() throws MojoExecutionException {
         File repositoryLibPath = new File(output, "repository/lib");
         if (!repositoryLibPath.exists()) return;
         try {
@@ -470,6 +471,9 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
     private void generateFrontendResources() throws MojoExecutionException {
+        DefaultComponentRepository repository = new DefaultComponentRepository(output.getAbsolutePath());
+        repository.start();
+
         Properties mappings = new Properties();
         IOFileFilter appCompFilter = new IOFileFilter() {
             @Override
@@ -487,11 +491,20 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         Collection<File> libJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "lib"), filter, null );
         Collection<File> repositoryJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "repository"),
                                                                                     filter, null);
-        // TODO 没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
-        for (File componentJar : libJars) {
-            extractFrontendResources(componentJar, mappings);
+        Collection<File> repositoryLibJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "repository/lib"),
+                                                                                    filter, null);
+        //  没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
+        List<File> allJars = new ArrayList<File>();
+        allJars.addAll(libJars);
+        allJars.addAll(repositoryJars);
+        allJars.addAll(repositoryLibJars);
+        File[] jarArray = allJars.toArray(new File[allJars.size()]);
+        try {
+            repository.sortCandidates(jarArray);
+        }catch (Exception ex ){
+            throw new MojoExecutionException("Can't sort the files by component dependencies", ex);
         }
-        for (File componentJar : repositoryJars) {
+        for (File componentJar : jarArray) {
             extractFrontendResources(componentJar, mappings);
         }
 

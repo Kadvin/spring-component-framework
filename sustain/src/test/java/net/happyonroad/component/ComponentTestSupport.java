@@ -7,6 +7,7 @@ import net.happyonroad.component.container.support.DefaultComponentLoader;
 import net.happyonroad.component.container.support.DefaultComponentLoaderTest;
 import net.happyonroad.component.container.support.DefaultComponentRepository;
 import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
 import net.happyonroad.util.TempFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
@@ -35,6 +36,11 @@ public class ComponentTestSupport {
 
     static {
         System.setProperty("framework.launch", "ide");
+        try {
+            URL.setURLStreamHandlerFactory(ComponentURLStreamHandlerFactory.getFactory());
+        } catch (Error e) {
+            //skip for duplicate definition
+        }
     }
 
     @AfterClass
