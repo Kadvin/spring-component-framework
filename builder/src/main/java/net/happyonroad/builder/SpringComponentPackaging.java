@@ -5,6 +5,7 @@ package net.happyonroad.builder;
 
 import net.happyonroad.component.container.support.DefaultComponentRepository;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import org.apache.commons.io.FilenameUtils;
@@ -27,6 +28,7 @@ import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.io.RawInputStreamFacade;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -43,6 +45,13 @@ import java.util.zip.ZipEntry;
 @Mojo(name = "package", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class SpringComponentPackaging extends CopyDependenciesMojo {
 
+    static {
+        try {
+            URL.setURLStreamHandlerFactory(ComponentURLStreamHandlerFactory.getFactory());
+        } catch (Error e) {
+            //skip for duplicate definition
+        }
+    }
     private static final Pattern          INTERPOLATE_PTN_A = Pattern.compile("\\$\\{([^}]+)\\}", Pattern.MULTILINE);
     private static final Pattern          INTERPOLATE_PTN_B = Pattern.compile("#\\{([^}]+)\\}", Pattern.MULTILINE);
     private static final Charset          UTF8              = Charset.forName("UTF-8");
@@ -129,6 +138,11 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             properties = new Properties();
         }
         appTarget = String.format("%s.%s-%s", project.getGroupId(), project.getArtifactId(), project.getVersion());
+        try {
+            System.setProperty("app.home", output.getCanonicalPath());
+        } catch (IOException e) {
+            System.setProperty("app.home", output.getAbsolutePath());
+        }
     }
 
     private void prepareFolders() throws MojoExecutionException {
@@ -470,6 +484,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     }
 
+    @SuppressWarnings("unchecked")
     private void generateFrontendResources() throws MojoExecutionException {
         DefaultComponentRepository repository = new DefaultComponentRepository(output.getAbsolutePath());
         repository.start();
@@ -488,11 +503,15 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             }
         };
         AndFileFilter filter = new AndFileFilter(new WildcardFileFilter("*.jar"), appCompFilter);
-        Collection<File> libJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "lib"), filter, null );
-        Collection<File> repositoryJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "repository"),
-                                                                                    filter, null);
-        Collection<File> repositoryLibJars = org.apache.commons.io.FileUtils.listFiles(new File(output, "repository/lib"),
-                                                                                    filter, null);
+        File folder = new File(output, "lib");
+        Collection<File> libJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null )
+                                                   : Collections.EMPTY_SET;
+        folder = new File(output, "repository");
+        Collection<File> repositoryJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null)
+                                                          : Collections.EMPTY_SET;
+        folder = new File(output, "repository/lib");
+        Collection<File> repositoryLibJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null)
+                                                             : Collections.EMPTY_SET;
         //  没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
         List<File> allJars = new ArrayList<File>();
         allJars.addAll(libJars);

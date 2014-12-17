@@ -388,8 +388,9 @@ public class DefaultComponentRepository
                 }
             }
         }
-        if( cycled ) throw new IllegalArgumentException("There are cycle dependencies in: "
-                                                        + Arrays.toString(dependencies.keySet().toArray()));
+        if(cycled && !dependencies.isEmpty())
+            throw new IllegalArgumentException("There are cycle dependencies in: "
+                                               + Arrays.toString(dependencies.keySet().toArray()));
         if( !dependencies.isEmpty() ) arrange(result, dependencies);
     }
 
