@@ -126,7 +126,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
         generateWrapper();
 
-        generateFrontendResources();
+        if(StringUtils.isNotBlank(frontendNodeModules))
+            generateFrontendResources();
     }
 
     private void initAppParams() throws MojoExecutionException {
@@ -527,7 +528,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             extractFrontendResources(componentJar, mappings);
         }
 
-        if( StringUtils.isNotBlank(frontendNodeModules) && FileUtils.fileExists(frontendNodeModules)){
+        if( FileUtils.fileExists(frontendNodeModules)){
             try {
                 FileUtils.copyDirectoryStructure(new File(frontendNodeModules),
                                                  new File(output, "webapp/frontend/node_modules"));
