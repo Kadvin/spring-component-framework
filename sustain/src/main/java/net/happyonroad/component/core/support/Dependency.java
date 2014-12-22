@@ -390,6 +390,8 @@ public class Dependency implements Versionize{
             if (!accept) return false;
         }
         if( range != null ){
+            // Temp solution
+            if( componentOrDependency.getVersion() == null ) return true;
             accept = range.containsVersion(new ComponentVersion(componentOrDependency.getVersion()));
             if (!accept) return false;
         }
