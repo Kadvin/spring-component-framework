@@ -47,7 +47,7 @@ public class ServiceFeatureResolver extends SpringFeatureResolver {
         String serviceConfig = component.getManifestAttribute(SERVICE_CONFIG);
         if( serviceConfig == null && readComponentDefaultConfig(component, "S").contains("S")){
             serviceConfig = System.getProperty("default.service.config",
-                                               "net.happyonroad.platform.config.DefaultServiceConfig");
+                                               "net.happyonroad.spring.config.DefaultServiceConfig");
         }
         component.setManifestAttribute(SERVICE_CONFIG, serviceConfig);
     }

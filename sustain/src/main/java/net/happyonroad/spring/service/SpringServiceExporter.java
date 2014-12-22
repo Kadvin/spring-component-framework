@@ -90,6 +90,6 @@ public class SpringServiceExporter extends SpringServiceProxy {
 
     @Override
     public String toString() {
-        return String.format("%s(ref=%s, hint=%s)", ClassUtils.getShortName(role), getRef(), getHint());
+        return String.format("%s(%s) <= %s", ClassUtils.getShortName(role), getHint(), getRef());
     }
 }

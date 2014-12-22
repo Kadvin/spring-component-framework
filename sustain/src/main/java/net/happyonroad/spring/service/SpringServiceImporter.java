@@ -109,6 +109,6 @@ public class SpringServiceImporter extends SpringServiceProxy {
 
     @Override
     public String toString() {
-        return String.format("%s(hint=%s, as=%s)", ClassUtils.getShortName(role), getHint(), getAs());
+        return String.format("%s(%s) => %s", ClassUtils.getShortName(role), getHint(), getAs());
     }
 }

@@ -14,6 +14,10 @@ import net.happyonroad.spring.exception.ApplicationConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
+import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.InputStreamResource;
@@ -21,11 +25,14 @@ import org.springframework.core.io.InputStreamResource;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static org.springframework.context.ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS;
+
 /**
  * 加载应用组件
  */
 public class ApplicationFeatureResolver extends SpringFeatureResolver {
     public static final String APP_CONFIG = "App-Config";
+    public static final String APP_REPOSITORY = "App-Repository";
     public static final String APP_MESSAGE = "App-Message";
     public static final String APP_XML = "META-INF/application.xml";
 
@@ -43,7 +50,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         super.applyDefaults(component);
         String appConfig = component.getManifestAttribute(APP_CONFIG);
         if( appConfig == null && readComponentDefaultConfig(component, "A").contains("A")){
-            appConfig = System.getProperty("default.app.config", "net.happyonroad.platform.config.DefaultAppConfig");
+            appConfig = System.getProperty("default.app.config", "net.happyonroad.spring.config.DefaultAppConfig");
         }
         component.setManifestAttribute(APP_CONFIG, appConfig);
     }
@@ -66,10 +73,11 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         }else{
             context = resolveByXml(component, realm, parent);
         }
-        //registerApplicationHelpers(component, context, realm);
-        registerServiceHelpers(context);
         String env = System.getProperty("spring.env", "production");
         context.getEnvironment().setActiveProfiles(env);
+        scanAppRepository(context, component);
+        //registerApplicationHelpers(component, context, realm);
+        registerServiceHelpers(context);
         context.refresh();
         //在根据配置的情况下，根据 manifest里面的App-Message加载资源
         //在根据XML配置的时候，由xml文件全权负责
@@ -91,6 +99,38 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         ((DefaultComponent)component).setApplication(context);
         context.start();
         resolveContext.registerFeature(component, getName(), context);
+    }
+
+    private void scanAppRepository(AbstractApplicationContext context, Component component) {
+        String appRepository = component.getManifestAttribute(APP_REPOSITORY);
+        if( StringUtils.isEmpty(appRepository)){
+            return;
+        }
+        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner((BeanDefinitionRegistry) context);
+        scanner.setEnvironment(context.getEnvironment());
+        scanner.setResourceLoader(context);
+        scanner.setIncludeAnnotationConfig(false);
+        int count = scanner.scan(StringUtils.split(appRepository, CONFIG_LOCATION_DELIMITERS));
+        if(count > 0 && logger.isDebugEnabled()){
+            logger.debug("Scanned {} beans", count);
+            String[] names = scanner.getRegistry().getBeanDefinitionNames();
+            for (String name : names) {
+                BeanDefinition definition = scanner.getRegistry().getBeanDefinition(name);
+                if( definition instanceof ScannedGenericBeanDefinition){
+                    ScannedGenericBeanDefinition sgbd = (ScannedGenericBeanDefinition) definition;
+                    Class<?> beanClass;
+                    try {
+                        beanClass = sgbd.resolveBeanClass(context.getClassLoader());
+                    } catch (ClassNotFoundException e) {
+                        continue;
+                    }
+                    if( beanClass != null ){
+                        logger.debug("\t{}", beanClass.getName());
+                    }
+                }
+            }
+        }
+
     }
 
     /**
