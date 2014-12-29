@@ -10,6 +10,7 @@ import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.context.event.SmartApplicationListener;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -18,6 +19,10 @@ import java.util.Set;
  * 另外，可以防止事件重复
  */
 public class SmartApplicationEventMulticaster extends SimpleApplicationEventMulticaster {
+    //最多存储5m内的事件，5分钟前的事件就删除
+    // 避免这里内存泄露
+    private static final long MAX_STORAGE_TIME = 1000 * 60 * 5;
+
     public SmartApplicationEventMulticaster(BeanFactory beanFactory) {
         super(beanFactory);
     }
@@ -50,6 +55,15 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
     }
 
     private void remember(ApplicationEvent event) {
+        Iterator<ApplicationEvent> it = events.iterator();
+        //没有专门配置一个定时清理的任务，而是在某次事件发生时顺带做事件清理
+        while (it.hasNext()) {
+            ApplicationEvent evt = it.next();
+            long lives = System.currentTimeMillis() - evt.getTimestamp();
+            if( lives > MAX_STORAGE_TIME ){
+                it.remove();
+            }
+        }
         events.add(event);
     }
 }
