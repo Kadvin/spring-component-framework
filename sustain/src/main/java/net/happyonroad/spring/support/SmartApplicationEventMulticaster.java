@@ -9,9 +9,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.context.event.SmartApplicationListener;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 能够根据Listener的Event的Source Type进行过滤的派发器
@@ -27,7 +25,7 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
         super(beanFactory);
     }
 
-    private Set<ApplicationEvent> events = new HashSet<ApplicationEvent>();
+    private final Set<ApplicationEvent> events = new HashSet<ApplicationEvent>();
 
     protected boolean supportsEvent(ApplicationListener<?> listener,
                                     Class<? extends ApplicationEvent> eventType, Class<?> sourceType) {
@@ -46,6 +44,7 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
         // ...
         if (remembered(event)) return;
         remember(event);
+        //clearExpires();
         super.multicastEvent(event);
     }
 
@@ -55,15 +54,25 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
     }
 
     private void remember(ApplicationEvent event) {
-        Iterator<ApplicationEvent> it = events.iterator();
+        events.add(event);
+    }
+
+    void clearExpires() {
+        //TODO 怎么弄，这里都在前端访问触发时抛出 ConcurrentModificationException
+        List<ApplicationEvent> removing = new LinkedList<ApplicationEvent>();
         //没有专门配置一个定时清理的任务，而是在某次事件发生时顺带做事件清理
-        while (it.hasNext()) {
-            ApplicationEvent evt = it.next();
+        for (ApplicationEvent evt : new HashSet<ApplicationEvent>(events)) {
             long lives = System.currentTimeMillis() - evt.getTimestamp();
-            if( lives > MAX_STORAGE_TIME ){
-                it.remove();
+            if (lives > MAX_STORAGE_TIME) {
+                removing.add(evt);
             }
         }
-        events.add(event);
+        if( !removing.isEmpty() ){
+             synchronized (events){
+                for (ApplicationEvent evt : removing) {
+                    events.remove(evt);
+                }
+             }
+        }
     }
 }
