@@ -350,17 +350,17 @@ public class DefaultComponentRepository
     @Override
     public void sortComponents(List<Component> components) {
         //将组件集合之间的依赖关系以map的形式展现出来
-        Map<Component, List<Component>> dependencies = dependsMap(components);
+        Map<Component, Set<Component>> dependencies = dependsMap(components);
         //清空待排序的components，用于做结果的容器
         components.clear();
         //基于依赖关系进行处理
         arrange(components, dependencies);
     }
 
-    Map<Component, List<Component>> dependsMap(List<Component> components) {
-        Map<Component, List<Component>> dependencies = new HashMap<Component, List<Component>>();
+    Map<Component, Set<Component>> dependsMap(List<Component> components) {
+        Map<Component, Set<Component>> dependencies = new HashMap<Component, Set<Component>>();
         for (Component component : components) {
-            List<Component> depends = new ArrayList<Component>();
+            Set<Component> depends = new HashSet<Component>();
             for (Component other : components) {
                 if( component == other ) continue;
                 if( component.dependsOn(other) )
@@ -371,11 +371,11 @@ public class DefaultComponentRepository
         return dependencies;
     }
 
-    void arrange(List<Component> result, Map<Component, List<Component>> dependencies) {
-        Iterator<Map.Entry<Component, List<Component>>> it = dependencies.entrySet().iterator();
+    void arrange(List<Component> result, Map<Component, Set<Component>> dependencies) {
+        Iterator<Map.Entry<Component, Set<Component>>> it = dependencies.entrySet().iterator();
         boolean cycled = true;
         while (it.hasNext()) {
-            Map.Entry<Component, List<Component>> entry = it.next();
+            Map.Entry<Component, Set<Component>> entry = it.next();
             if( entry.getValue().isEmpty() ){
                 cycled = false;
                 //从依赖数组中移除当前这个没有依赖任何其他组件的对象关系
@@ -383,7 +383,7 @@ public class DefaultComponentRepository
                 //并将对象放到结果集合头部
                 result.add(entry.getKey());
                 //而后将所有其他的依赖关系中指向该记录的清除掉
-                for (List<Component> list : dependencies.values()) {
+                for (Set<Component> list : dependencies.values()) {
                     list.remove(entry.getKey());
                 }
             }
