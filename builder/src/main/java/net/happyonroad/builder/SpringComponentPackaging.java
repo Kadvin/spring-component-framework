@@ -327,15 +327,25 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
     }
 
     private void reduceLibs() throws MojoExecutionException {
-        File repositoryLibPath = new File(output, "repository/lib");
+        File repositoryPath = new File(output, "repository");
+        File repositoryLibPath = new File(repositoryPath, "lib");
         if (!repositoryLibPath.exists()) return;
 
         File repositoryPomsPath = new File(output, "repository/poms");
         if (!repositoryPomsPath.exists()) repositoryPomsPath.mkdirs();
 
         try {
+            //Reduce repository with boot, lib
+            List<File> jars = FileUtils.getFiles(repositoryPath, "*.jar", null);
+            for (File jar : jars) {
+                if (FileUtils.fileExists(output + "/lib/" + jar.getName()) ||
+                        FileUtils.fileExists(output + "/boot/" + jar.getName())) {
+                    FileUtils.forceDelete(jar);
+                }
+            }
+
             //Reduce jar with boot, lib, repository
-            List<File> jars = FileUtils.getFiles(repositoryLibPath, "*.jar", null);
+            jars = FileUtils.getFiles(repositoryLibPath, "*.jar", null);
             for (File jar : jars) {
                 if (FileUtils.fileExists(output + "/lib/" + jar.getName()) ||
                         FileUtils.fileExists(output + "/boot/" + jar.getName()) ||

@@ -108,6 +108,14 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
 
     }
 
+    @Override
+    protected void copyFile(File artifact, File destFile) throws MojoExecutionException {
+        if (new File(outputDirectory, "lib/" + destFile.getName()).exists() ||
+                new File(repositoryFile, "lib/" + destFile.getName()).exists())
+            return;
+        super.copyFile(artifact, destFile);
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void reduceDependencies() throws MojoExecutionException {
         File libPath = new File(repositoryFile, "lib");
@@ -143,7 +151,7 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
 
     private void reducePoms() throws MojoExecutionException {
         File libPath = new File(repositoryFile, "lib");
-        if(!libPath.exists()) return;
+        if (!libPath.exists()) return;
         File tempFolder = new File(libPath, "temp");
         try {
             List<File> pomFiles = FileUtils.getFiles(libPath, "*.pom", null);
