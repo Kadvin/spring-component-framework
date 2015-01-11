@@ -44,8 +44,8 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
         // ...
         if (remembered(event)) return;
         remember(event);
-        //clearExpires();
         super.multicastEvent(event);
+        clearExpires();
     }
 
 
@@ -59,20 +59,17 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
 
     void clearExpires() {
         //TODO 怎么弄，这里都在前端访问触发时抛出 ConcurrentModificationException
-        List<ApplicationEvent> removing = new LinkedList<ApplicationEvent>();
-        //没有专门配置一个定时清理的任务，而是在某次事件发生时顺带做事件清理
-        for (ApplicationEvent evt : new HashSet<ApplicationEvent>(events)) {
-            long lives = System.currentTimeMillis() - evt.getTimestamp();
-            if (lives > MAX_STORAGE_TIME) {
-                removing.add(evt);
-            }
-        }
-        if( !removing.isEmpty() ){
-             synchronized (events){
-                for (ApplicationEvent evt : removing) {
-                    events.remove(evt);
+        try {
+            Iterator<ApplicationEvent> it = events.iterator();
+            while (it.hasNext()) {
+                ApplicationEvent event = it.next();
+                long lives = System.currentTimeMillis() - event.getTimestamp();
+                if (lives > MAX_STORAGE_TIME) {
+                    it.remove();
                 }
-             }
+            }
+        } catch (Exception e) {
+            //skip concurrent modification error
         }
     }
 }
