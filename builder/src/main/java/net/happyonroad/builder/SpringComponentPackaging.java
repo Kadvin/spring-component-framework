@@ -224,7 +224,8 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         super.setPrependGroupId(true);
         super.addParentPoms = true;
         Collection<String> scope = new HashSet<String>();
-        scope.add("test");
+        scope.add("compile");
+        scope.add("runtime");
         getProject().setArtifactFilter(new CumulativeScopeArtifactFilter(scope));
         super.doExecute();
 
