@@ -101,6 +101,7 @@ public class SpringComponentExtending extends CopyDependenciesMojo {
         super.setCopyPom(true);
         super.setPrependGroupId(true);
         super.addParentPoms = true;
+        super.stripClassifier = true;
         Collection<String> scope = new HashSet<String>();
         scope.add("compile");
         scope.add("runtime");

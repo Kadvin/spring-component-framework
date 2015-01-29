@@ -222,6 +222,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         super.setOutputDirectory(libPath);
         super.setCopyPom(true);
         super.setPrependGroupId(true);
+        super.stripClassifier = true;
         super.addParentPoms = true;
         Collection<String> scope = new HashSet<String>();
         scope.add("compile");
