@@ -437,6 +437,7 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
             if (StringUtils.isNotBlank(appPrefix)) {
                 jvmOptions += " -Dapp.prefix=" + appPrefix;
             }
+            jvmOptions = StringUtils.strip(jvmOptions, "\n");
             replaces.put("jvm.options", jvmOptions);
             String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh", "check.sh"};
             for (String resource : resourceNames) {
