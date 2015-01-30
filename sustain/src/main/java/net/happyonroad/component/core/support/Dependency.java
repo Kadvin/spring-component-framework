@@ -44,6 +44,11 @@ public class Dependency implements Versionize{
         } catch (IOException e) {
             System.err.println("Can't load special_artifacts.txt: " + e.getMessage());
         }
+        String specials = System.getProperty("special.artifacts", "");
+        String[] specialArtifacts = specials.split(";,");
+        for (String specialArtifact : specialArtifacts) {
+            specialPatterns.add(Pattern.compile(specialArtifact));
+        }
     }
 
     private String groupId;
