@@ -10,6 +10,7 @@ import org.apache.commons.lang.reflect.FieldUtils;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -31,14 +32,17 @@ class ContextUtils {
      * @param inheriting  上级上下文
      * @param context 当前上下文
      */
-    public static void inheritParentProperties(AbstractApplicationContext inheriting,
+    public static void inheritParentProperties(ApplicationContext inheriting,
                                                GenericApplicationContext context) {
         if (inheriting == null) return;
         Set<PropertyResourceConfigurer> configurers = new LinkedHashSet<PropertyResourceConfigurer>();
         configurers.addAll(inheriting.getBeansOfType(PropertyResourceConfigurer.class).values());
+        if( ! (inheriting instanceof AbstractApplicationContext ) ){
+            return;
+        }
         //把上级context的属性配置器加到当前这个上下文的post processor里面来
         //以便把其了解的属性配置到本context里面的bean的placeholder中
-        List<BeanFactoryPostProcessor> postProcessors = inheriting.getBeanFactoryPostProcessors();
+        List<BeanFactoryPostProcessor> postProcessors = ((AbstractApplicationContext)inheriting).getBeanFactoryPostProcessors();
 
         for (BeanFactoryPostProcessor postProcessor : postProcessors) {
             //现在暂时仅仅将 Property Resource Configurer 复制过来

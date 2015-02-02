@@ -11,11 +11,13 @@ import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.spring.context.AnnotationComponentApplicationContext;
 import net.happyonroad.spring.context.XmlComponentApplicationContext;
 import net.happyonroad.spring.exception.ApplicationConfigurationException;
+import net.happyonroad.spring.support.CombinedMessageSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -24,13 +26,17 @@ import org.springframework.core.io.InputStreamResource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import static org.springframework.context.ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS;
 
 /**
  * 加载应用组件
  */
-public class ApplicationFeatureResolver extends SpringFeatureResolver {
+public class ApplicationFeatureResolver extends AbstractFeatureResolver {
     public static final String APP_CONFIG = "App-Config";
     public static final String APP_REPOSITORY = "App-Repository";
     public static final String APP_MESSAGE = "App-Message";
@@ -64,9 +70,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
     public void resolve(Component component) throws IOException {
         logger.debug("Resolving {} {} feature", component, getName());
         ClassLoader realm = resolveContext.getClassRealm(component.getId());
-        AbstractApplicationContext parent = (AbstractApplicationContext) resolveContext.getServiceFeature(component);
-        if (parent == null)
-            parent = combineDependedApplicationAsParentContext(component);
+        ApplicationContext parent = resolveContext.getContext() ;
         AbstractApplicationContext context;
         if( byConfig(component)){
             context = resolveByConfig(component, realm, parent);
@@ -77,7 +81,6 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
         context.getEnvironment().setActiveProfiles(env);
         scanAppRepository(context, component);
         //registerApplicationHelpers(component, context, realm);
-        registerServiceHelpers(context);
         context.refresh();
         //在根据配置的情况下，根据 manifest里面的App-Message加载资源
         //在根据XML配置的时候，由xml文件全权负责
@@ -87,7 +90,8 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
                 ResourceBundleMessageSource bundle;
                 try {
                     bundle = context.getBean(ResourceBundleMessageSource.class);
-                    bundle.setParentMessageSource(parent);
+                    CombinedMessageSource combinedMessageSource = combineMessageSource(component);
+                    bundle.setParentMessageSource(combinedMessageSource);
                 } catch (BeansException e) {
                     String message = "The " + component + " app config should configure a " +
                                      "resource bundle message source to hold:" + appMessage + "!";
@@ -142,7 +146,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
      */
     protected AbstractApplicationContext resolveByXml(Component component,
                                                       ClassLoader realm,
-                                                      AbstractApplicationContext parent) {
+                                                      ApplicationContext parent) {
         InputStream applicationStream = null;
         try {
             applicationStream = component.getResource().getApplicationStream();
@@ -170,7 +174,7 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
      */
     protected AbstractApplicationContext resolveByConfig(Component component,
                                                          ClassLoader realm,
-                                                         AbstractApplicationContext parent) {
+                                                         ApplicationContext parent) {
         String appConfig = component.getManifestAttribute(APP_CONFIG);
         Class appConfigClass;
         try {
@@ -196,6 +200,51 @@ public class ApplicationFeatureResolver extends SpringFeatureResolver {
 
     protected String getAppMessage(Component component){
         return component.getManifestAttribute(APP_MESSAGE);
+    }
+
+
+    @Override
+    public Object release(Component component) {
+        AbstractApplicationContext context = (AbstractApplicationContext) super.release(component);
+        if (context != null) {
+            shutdownContext(context);
+        }else{
+            logger.error("Can't pick loaded {} feature for: {}", getName(), component);
+        }
+        return context;
+    }
+
+    protected void shutdownContext(AbstractApplicationContext context) {
+        context.stop();
+        context.close();
+    }
+
+    protected CombinedMessageSource combineMessageSource(Component component) {
+        // 将所有该组件依赖的组件生成的context组合起来，作为parent context，以便直接获取相关设置
+        Set<AbstractApplicationContext> dependedContexts = new LinkedHashSet<AbstractApplicationContext>();
+        List<ResourceBundleMessageSource> sources = new LinkedList<ResourceBundleMessageSource>();
+        digDepends(component, dependedContexts, sources);
+        return new CombinedMessageSource(sources);
+    }
+
+
+    protected void digDepends(Component component,
+                                                 Set<AbstractApplicationContext> dependedContexts,
+                                                 List<ResourceBundleMessageSource> sources) {
+        ApplicationContext loaded = resolveContext.getApplicationFeature(component);
+        if (loaded != null ) {
+            AbstractApplicationContext componentContext = (AbstractApplicationContext) loaded;
+            dependedContexts.add(componentContext);
+            try {
+                ResourceBundleMessageSource source = componentContext.getBean(ResourceBundleMessageSource.class);
+                sources.add(source);
+            } catch (BeansException e) {
+                //ignore
+            }
+        }
+        for (Component depended : component.getDependedComponents()) {
+            digDepends(depended, dependedContexts, sources);
+        }
     }
 
 }

@@ -1,2 +1,1 @@
 App-Config: spring.test.ann_service_import.AppConfig
-Service-Config: spring.test.ann_service_import.ServiceConfig

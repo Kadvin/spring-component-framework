@@ -1,2 +1,1 @@
 App-Config: spring.test.ann_service_export.AppConfig
-Service-Config: spring.test.ann_service_export.ServiceConfig

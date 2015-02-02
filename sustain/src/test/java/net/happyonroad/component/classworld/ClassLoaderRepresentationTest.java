@@ -3,7 +3,7 @@
  */
 package net.happyonroad.component.classworld;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import net.happyonroad.component.ComponentTestSupport;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;

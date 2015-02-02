@@ -6,13 +6,11 @@ package spring.test.ann_service_import.more;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.Lifecycle;
-import org.springframework.stereotype.Component;
 import spring.test.ann_service_export.AnnotationService;
 
 /**
  * The component been export
  */
-@Component("moreAnnotationService")
 public class MoreProvider implements Lifecycle, AnnotationService {
     private boolean           running;
 

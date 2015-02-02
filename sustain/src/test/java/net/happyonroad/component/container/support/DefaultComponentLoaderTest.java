@@ -118,8 +118,6 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Class spClass = realm.loadClass("spring.test.api.ServiceProvider");
         Class tspClass = realm.loadClass("spring.test.provider.TestServiceProvider");
         Assert.assertNotNull(tspClass);
-        ApplicationContext serviceContext = loader.getServiceFeature(target);
-        Assert.assertNotNull(serviceContext);
         ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Object serviceProvider = context.getBean(spClass);
@@ -155,8 +153,6 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Class suClass = realm.loadClass("spring.test.api.ServiceUser");
         Class tsuClass = realm.loadClass("spring.test.user.TestServiceUser");
         Assert.assertNotNull(tsuClass);
-        ApplicationContext serviceContext = loader.getServiceFeature(target);
-        Assert.assertNotNull(serviceContext);
         ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Object serviceUser = context.getBean(suClass);
@@ -191,8 +187,6 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
         Class suClass = realm.loadClass("spring.test.api.ServiceUser");
         Class msuClass = realm.loadClass("spring.test.mixed.MixedServiceUser");
         Assert.assertNotNull(msuClass);
-        ApplicationContext serviceContext = loader.getServiceFeature(target);
-        Assert.assertNotNull(serviceContext);
         ApplicationContext context = target.getApplication();
         Assert.assertNotNull(context);
         Object serviceUser = context.getBean(suClass);

@@ -5,7 +5,6 @@ package net.happyonroad.component.spring;
 
 import net.happyonroad.component.ComponentTestSupport;
 import net.happyonroad.spring.context.AnnotationComponentApplicationContext;
-import net.happyonroad.spring.context.GenericServiceApplicationContext;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -41,9 +40,6 @@ public class AnnotationDrivenTest extends ComponentTestSupport{
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
         Assert.assertNotNull(context);
-        context = loader.getServiceFeature(target);
-        Assert.assertNotNull(context);
-        Assert.assertTrue(context instanceof GenericServiceApplicationContext);
     }
 
     @Test
@@ -53,9 +49,6 @@ public class AnnotationDrivenTest extends ComponentTestSupport{
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
         Assert.assertNotNull(context);
-        context = loader.getServiceFeature(target);
-        Assert.assertNotNull(context);
-        Assert.assertTrue(context instanceof GenericServiceApplicationContext);
     }
 
 }

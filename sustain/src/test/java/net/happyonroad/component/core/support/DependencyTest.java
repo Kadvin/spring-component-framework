@@ -3,8 +3,8 @@
  */
 package net.happyonroad.component.core.support;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 /**
  * 测试Dependency对象

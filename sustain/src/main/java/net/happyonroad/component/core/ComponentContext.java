@@ -4,9 +4,8 @@
 
 package net.happyonroad.component.core;
 
-import net.happyonroad.component.container.ComponentLoader;
-import net.happyonroad.component.container.ComponentRepository;
-import net.happyonroad.component.container.ServiceRegistry;
+import net.happyonroad.component.container.*;
+import net.happyonroad.component.container.support.DefaultServiceHelper;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
@@ -32,17 +31,17 @@ public interface ComponentContext {
 
     ApplicationContext getApplicationFeature(Component component);
 
-    ApplicationContext getServiceFeature(Component component);
-
     //按照对应组件的依赖顺序排序的应用程序上下文
     List<ApplicationContext> getApplicationFeatures();
 
     ServiceRegistry getRegistry();
 
+    DefaultServiceHelper getServiceHelper();
+
     ComponentLoader getComponentLoader();
 
     ComponentRepository getComponentRepository();
 
-    ApplicationContext getMainApp();
+    ApplicationContext getContext();
 
 }

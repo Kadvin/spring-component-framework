@@ -5,8 +5,8 @@ package net.happyonroad.spring.context;
 
 import net.happyonroad.component.core.Component;
 import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 /**
@@ -19,7 +19,7 @@ public class AnnotationComponentApplicationContext extends AnnotationConfigAppli
 
     public AnnotationComponentApplicationContext(Component component,
                                                  ClassLoader realm,
-                                                 AbstractApplicationContext  parent) {
+                                                 ApplicationContext parent) {
         this.setParent(parent); /*It accept null*/
         this.component = component;
         ContextUtils.inheritParentProperties(parent, this);

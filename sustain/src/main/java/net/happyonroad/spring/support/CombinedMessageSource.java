@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Description here
+ * 将多个依赖的组件的message source合并一个
  */
 public class CombinedMessageSource extends DelegatingMessageSource {
 

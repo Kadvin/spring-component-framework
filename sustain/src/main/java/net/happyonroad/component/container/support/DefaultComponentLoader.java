@@ -3,11 +3,8 @@
  */
 package net.happyonroad.component.container.support;
 
-import net.happyonroad.component.container.ComponentLoader;
-import net.happyonroad.component.container.ComponentRepository;
-import net.happyonroad.component.container.ServiceRegistry;
+import net.happyonroad.component.container.*;
 import net.happyonroad.component.container.feature.ApplicationFeatureResolver;
-import net.happyonroad.component.container.feature.ServiceFeatureResolver;
 import net.happyonroad.component.container.feature.StaticFeatureResolver;
 import net.happyonroad.component.core.*;
 import net.happyonroad.component.core.Component;
@@ -15,7 +12,9 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 
 import java.io.IOException;
 import java.util.*;
@@ -30,9 +29,12 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     /*package*/ final List<FeatureResolver>    featureResolvers;
     /*package*/ final List<FeatureResolver>    reverseResolvers;
     /*package*/ final Map<Component, Features> loadedFeatures;
-    /*package*/ final ServiceRegistry          registry;
+    /*package*/ final MutableServiceRegistry   registry;
+    /*package*/ final DefaultServiceHelper     helper;
     /*package*/ final ComponentRepository      repository;
-    /*package*/ final Set<Component> loading, unloading;
+    /*package*/ final Set<Component>           loading, unloading;
+    /*package*/ final DefaultListableBeanFactory beanFactory;
+    /*package*/ final GenericApplicationContext context;
 
 
     public DefaultComponentLoader(ComponentRepository repository,
@@ -40,6 +42,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         this.repository = repository;
         loadedFeatures = new ConcurrentHashMap<Component, Features>();
         registry = new DefaultServiceRegistry();
+        helper = new DefaultServiceHelper(registry);
         featureResolvers = new LinkedList<FeatureResolver>();
         reverseResolvers = new LinkedList<FeatureResolver>();
         loading = new LinkedHashSet<Component>();
@@ -47,11 +50,22 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         //注册缺省的特性解析器
         registerResolver(new StaticFeatureResolver());
         registerResolver(new ApplicationFeatureResolver());
-        registerResolver(new ServiceFeatureResolver());
         //注册构造时传入的扩展Feature Resolvers
         for (FeatureResolver resolver : resolvers) {
             registerResolver(resolver);
         }
+        beanFactory = new DefaultListableBeanFactory();
+        //将全局的注册表也注册进去
+        beanFactory.registerSingleton("springServiceRegistry", getRegistry());
+        //ServiceHelper( Importer/Exporter )
+        beanFactory.registerSingleton("serviceHelper", getServiceHelper());
+        //将Component Loader也注册进去
+        beanFactory.registerSingleton("springComponentLoader", getComponentLoader());
+        //将Component Repository也注册进去
+        beanFactory.registerSingleton("springComponentRepository", getComponentRepository());
+
+        context = new GenericApplicationContext(beanFactory);
+        context.refresh();
     }
 
     /**
@@ -80,6 +94,10 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     @Override
     public boolean isLoaded(Component component) {
         return loadedFeatures.containsKey(component);
+    }
+
+    public GenericApplicationContext getContext() {
+        return context;
     }
 
     @Override
@@ -121,13 +139,6 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public ApplicationContext getServiceFeature(Component component) {
-        Features features = loadedFeatures.get(component);
-        if (features == null) return null;
-        return features.getServiceFeature();
-    }
-
-    @Override
     public ClassLoader getClassRealm(String componentId) {
         try {
             return repository.resolveComponent(componentId).getClassLoader();
@@ -139,20 +150,13 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
-    public ApplicationContext getMainApp() {
-        String id = repository.getMainComponentId();
-        Component component;
-        try {
-            component = repository.resolveComponent(id);
-        } catch (Exception e) {
-            throw new RuntimeException("The system is not read for access main app");
-        }
-        return component.getApplication();
+    public ServiceRegistry getRegistry() {
+        return registry;
     }
 
     @Override
-    public ServiceRegistry getRegistry() {
-        return registry;
+    public DefaultServiceHelper getServiceHelper() {
+        return helper ;
     }
 
     @Override

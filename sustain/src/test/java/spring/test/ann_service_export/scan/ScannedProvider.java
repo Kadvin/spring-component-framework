@@ -4,14 +4,11 @@
 package spring.test.ann_service_export.scan;
 
 import org.springframework.context.Lifecycle;
-import org.springframework.stereotype.Component;
 import spring.test.ann_service_export.AnnotationService;
 
 /**
  * 基于Scan的bean
  */
-@Component
-//在组件的类声明上声明该组件被构建之后，还应该被作为服务导出
 public class ScannedProvider implements Lifecycle, AnnotationService {
     private boolean running;
 
