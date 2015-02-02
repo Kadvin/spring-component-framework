@@ -10,6 +10,7 @@ import net.happyonroad.component.core.Features;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.spring.context.AnnotationComponentApplicationContext;
 import net.happyonroad.spring.context.XmlComponentApplicationContext;
+import net.happyonroad.spring.event.ComponentLoadedEvent;
 import net.happyonroad.spring.exception.ApplicationConfigurationException;
 import net.happyonroad.spring.support.CombinedMessageSource;
 import org.apache.commons.io.IOUtils;
@@ -212,6 +213,13 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
             logger.error("Can't pick loaded {} feature for: {}", getName(), component);
         }
         return context;
+    }
+
+    @Override
+    public void afterResolve(Component component) {
+        super.afterResolve(component);
+        //向其内部所有组件发布通知，其已经被加载
+        component.getApplication().publishEvent(new ComponentLoadedEvent(component));
     }
 
     protected void shutdownContext(AbstractApplicationContext context) {
