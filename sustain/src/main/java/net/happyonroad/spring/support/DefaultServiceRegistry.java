@@ -96,10 +96,16 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
     @Override
     public <T> T getService(Class<T> requiredType, String hint) {
         Map<String, Object> map = services.get(requiredType);
-        if (map == null) {
+        T service = getServiceFromMap(map, hint);
+        if (service == null) {
             //如果精确查找找不到，则进行模糊匹配，找到第一个算数
             map = digMaps(requiredType);
+            service = getServiceFromMap(map, hint);
         }
+        return service;
+    }
+
+    protected <T> T getServiceFromMap(Map<String, Object> map, String hint) {
         if(map.isEmpty()) return null;
         if(ANY_HINT.equals(hint)){
             return (T) map.values().iterator().next();
