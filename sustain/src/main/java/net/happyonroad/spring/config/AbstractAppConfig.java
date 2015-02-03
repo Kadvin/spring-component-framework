@@ -84,14 +84,26 @@ public abstract class AbstractAppConfig extends AbstractUserConfig implements In
 
     @Override
     public final void afterPropertiesSet() throws Exception {
-        doExports();
+        beforeExports();
+        try {
+            doExports();
+        } finally {
+            afterExports();
+        }
     }
+
+    /**
+     * 执行服务导出的之前工作
+     */
+    protected void beforeExports() {}
 
     /**
      * 执行服务导出的工作
      */
-    protected void doExports() {
+    protected void doExports() {}
 
-
-    }
+    /**
+     * 执行服务导出的之后工作
+     */
+    protected void afterExports() {}
 }
