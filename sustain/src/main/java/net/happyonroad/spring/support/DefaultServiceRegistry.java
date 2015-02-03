@@ -1,9 +1,9 @@
 /**
  * @author XiongJie, Date: 13-10-29
  */
-package net.happyonroad.component.container.support;
+package net.happyonroad.spring.support;
 
-import net.happyonroad.component.container.MutableServiceRegistry;
+import net.happyonroad.spring.service.MutableServiceRegistry;
 import net.happyonroad.spring.exception.ServiceConfigurationException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;

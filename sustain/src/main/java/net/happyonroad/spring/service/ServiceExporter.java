@@ -1,7 +1,7 @@
 /**
  * Developer: Kadvin Date: 15/2/2 上午11:02
  */
-package net.happyonroad.component.container;
+package net.happyonroad.spring.service;
 
 /**
  * <h1>服务导出工具</h1>

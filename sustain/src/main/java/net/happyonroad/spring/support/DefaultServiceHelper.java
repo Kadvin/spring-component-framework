@@ -1,11 +1,11 @@
 /**
  * Developer: Kadvin Date: 15/2/2 上午11:31
  */
-package net.happyonroad.component.container.support;
+package net.happyonroad.spring.support;
 
-import net.happyonroad.component.container.MutableServiceRegistry;
-import net.happyonroad.component.container.ServiceExporter;
-import net.happyonroad.component.container.ServiceImporter;
+import net.happyonroad.spring.service.MutableServiceRegistry;
+import net.happyonroad.spring.service.ServiceExporter;
+import net.happyonroad.spring.service.ServiceImporter;
 import net.happyonroad.spring.exception.ServiceConfigurationException;
 import org.springframework.aop.framework.ProxyFactory;
 

@@ -38,5 +38,5 @@
     <logger name="net.happyonroad.platform.web.support.ExtendedRequestMappingHandlerMapping" level="WARN" />
     <logger name="net.happyonroad.platform.resolver.MybatisFeatureResolver" level="WARN" />
     <logger name="net.happyonroad.platform.resolver.SpringMvcFeatureResolver" level="WARN" />
-    <logger name="net.happyonroad.component.container.support.DefaultServiceRegistry" level="WARN" />
+    <logger name="net.happyonroad.spring.support.DefaultServiceRegistry" level="WARN" />
 </included>

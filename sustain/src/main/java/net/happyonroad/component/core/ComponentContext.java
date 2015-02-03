@@ -5,7 +5,8 @@
 package net.happyonroad.component.core;
 
 import net.happyonroad.component.container.*;
-import net.happyonroad.component.container.support.DefaultServiceHelper;
+import net.happyonroad.spring.support.DefaultServiceHelper;
+import net.happyonroad.spring.service.ServiceRegistry;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;

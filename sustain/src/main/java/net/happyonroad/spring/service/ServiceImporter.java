@@ -1,7 +1,7 @@
 /**
  * Developer: Kadvin Date: 15/2/2 上午11:09
  */
-package net.happyonroad.component.container;
+package net.happyonroad.spring.service;
 
 import net.happyonroad.spring.exception.ServiceConfigurationException;
 

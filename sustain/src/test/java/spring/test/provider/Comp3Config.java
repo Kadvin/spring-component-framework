@@ -3,7 +3,7 @@
  */
 package spring.test.provider;
 
-import net.happyonroad.component.container.ServiceExporter;
+import net.happyonroad.spring.service.ServiceExporter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

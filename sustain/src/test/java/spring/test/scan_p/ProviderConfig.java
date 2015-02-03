@@ -3,11 +3,10 @@
  */
 package spring.test.scan_p;
 
-import net.happyonroad.component.container.ServiceExporter;
+import net.happyonroad.spring.service.ServiceExporter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import spring.test.api.ServiceProvider;
 
 /**
  * <h1>Component6的App Config</h1>

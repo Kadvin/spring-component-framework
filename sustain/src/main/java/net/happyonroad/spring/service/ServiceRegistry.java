@@ -2,7 +2,7 @@
  * @author XiongJie, Date: 13-10-29
  */
 
-package net.happyonroad.component.container;
+package net.happyonroad.spring.service;
 
 import java.util.Map;
 

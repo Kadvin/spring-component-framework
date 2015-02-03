@@ -3,6 +3,7 @@
  */
 package net.happyonroad.component.container.support;
 
+import net.happyonroad.spring.support.DefaultServiceRegistry;
 import org.junit.Test;
 
 /** 对缺省服务注册表的测试 */

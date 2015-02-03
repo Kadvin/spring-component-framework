@@ -3,8 +3,8 @@
  */
 package spring.test.ann_service_import;
 
-import net.happyonroad.component.container.ServiceExporter;
-import net.happyonroad.component.container.ServiceImporter;
+import net.happyonroad.spring.service.ServiceExporter;
+import net.happyonroad.spring.service.ServiceImporter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

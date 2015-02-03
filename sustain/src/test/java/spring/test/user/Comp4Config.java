@@ -3,7 +3,7 @@
  */
 package spring.test.user;
 
-import net.happyonroad.component.container.ServiceImporter;
+import net.happyonroad.spring.service.ServiceImporter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
