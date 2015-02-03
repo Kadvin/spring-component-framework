@@ -6,7 +6,6 @@ import net.happyonroad.component.core.support.DependencyManagement;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 
-import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
@@ -241,13 +240,6 @@ public interface Component extends Comparable<Component>, Versionize {
     ApplicationContext getApplication();
 
     /**
-     * 如果是服务组件，返回相应的服务上下文，如果不是返回null
-     *
-     * @return 服务上下文
-     */
-    ApplicationContext getServiceApplication();
-
-    /**
      * 为组件设置额外的缺省manifest属性
      *
      * 这些属性会被实际配置的manifest属性覆盖
@@ -260,4 +252,7 @@ public interface Component extends Comparable<Component>, Versionize {
     Set<URL> getLibURLs();
 
     List<String> getAppBriefIds();
+
+    void setParentContext(ApplicationContext parentContext);
+    ApplicationContext getParentContext();
 }

@@ -33,7 +33,6 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     /*package*/ final DefaultServiceHelper     helper;
     /*package*/ final ComponentRepository      repository;
     /*package*/ final Set<Component>           loading, unloading;
-    /*package*/ final DefaultListableBeanFactory beanFactory;
     /*package*/ final GenericApplicationContext context;
 
 
@@ -54,7 +53,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         for (FeatureResolver resolver : resolvers) {
             registerResolver(resolver);
         }
-        beanFactory = new DefaultListableBeanFactory();
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         //将全局的注册表也注册进去
         beanFactory.registerSingleton("springServiceRegistry", getRegistry());
         //ServiceHelper( Importer/Exporter )

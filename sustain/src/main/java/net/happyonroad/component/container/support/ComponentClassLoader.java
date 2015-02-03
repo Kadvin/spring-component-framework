@@ -31,6 +31,10 @@ public class ComponentClassLoader extends URLClassLoader {
         return component.getType().equals("pom") ? null : new ComponentParentClassLoader(component);
     }
 
+    public Component getComponent() {
+        return component;
+    }
+
     @Override
     public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         LoadUnit unit = loading(name);

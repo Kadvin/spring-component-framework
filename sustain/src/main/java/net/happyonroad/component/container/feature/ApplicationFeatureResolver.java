@@ -71,7 +71,8 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
     public void resolve(Component component) throws IOException {
         logger.debug("Resolving {} {} feature", component, getName());
         ClassLoader realm = resolveContext.getClassRealm(component.getId());
-        ApplicationContext parent = resolveContext.getContext() ;
+        ApplicationContext parent =  component.getParentContext() == null ?
+                resolveContext.getContext() : component.getParentContext();
         AbstractApplicationContext context;
         if( byConfig(component)){
             context = resolveByConfig(component, realm, parent);
