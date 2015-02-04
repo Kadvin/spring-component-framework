@@ -31,13 +31,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
+
 /** 为了让Launch静态程序可以被定制化，从原 Plexus/Launch中分离出来的对象 */
 public class DefaultLaunchEnvironment implements LaunchEnvironment {
     public static final int MODE_START  = 1;
     public static final int MODE_STOP   = -1;
     public static final int MODE_RELOAD = 0;
 
-    private Logger logger = LoggerFactory.getLogger(DefaultLaunchEnvironment.class.getName());
+    private Logger logger = LoggerFactory.getLogger(AppLauncher.class.getName());
 
     private DefaultComponentRepository repository;
     private ComponentLoader            loader;
@@ -51,6 +53,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             logger.debug("app.home is not set, use user.dir as app.home: {}", home);
         }
         home = FilenameUtils.normalize(System.getProperty("app.home"));
+        //noinspection ConstantConditions
         System.setProperty("app.home", home);
 
         String appHost = System.getProperty("app.host");
@@ -191,9 +194,11 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
      * @param component 被加载的组件
      */
     public void load(Component component) throws Exception {
+        long start = System.currentTimeMillis();
         loader.load(component);
-
         registerWorldAndComponents(component);
+
+        banner("Container starts took {}", formatDurationHMS(System.currentTimeMillis() - start));
 
         publishContainerStartedEvent();
     }
@@ -218,8 +223,9 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
     public void unload(Component component) {
         publishContainerStoppingEvent();
-
+        long start = System.currentTimeMillis();
         loader.unload(component);
+        banner("Container stops took {}", formatDurationHMS(System.currentTimeMillis() - start));
     }
 
     public List<ApplicationContext> getApplications(){
@@ -227,7 +233,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     }
 
     void publishContainerStartedEvent() {
-        banner("The component container is started");
+        logger.debug("The component container is started");
         List<ApplicationContext> applications = getApplications();
         ContainerStartedEvent event = new ContainerStartedEvent(this);
         for (ApplicationContext application : applications) {
@@ -236,7 +242,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     }
 
     void publishContainerStoppingEvent() {
-        banner("The component container is stopping");
+        logger.debug("The component container is stopping");
         List<ApplicationContext> applications = context.getApplicationFeatures();
         Collections.reverse(applications);
 
@@ -249,7 +255,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
     @Override
     public void shutdown() {
-        banner("Shutting down");
+        banner("Shutting down...");
         if (repository != null) {
             repository.stop();
         }
@@ -265,7 +271,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         if(StringUtils.hasText(featureResolvers)){
             for(String resolverFqn: featureResolvers.split(",")){
                 try{
-                    banner("Found extended feature resolver: " + resolverFqn);
+                    logger.debug("Found extended feature resolver: " + resolverFqn);
                     Class resolverClass = Class.forName(resolverFqn, true, component.getClassLoader());
                     FeatureResolver resolver = (FeatureResolver) resolverClass.newInstance();
                     loader.registerResolver(resolver);
@@ -277,8 +283,8 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         return loader;
     }
 
-    void banner(String message){
-        logger.info(LogUtils.banner(message));
+    void banner(String message, Object... args){
+        logger.info(LogUtils.banner(message, args));
     }
 
 }

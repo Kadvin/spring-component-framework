@@ -8,8 +8,6 @@ import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentException;
 import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
-import org.apache.commons.lang.ClassUtils;
-import org.apache.commons.lang.reflect.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
@@ -21,6 +19,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 
 import static net.happyonroad.util.LogUtils.banner;
+import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
 
 /**
  * <h2>扩展了Maven Plexus的Launcher</h2>
@@ -69,6 +68,7 @@ public class AppLauncher implements Executable {
      */
     public void start() throws Exception {
         try {
+            long start = System.currentTimeMillis();
             //主线程设置为该class loader，可以让RMI序列化的时候工作
             Thread.currentThread().setContextClassLoader(getMainClassLoader());
             logger.info(banner("Loading components starts from {}", this.mainComponent));
@@ -76,6 +76,8 @@ public class AppLauncher implements Executable {
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
             exportAsRMI();
             addShutdownHook();
+            logger.info(banner("The {} is started", getAppName()));
+            logger.info(banner("System starts took {}", formatDurationHMS(System.currentTimeMillis() - start)));
             //让主线程基于STDIO接受交互命令
             //以后应该让CLI组件托管这块工作
             processCommands();
@@ -90,6 +92,7 @@ public class AppLauncher implements Executable {
             logger.debug("Another thread is shutting down");
             return;
         }
+        final long start = System.currentTimeMillis();
         //noinspection finally
         try {
             logger.info(banner("Unloading the main component {}", this.mainComponent));
@@ -101,9 +104,10 @@ public class AppLauncher implements Executable {
         } finally {
             running = false;
             //启动一个额外的线程停止自身
-            new Thread("Remote Stopper") {
+            new Thread("Stopper") {
                 @Override
                 public void run() {
+                    logger.info(banner("System stops took {}", formatDurationHMS(System.currentTimeMillis() - start)));
                     System.exit(0);
                 }
             }.start();
@@ -151,7 +155,6 @@ public class AppLauncher implements Executable {
 
     /** 处理当前进程的命令行交互 */
     private void processCommands() {
-        logger.info(banner("The {} is started", getAppName()));
         running = true;
         boolean normal = true;
         while (running) {

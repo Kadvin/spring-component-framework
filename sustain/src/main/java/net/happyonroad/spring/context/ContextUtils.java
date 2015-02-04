@@ -16,9 +16,7 @@ import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.springframework.context.support.AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME;
 
@@ -34,27 +32,11 @@ class ContextUtils {
      */
     public static void inheritParentProperties(ApplicationContext inheriting,
                                                GenericApplicationContext context) {
-        if (inheriting == null) return;
-        Set<PropertyResourceConfigurer> configurers = new LinkedHashSet<PropertyResourceConfigurer>();
-        configurers.addAll(inheriting.getBeansOfType(PropertyResourceConfigurer.class).values());
-        if( ! (inheriting instanceof AbstractApplicationContext ) ){
-            return;
-        }
-        //把上级context的属性配置器加到当前这个上下文的post processor里面来
-        //以便把其了解的属性配置到本context里面的bean的placeholder中
-        List<BeanFactoryPostProcessor> postProcessors = ((AbstractApplicationContext)inheriting).getBeanFactoryPostProcessors();
-
-        for (BeanFactoryPostProcessor postProcessor : postProcessors) {
-            //现在暂时仅仅将 Property Resource Configurer 复制过来
-            //  以后根据需求，可能还有其他类型的 post processor需要复制
-            if( postProcessor instanceof PropertyResourceConfigurer){
-                configurers.add((PropertyResourceConfigurer) postProcessor);
-            }
-        }
-        List<BeanFactoryPostProcessor> existProcessors = context.getBeanFactoryPostProcessors();
-        for (PropertyResourceConfigurer configurer : configurers) {
-            if( !existProcessors.contains(configurer) )
-                context.addBeanFactoryPostProcessor(configurer);
+        if (!(inheriting instanceof AbstractApplicationContext)) return;
+        List<BeanFactoryPostProcessor> processors = ((AbstractApplicationContext) inheriting).getBeanFactoryPostProcessors();
+        for (BeanFactoryPostProcessor processor : processors) {
+            if( processor instanceof PropertyResourceConfigurer)
+                context.addBeanFactoryPostProcessor(processor);
         }
     }
 

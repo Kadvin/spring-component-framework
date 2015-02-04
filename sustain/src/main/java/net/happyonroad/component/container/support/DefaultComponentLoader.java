@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
+
 /**
  * 组件加载
  */
@@ -68,6 +70,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         beanFactory.registerSingleton("springComponentRepository", getComponentRepository());
 
         context = new GenericApplicationContext(beanFactory);
+        context.setDisplayName("Component Parent Context");
         context.refresh();
     }
 
@@ -180,7 +183,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     @Override
     public void load(Component component) throws Exception {
         if (isLoaded(component)) return;
-        logger.debug("Loading {}", component);
+        logger.debug("Before loading {}", component);
         //首先加载父组件
         if (component.getParent() != null) {
             //上面会自动检测是否已经加载，防止重复加载
@@ -193,7 +196,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         }
         loadSingle(component);
         //最后，加载自身
-        logger.debug("Loaded  {}", component);
+        logger.debug("After  loaded  {}", component);
     }
 
     /**
@@ -204,7 +207,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     @Override
     public void unload(Component component) {
         if (!isLoaded(component))  return;
-        logger.debug("Unloading {}", component);
+        logger.debug("Before unloading {}", component);
         //先卸载自身
         unloadSingle(component);
         //再卸载依赖
@@ -217,7 +220,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             //上面会自动检测是否已经加载，防止重复加载
             unload(component.getParent());
         }
-        logger.debug("Unloaded  {}", component);
+        logger.debug("After  unloaded  {}", component);
     }
 
     boolean isLoading(Component component){
@@ -279,12 +282,13 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             loadedFeatures.put(component, FeatureResolver.PlainFlag);
         } else {
             if (isLoading(component)) return;
+            long start = System.currentTimeMillis();
             loading(component);
             ComponentResource resource = component.getResource();
             if (resource == null) {
                 throw new IOException("The component " + component + " without resource");
             }
-            logger.trace("Actual loading {}", component);
+            logger.info("Loading {}", component);
             List<FeatureResolver> resolvers = new ArrayList<FeatureResolver>(featureResolvers.size());
             for (FeatureResolver featureResolver : featureResolvers) {
                 featureResolver.applyDefaults(component);
@@ -303,6 +307,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 featureResolver.afterResolve(component);
             }
             loaded(component);
+            logger.info("Loaded  {} ({})", component, formatDurationHMS(System.currentTimeMillis()-start));
         }
     }
 
@@ -320,8 +325,9 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             loadedFeatures.remove(component);
         }else{
             if (isUnloading(component)) return;
+            long start = System.currentTimeMillis();
             unloading(component);
-            logger.trace("Actual unloading {}", component);
+            logger.info("Unloading {}", component);
             for (FeatureResolver resolver : reverseResolvers) {
                 if (resolver.hasFeature(component)) {
                     resolver.release(component);
@@ -329,6 +335,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             }
             loadedFeatures.remove(component);
             unloaded(component);
+            logger.info("Unloaded  {} ({})", component, formatDurationHMS(System.currentTimeMillis() - start));
         }
     }
 
