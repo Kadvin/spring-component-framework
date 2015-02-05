@@ -253,6 +253,7 @@ public interface Component extends Comparable<Component>, Versionize {
 
     List<String> getAppBriefIds();
 
-    void setParentContext(ApplicationContext parentContext);
     ApplicationContext getParentContext();
+
+    void setParentContext(ApplicationContext parentContext);
 }

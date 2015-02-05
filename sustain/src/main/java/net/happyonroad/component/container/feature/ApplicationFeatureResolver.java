@@ -72,7 +72,7 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
         logger.debug("Resolving {} {} feature", component, getName());
         ClassLoader realm = resolveContext.getClassRealm(component.getId());
         ApplicationContext parent =  component.getParentContext() == null ?
-                resolveContext.getContext() : component.getParentContext();
+                resolveContext.getRootContext() : component.getParentContext();
         AbstractApplicationContext context;
         if( byConfig(component)){
             context = resolveByConfig(component, realm, parent);

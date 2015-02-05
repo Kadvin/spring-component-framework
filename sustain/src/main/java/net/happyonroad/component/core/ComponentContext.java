@@ -43,6 +43,5 @@ public interface ComponentContext {
 
     ComponentRepository getComponentRepository();
 
-    ApplicationContext getContext();
-
+    ApplicationContext getRootContext();
 }

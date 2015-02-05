@@ -3,11 +3,11 @@
  */
 package net.happyonroad.component.container.support;
 
-import net.happyonroad.component.container.*;
+import net.happyonroad.component.container.ComponentLoader;
+import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.feature.ApplicationFeatureResolver;
 import net.happyonroad.component.container.feature.StaticFeatureResolver;
 import net.happyonroad.component.core.*;
-import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.spring.service.MutableServiceRegistry;
@@ -35,11 +35,11 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     /*package*/ final List<FeatureResolver>    featureResolvers;
     /*package*/ final List<FeatureResolver>    reverseResolvers;
     /*package*/ final Map<Component, Features> loadedFeatures;
-    /*package*/ final MutableServiceRegistry registry;
-    /*package*/ final DefaultServiceHelper helper;
+    /*package*/ final MutableServiceRegistry   registry;
+    /*package*/ final DefaultServiceHelper     helper;
     /*package*/ final ComponentRepository      repository;
     /*package*/ final Set<Component>           loading, unloading;
-    /*package*/ final GenericApplicationContext context;
+    /*package*/ ApplicationContext             context;
 
 
     public DefaultComponentLoader(ComponentRepository repository,
@@ -69,9 +69,10 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         //将Component Repository也注册进去
         beanFactory.registerSingleton("springComponentRepository", getComponentRepository());
 
-        context = new GenericApplicationContext(beanFactory);
-        context.setDisplayName("Component Parent Context");
+        GenericApplicationContext context = new GenericApplicationContext(beanFactory);
+        context.setDisplayName("Component Root Context");
         context.refresh();
+        this.context = context;
     }
 
     /**
@@ -102,7 +103,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         return loadedFeatures.containsKey(component);
     }
 
-    public GenericApplicationContext getContext() {
+    public ApplicationContext getRootContext() {
         return context;
     }
 
@@ -131,7 +132,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     public List<ApplicationContext> getApplicationFeatures() {
         List<Component> components = new LinkedList<Component>();
         for (Map.Entry<Component, Features> entry : loadedFeatures.entrySet()) {
-            if( entry.getValue().getApplicationFeature() != null ){
+            if (entry.getValue().getApplicationFeature() != null) {
                 components.add(entry.getKey());
             }
         }
@@ -162,7 +163,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
 
     @Override
     public DefaultServiceHelper getServiceHelper() {
-        return helper ;
+        return helper;
     }
 
     @Override
@@ -206,7 +207,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      */
     @Override
     public void unload(Component component) {
-        if (!isLoaded(component))  return;
+        if (!isLoaded(component)) return;
         logger.debug("Before unloading {}", component);
         //先卸载自身
         unloadSingle(component);
@@ -223,27 +224,27 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         logger.debug("After  unloaded  {}", component);
     }
 
-    boolean isLoading(Component component){
+    boolean isLoading(Component component) {
         return loading.contains(component);
     }
 
-    boolean isUnloading(Component component){
+    boolean isUnloading(Component component) {
         return unloading.contains(component);
     }
 
-    void loading(Component component){
+    void loading(Component component) {
         loading.add(component);
     }
 
-    void unloading(Component component){
+    void unloading(Component component) {
         unloading.add(component);
     }
 
-    void loaded(Component component){
+    void loaded(Component component) {
         loading.remove(component);
     }
 
-    void unloaded(Component component){
+    void unloaded(Component component) {
         unloading.remove(component);
     }
 
@@ -307,7 +308,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 featureResolver.afterResolve(component);
             }
             loaded(component);
-            logger.info("Loaded  {} ({})", component, formatDurationHMS(System.currentTimeMillis()-start));
+            logger.info("Loaded  {} ({})", component, formatDurationHMS(System.currentTimeMillis() - start));
         }
     }
 
@@ -320,10 +321,10 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         if (component.isAggregating()) {
             logger.trace("Remove aggregating component {}", component);
             loadedFeatures.remove(component);
-        }else if (component.isPlain()){
+        } else if (component.isPlain()) {
             logger.trace("Remove plain component {}", component);
             loadedFeatures.remove(component);
-        }else{
+        } else {
             if (isUnloading(component)) return;
             long start = System.currentTimeMillis();
             unloading(component);

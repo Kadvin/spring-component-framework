@@ -23,7 +23,7 @@ import static org.springframework.context.support.AbstractApplicationContext.APP
 /**
  * 将各个context无法DRY的功能集中到这里
  */
-class ContextUtils {
+public class ContextUtils {
     /**
      * 继承上级上下文中的属性配置器
      *
