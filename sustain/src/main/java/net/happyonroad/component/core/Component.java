@@ -1,5 +1,6 @@
 package net.happyonroad.component.core;
 
+import net.happyonroad.component.container.RepositoryScanner;
 import net.happyonroad.component.container.support.ComponentClassLoader;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.DependencyManagement;
@@ -253,7 +254,7 @@ public interface Component extends Comparable<Component>, Versionize {
 
     List<String> getAppBriefIds();
 
-    ApplicationContext getParentContext();
+    void registerScanner(RepositoryScanner scanner);
 
-    void setParentContext(ApplicationContext parentContext);
+    List<RepositoryScanner> getScanners();
 }

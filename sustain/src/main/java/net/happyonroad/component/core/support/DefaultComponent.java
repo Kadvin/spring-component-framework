@@ -3,6 +3,7 @@
  */
 package net.happyonroad.component.core.support;
 
+import net.happyonroad.component.container.RepositoryScanner;
 import net.happyonroad.component.container.support.ComponentClassLoader;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
@@ -73,11 +74,11 @@ public class DefaultComponent implements Component, SelfNaming {
 
     private String name, description, url;
 
-    private Properties           properties;
-    private ComponentClassLoader classLoader;
-    private ApplicationContext   application;
-    private ApplicationContext   parentContext;
-    private Map<String, String>  defaults;
+    private Properties              properties;
+    private ComponentClassLoader    classLoader;
+    private ApplicationContext      application;
+    private Map<String, String>     defaults;
+    private List<RepositoryScanner> scanners;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -740,12 +741,17 @@ public class DefaultComponent implements Component, SelfNaming {
         this.application = application;
     }
 
-    public ApplicationContext getParentContext() {
-        return parentContext;
+    @Override
+    public void registerScanner(RepositoryScanner scanner) {
+        if( scanners == null ){
+            scanners = new LinkedList<RepositoryScanner>();
+        }
+        scanners.add(scanner);
     }
 
-    public void setParentContext(ApplicationContext parentContext) {
-        this.parentContext = parentContext;
+    @Override
+    public List<RepositoryScanner> getScanners() {
+        return scanners;
     }
 }
 

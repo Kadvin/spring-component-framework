@@ -3,6 +3,7 @@
  */
 package net.happyonroad.component.container.feature;
 
+import net.happyonroad.component.container.RepositoryScanner;
 import net.happyonroad.component.container.support.ComponentInputStreamResource;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
@@ -19,9 +20,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigRegistry;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.InputStreamResource;
 
@@ -71,8 +74,7 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
     public void resolve(Component component) throws IOException {
         logger.debug("Resolving {} {} feature", component, getName());
         ClassLoader realm = resolveContext.getClassRealm(component.getId());
-        ApplicationContext parent =  component.getParentContext() == null ?
-                resolveContext.getRootContext() : component.getParentContext();
+        ApplicationContext parent = resolveContext.getRootContext() ;
         AbstractApplicationContext context;
         if( byConfig(component)){
             context = resolveByConfig(component, realm, parent);
@@ -81,6 +83,12 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
         }
         String env = System.getProperty("spring.env", "production");
         context.getEnvironment().setActiveProfiles(env);
+        if( component.getScanners() != null ){
+            for (RepositoryScanner scanner : component.getScanners()) {
+                scanner.bind(context);
+                scanner.scan();
+            }
+        }
         scanAppRepository(context, component);
         //registerApplicationHelpers(component, context, realm);
         context.refresh();
@@ -112,16 +120,23 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
         if( StringUtils.isEmpty(appRepository)){
             return;
         }
-        ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner((BeanDefinitionRegistry) context);
-        scanner.setEnvironment(context.getEnvironment());
-        scanner.setResourceLoader(context);
-        scanner.setIncludeAnnotationConfig(false);
-        int count = scanner.scan(StringUtils.split(appRepository, CONFIG_LOCATION_DELIMITERS));
+        int count;
+        if( context instanceof AnnotationConfigRegistry){
+            int before = context.getBeanDefinitionCount();
+            ((AnnotationConfigRegistry) context).scan(StringUtils.split(appRepository, CONFIG_LOCATION_DELIMITERS));
+            count = context.getBeanDefinitionCount() - before;
+        }else{
+            ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner((BeanDefinitionRegistry) context);
+            scanner.setEnvironment(context.getEnvironment());
+            scanner.setResourceLoader(context);
+            scanner.setIncludeAnnotationConfig(false);
+            count = scanner.scan(StringUtils.split(appRepository, CONFIG_LOCATION_DELIMITERS));
+        }
         if(count > 0 && logger.isDebugEnabled()){
-            logger.debug("Scanned {} beans", count);
-            String[] names = scanner.getRegistry().getBeanDefinitionNames();
+            logger.debug("Scanned {} beans in {}", count, component.getDisplayName());
+            String[] names = context.getBeanDefinitionNames();
             for (String name : names) {
-                BeanDefinition definition = scanner.getRegistry().getBeanDefinition(name);
+                BeanDefinition definition = ((GenericApplicationContext)context).getBeanDefinition(name);
                 if( definition instanceof ScannedGenericBeanDefinition){
                     ScannedGenericBeanDefinition sgbd = (ScannedGenericBeanDefinition) definition;
                     Class<?> beanClass;
