@@ -13,10 +13,8 @@ import net.happyonroad.spring.context.AnnotationComponentApplicationContext;
 import net.happyonroad.spring.context.XmlComponentApplicationContext;
 import net.happyonroad.spring.event.ComponentLoadedEvent;
 import net.happyonroad.spring.exception.ApplicationConfigurationException;
-import net.happyonroad.spring.support.CombinedMessageSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
@@ -25,15 +23,10 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.InputStreamResource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 import static org.springframework.context.ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS;
 
@@ -43,7 +36,6 @@ import static org.springframework.context.ConfigurableApplicationContext.CONFIG_
 public class ApplicationFeatureResolver extends AbstractFeatureResolver {
     public static final String APP_CONFIG = "App-Config";
     public static final String APP_REPOSITORY = "App-Repository";
-    public static final String APP_MESSAGE = "App-Message";
     public static final String APP_XML = "META-INF/application.xml";
 
     public ApplicationFeatureResolver() {
@@ -92,24 +84,6 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
         scanAppRepository(context, component);
         //registerApplicationHelpers(component, context, realm);
         context.refresh();
-        //在根据配置的情况下，根据 manifest里面的App-Message加载资源
-        //在根据XML配置的时候，由xml文件全权负责
-        if( byConfig(component) ){
-            String appMessage = getAppMessage(component);
-            if(StringUtils.isNotBlank(appMessage)){
-                ResourceBundleMessageSource bundle;
-                try {
-                    bundle = context.getBean(ResourceBundleMessageSource.class);
-                    CombinedMessageSource combinedMessageSource = combineMessageSource(component);
-                    bundle.setParentMessageSource(combinedMessageSource);
-                } catch (BeansException e) {
-                    String message = "The " + component + " app config should configure a " +
-                                     "resource bundle message source to hold:" + appMessage + "!";
-                    throw new ApplicationConfigurationException(message, e);
-                }
-                bundle.setBasenames(StringUtils.split(appMessage,","));
-            }
-        }
         ((DefaultComponent)component).setApplication(context);
         context.start();
         resolveContext.registerFeature(component, getName(), context);
@@ -215,9 +189,6 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
         return resource.exists(APP_XML);
     }
 
-    protected String getAppMessage(Component component){
-        return component.getManifestAttribute(APP_MESSAGE);
-    }
 
 
     @Override
@@ -241,34 +212,6 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
     protected void shutdownContext(AbstractApplicationContext context) {
         context.stop();
         context.close();
-    }
-
-    protected CombinedMessageSource combineMessageSource(Component component) {
-        // 将所有该组件依赖的组件生成的context组合起来，作为parent context，以便直接获取相关设置
-        Set<AbstractApplicationContext> dependedContexts = new LinkedHashSet<AbstractApplicationContext>();
-        List<ResourceBundleMessageSource> sources = new LinkedList<ResourceBundleMessageSource>();
-        digDepends(component, dependedContexts, sources);
-        return new CombinedMessageSource(sources);
-    }
-
-
-    protected void digDepends(Component component,
-                                                 Set<AbstractApplicationContext> dependedContexts,
-                                                 List<ResourceBundleMessageSource> sources) {
-        ApplicationContext loaded = resolveContext.getApplicationFeature(component);
-        if (loaded != null ) {
-            AbstractApplicationContext componentContext = (AbstractApplicationContext) loaded;
-            dependedContexts.add(componentContext);
-            try {
-                ResourceBundleMessageSource source = componentContext.getBean(ResourceBundleMessageSource.class);
-                sources.add(source);
-            } catch (BeansException e) {
-                //ignore
-            }
-        }
-        for (Component depended : component.getDependedComponents()) {
-            digDepends(depended, dependedContexts, sources);
-        }
     }
 
 }

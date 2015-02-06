@@ -31,7 +31,7 @@ public class DefaultServiceHelper implements ServiceImporter, ServiceExporter{
 
     @Override
     public <T> T imports(Class<T> serviceClass) throws ServiceConfigurationException {
-        return imports(serviceClass, "default");
+        return imports(serviceClass, "*");
     }
 
     @Override

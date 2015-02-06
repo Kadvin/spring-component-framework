@@ -78,5 +78,4 @@ public class ContextUtils {
             throw new ApplicationContextException("Can't hacking the spring context for applicationEventMulticaster", e);
         }
     }
-
 }

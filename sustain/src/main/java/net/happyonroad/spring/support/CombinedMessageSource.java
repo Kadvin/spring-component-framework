@@ -8,6 +8,7 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.DelegatingMessageSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -18,8 +19,13 @@ public class CombinedMessageSource extends DelegatingMessageSource {
 
     private final List<ResourceBundleMessageSource> sources;
 
-    public CombinedMessageSource(List<ResourceBundleMessageSource> sources) {
-        this.sources = sources;
+    public CombinedMessageSource() {
+        this.sources = new LinkedList<ResourceBundleMessageSource>();
+    }
+
+    public void combine(ResourceBundleMessageSource source){
+        //后来优先级反而高
+        sources.add(0, source);
     }
 
     @Override

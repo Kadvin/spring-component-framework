@@ -1,2 +1,2 @@
-App-Config: net.happyonroad.spring.config.DefaultAppConfig
+App-Config: spring.test.msg.MsgAppConfig
 App-Message: META-INF/comp_c-messages

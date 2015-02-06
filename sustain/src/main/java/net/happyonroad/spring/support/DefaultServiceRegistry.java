@@ -106,7 +106,7 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
     }
 
     protected <T> T getServiceFromMap(Map<String, Object> map, String hint) {
-        if(map.isEmpty()) return null;
+        if(map == null || map.isEmpty()) return null;
         if(ANY_HINT.equals(hint)){
             return (T) map.values().iterator().next();
         }

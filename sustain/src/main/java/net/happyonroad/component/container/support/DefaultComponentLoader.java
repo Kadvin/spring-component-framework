@@ -12,19 +12,23 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.spring.service.MutableServiceRegistry;
 import net.happyonroad.spring.service.ServiceRegistry;
+import net.happyonroad.spring.support.CombinedMessageSource;
 import net.happyonroad.spring.support.DefaultServiceHelper;
 import net.happyonroad.spring.support.DefaultServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
+import static org.springframework.context.support.AbstractApplicationContext.MESSAGE_SOURCE_BEAN_NAME;
 
 /**
  * 组件加载
@@ -68,7 +72,8 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         beanFactory.registerSingleton("springComponentLoader", getComponentLoader());
         //将Component Repository也注册进去
         beanFactory.registerSingleton("springComponentRepository", getComponentRepository());
-
+        //系统全局使用该message source
+        beanFactory.registerSingleton(MESSAGE_SOURCE_BEAN_NAME, new CombinedMessageSource());
         GenericApplicationContext context = new GenericApplicationContext(beanFactory);
         context.setDisplayName("Component Root Context");
         context.refresh();
