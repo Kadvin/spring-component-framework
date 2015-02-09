@@ -41,7 +41,7 @@ import java.util.zip.ZipEntry;
 /**
  * 打包一个基于Spring Component 框架的项目
  */
-@SuppressWarnings("UnusedDeclaration")
+@SuppressWarnings("UnusedDeclaration unchecked")
 @Mojo(name = "package", inheritByDefault = false, defaultPhase = LifecyclePhase.PACKAGE)
 public class SpringComponentPackaging extends CopyDependenciesMojo {
 
@@ -127,7 +127,12 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         generateWrapper();
 
         if(StringUtils.isNotBlank(frontendNodeModules))
+        {
+            //从各个jar包里面抽取前端程序
             generateFrontendResources();
+            //根据需要，将前端程序从各个jar包中删除，降低系统运行时的负担
+            reduceFrontendResources();
+        }
     }
 
     private void initAppParams() throws MojoExecutionException {
@@ -498,7 +503,6 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
 
     }
 
-    @SuppressWarnings("unchecked")
     private void generateFrontendResources() throws MojoExecutionException {
         DefaultComponentRepository repository = new DefaultComponentRepository(output.getAbsolutePath());
         repository.start();
@@ -526,7 +530,6 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         folder = new File(output, "repository/lib");
         Collection<File> repositoryLibJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null)
                                                              : Collections.EMPTY_SET;
-        //  没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
         List<File> allJars = new ArrayList<File>();
         allJars.addAll(libJars);
         allJars.addAll(repositoryJars);
@@ -604,6 +607,80 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         } catch (Exception e) {
             throw new MojoExecutionException("Can't extract frontend resources from " + componentJar.getName() , e );
         }
+    }
+
+    private void reduceFrontendResources() throws MojoExecutionException {
+        WildcardFileFilter filter = new WildcardFileFilter("*.jar");
+        File folder = new File(output, "lib");
+        Collection<File> libJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null )
+                                                   : Collections.EMPTY_SET;
+        folder = new File(output, "repository");
+        Collection<File> repositoryJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null)
+                                                          : Collections.EMPTY_SET;
+        folder = new File(output, "repository/lib");
+        Collection<File> repositoryLibJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, filter, null)
+                                                             : Collections.EMPTY_SET;
+        //  没有严格按照组件的依赖顺序进行抽取，会有覆盖问题
+        List<File> allJars = new ArrayList<File>();
+        allJars.addAll(libJars);
+        allJars.addAll(repositoryJars);
+        allJars.addAll(repositoryLibJars);
+        for (File jar : allJars) {
+            JarFile jarFile = null;
+            File tempJarFolder ;
+            try {
+                jarFile = new JarFile(jar);
+                String jarFileName = FilenameUtils.getBaseName(jarFile.getName());
+                tempJarFolder = new File(System.getProperty("java.io.tmpdir"), jarFileName);
+                String reduceFrontend = jarFile.getManifest().getMainAttributes().getValue("Reduce-Frontend");
+                if( "false".equalsIgnoreCase(reduceFrontend) ) continue;
+
+                ZipEntry detailEntry = jarFile.getEntry("META-INF/INDEX.DETAIL");
+                if( detailEntry == null ) continue;
+                List<String> lines = IOUtils.readLines(jarFile.getInputStream(detailEntry));
+                int reduces = reduceIndexes(lines);
+                if(reduces == 0 ) continue;
+                // Clean it
+                org.apache.commons.io.FileUtils.deleteDirectory(tempJarFolder);
+                Enumeration<JarEntry> entries = jarFile.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    if( entry.getName().startsWith("frontend/") ) continue;// reduces
+                    if( entry.isDirectory() ) {
+                        org.apache.commons.io.FileUtils.forceMkdir(new File(tempJarFolder, entry.getName()));
+                        continue;
+                    }
+                    FileOutputStream outStream = new FileOutputStream(new File(tempJarFolder, entry.getName()));
+                    if( entry.getName().equals("META-INF/INDEX.DETAIL")) {
+                        IOUtils.writeLines(lines, "\n", outStream);
+                    }else{
+                        IOUtils.copy(jarFile.getInputStream(entry), outStream);
+                    }
+                    IOUtils.closeQuietly(outStream);
+                }
+                createJar(tempJarFolder, jar);
+                org.apache.commons.io.FileUtils.deleteDirectory(tempJarFolder);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Can't reduce jar file", e);
+            } finally {
+                IOUtils.closeQuietly(jarFile);
+            }
+
+        }
+
+    }
+
+    private int reduceIndexes(List<String> lines) {
+        Iterator<String> it = lines.iterator();
+        int count = 0;
+        while (it.hasNext()) {
+            String line = it.next();
+            if( line.startsWith("frontend") ) {
+                it.remove();
+                count++;
+            }
+        }
+        return count;
     }
 
 
@@ -774,6 +851,19 @@ public class SpringComponentPackaging extends CopyDependenciesMojo {
         } else {
             FileUtils.forceMkdir(subFolder);
         }
+    }
+
+    protected void createJar(File srcFolder, File destJar){
+        Jar jar = new Jar();
+        jar.setProject(ANT_PROJECT);
+        jar.setUpdate(false);
+        jar.setDestFile(destJar);
+        jar.setManifest(new File(srcFolder, "META-INF/MANIFEST.MF"));
+        FileSet fs = new FileSet();
+        fs.setProject(ANT_PROJECT);
+        fs.setDir(srcFolder);
+        jar.add(fs);
+        jar.execute();
     }
 
     private static Project ANT_PROJECT = new Project();

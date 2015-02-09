@@ -28,10 +28,17 @@ public interface ComponentLoader {
     void unload(Component component);
 
     /**
-     * 仅卸载组件自身，不进行关联和依赖卸载
+     * 加载某个组件，不管其依赖关系(外部应该已经准备好相应的依赖关系)
+     *
+     * @param component 被加载的组件
+     */
+    void quickLoad(Component component) throws Exception;
+
+    /**
+     * 卸载组件，不管其依赖关系(外部应该已经拆解好相应的依赖关系)
      * @param component 被卸载的组件
      */
-    void unloadSingle(Component component);
+    void quickUnload(Component component);
 
     /**
      * 注册特性解析器

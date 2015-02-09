@@ -195,6 +195,21 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
      */
     public void load(Component component) throws Exception {
         long start = System.currentTimeMillis();
+/*
+        Set<Component> dependedComponents = component.getAllDependedComponents();
+        ArrayList<Component> depends = new ArrayList<Component>(dependedComponents);
+        repository.sortComponents(depends);
+        if( logger.isDebugEnabled() ){
+            logger.debug("Loading components by: \n\t {}",
+                        org.apache.commons.lang.StringUtils.join(depends, "\n\t"));
+        }
+        //把自己放在最后面
+        depends.add(component);
+        //已经按照依赖排序了
+        for (Component depend : depends) {
+            loader.quickLoad(depend);
+        }
+*/
         loader.load(component);
         registerWorldAndComponents(component);
 

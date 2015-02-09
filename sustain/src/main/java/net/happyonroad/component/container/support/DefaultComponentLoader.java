@@ -19,9 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.io.IOException;
 import java.util.*;
@@ -200,7 +198,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             //上面会自动检测是否已经加载，防止重复加载
             load(depended);
         }
-        loadSingle(component);
+        quickLoad(component);
         //最后，加载自身
         logger.debug("After  loaded  {}", component);
     }
@@ -215,7 +213,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         if (!isLoaded(component)) return;
         logger.debug("Before unloading {}", component);
         //先卸载自身
-        unloadSingle(component);
+        quickUnload(component);
         //再卸载依赖
         for (Component depended : component.getDependedComponents()) {
             //上面会自动检测是否已经加载，防止重复加载
@@ -279,7 +277,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      * @param component 被加载的组件
      * @throws IOException 加载过程中的IO错误
      */
-    protected void loadSingle(Component component) throws Exception {
+    public void quickLoad(Component component) throws Exception {
         if (component.isAggregating()) {
             logger.trace("Needn't real load aggregating component {}", component);
             loadedFeatures.put(component, FeatureResolver.AggregatingFlag);
@@ -322,7 +320,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
      *
      * @param component 被卸载的组件
      */
-    public void unloadSingle(Component component) {
+    public void quickUnload(Component component) {
         if (component.isAggregating()) {
             logger.trace("Remove aggregating component {}", component);
             loadedFeatures.remove(component);
