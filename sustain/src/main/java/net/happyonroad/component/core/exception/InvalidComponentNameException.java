@@ -12,4 +12,8 @@ public class InvalidComponentNameException extends ComponentException {
     public InvalidComponentNameException(String s) {
         super(s);
     }
+
+    public InvalidComponentNameException(String s, Throwable e) {
+        super(s, e);
+    }
 }

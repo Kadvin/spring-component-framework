@@ -74,7 +74,7 @@ public class ComponentTestSupport {
     protected static void createPom(String folder, String compName, File root) throws IOException {
         String path = folder + "/pom.xml";
         URL source = DefaultComponentLoaderTest.class.getClassLoader().getResource(path);
-        File destination = new File(root, "lib/poms/" + compName + ".pom");
+        File destination = new File(root, "lib/" + compName + ".pom");
         FileUtils.copyURLToFile(source, destination);
     }
 

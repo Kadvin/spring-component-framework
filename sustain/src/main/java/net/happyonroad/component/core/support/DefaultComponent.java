@@ -4,7 +4,7 @@
 package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.container.RepositoryScanner;
-import net.happyonroad.component.container.support.ComponentClassLoader;
+import net.happyonroad.component.classworld.ComponentClassLoader;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.Versionize;
@@ -302,7 +302,7 @@ public class DefaultComponent implements Component, SelfNaming {
         StringBuffer sb = new StringBuffer();
         if (getGroupId() != null) {
             sb.append(getGroupId());
-            sb.append(".");
+            sb.append("/");
         }
         appendArtifactTypeClassifierString(sb);
         return sb.toString();
@@ -311,14 +311,14 @@ public class DefaultComponent implements Component, SelfNaming {
     public String getDependencyConflictId() {
         StringBuffer sb = new StringBuffer();
         sb.append(getGroupId());
-        sb.append(".");
+        sb.append("/");
         appendArtifactTypeClassifierString(sb);
         return sb.toString();
     }
 
     private void appendArtifactTypeClassifierString(StringBuffer sb) {
         sb.append(getArtifactId());
-        sb.append("-").append(getVersion() == null ? "<*>" : getVersion());
+        sb.append("@").append(getVersion() == null ? "<*>" : getVersion());
         if (hasClassifier()) {
             sb.append("-");
             sb.append(getClassifier());
@@ -609,7 +609,7 @@ public class DefaultComponent implements Component, SelfNaming {
                 return;
             }
         }
-        String[] versionAndClassifier = Dependency.splitClassifierFromVersion(version, new StringBuilder());
+        String[] versionAndClassifier = Dependency.splitClassifierFromVersion(version);
         this.version = versionAndClassifier[0];
         if (versionAndClassifier[1].length() > 0) setClassifier(versionAndClassifier[1]);
     }

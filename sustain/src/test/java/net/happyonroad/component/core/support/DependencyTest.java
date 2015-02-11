@@ -23,7 +23,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithoutType() throws Exception {
-        Dependency dependency = Dependency.parse("net.happyonroad.component.artifact-1.0.0");
+        Dependency dependency = Dependency.parse("net.happyonroad.component/artifact@1.0.0");
         assertEquals("net.happyonroad.component", dependency.getGroupId());
         assertEquals("artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -39,7 +39,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithDotJar() throws Exception {
-        Dependency dependency = Dependency.parse("net.happyonroad.component.artifact-1.0.0.jar");
+        Dependency dependency = Dependency.parse("net.happyonroad.component/artifact@1.0.0.jar");
         assertEquals("net.happyonroad.component", dependency.getGroupId());
         assertEquals("artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -55,7 +55,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithDotPom() throws Exception {
-        Dependency dependency = Dependency.parse("net.happyonroad.component.artifact-1.0.0.pom");
+        Dependency dependency = Dependency.parse("net.happyonroad.component/artifact@1.0.0.pom");
         assertEquals("net.happyonroad.component", dependency.getGroupId());
         assertEquals("artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -71,7 +71,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithClassifier() throws Exception {
-        Dependency dependency = Dependency.parse("net.happyonroad.component.artifact-1.0.0.RELEASE.pom");
+        Dependency dependency = Dependency.parse("net.happyonroad.component/artifact@1.0.0.RELEASE.pom");
         assertEquals("net.happyonroad.component", dependency.getGroupId());
         assertEquals("artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -87,7 +87,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithClassifierSeparatedBySlash() throws Exception {
-        Dependency dependency = Dependency.parse("net.happyonroad.component.artifact-1.0.0-RELEASE-Rc1.pom");
+        Dependency dependency = Dependency.parse("net.happyonroad.component/artifact@1.0.0-RELEASE-Rc1.pom");
         assertEquals("net.happyonroad.component", dependency.getGroupId());
         assertEquals("artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -103,7 +103,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithClassifierSeparatedByDot() throws Exception {
-        Dependency dependency = Dependency.parse("net.happyonroad.component.artifact-1.0.0.RELEASE-Rc1.pom");
+        Dependency dependency = Dependency.parse("net.happyonroad.component/artifact@1.0.0.RELEASE-Rc1.pom");
         assertEquals("net.happyonroad.component", dependency.getGroupId());
         assertEquals("artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -119,7 +119,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithSlashInGroupOrArtifactName() throws Exception {
-        Dependency dependency = Dependency.parse("dnt-soft.new-artifact-1.0.0.RELEASE-Rc1.pom");
+        Dependency dependency = Dependency.parse("dnt-soft/new-artifact@1.0.0.RELEASE-Rc1.pom");
         assertEquals("dnt-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
@@ -135,7 +135,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithTwoDigits() throws Exception {
-        Dependency dependency = Dependency.parse("dnt-soft.new-artifact-1.0.jar");
+        Dependency dependency = Dependency.parse("dnt-soft/new-artifact@1.0.jar");
         assertEquals("dnt-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.0", dependency.getVersion());
@@ -151,7 +151,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithFourDigits() throws Exception {
-        Dependency dependency = Dependency.parse("dnt-soft.new-artifact-1.0.0.1.jar");
+        Dependency dependency = Dependency.parse("dnt-soft/new-artifact@1.0.0.1.jar");
         assertEquals("dnt-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.0.0.1", dependency.getVersion());
@@ -167,7 +167,7 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithClosingClassifier() throws Exception {
-        Dependency dependency = Dependency.parse("dnt-soft.new-artifact-1.2.4c.jar");
+        Dependency dependency = Dependency.parse("dnt-soft/new-artifact@1.2.4c.jar");
         assertEquals("dnt-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.2.4", dependency.getVersion());
@@ -218,7 +218,6 @@ public class DependencyTest extends TestCase {
         dependency.setGroupId("net.happyonroad");
         dependency.setArtifactId("probe-api");
         dependency.setVersion("[1.0.1,)");
-        dependency.reform();
         Assert.assertFalse(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.0")));
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1")));
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1-SNAPSHOT")));
@@ -230,7 +229,6 @@ public class DependencyTest extends TestCase {
         dependency.setGroupId("net.happyonroad");
         dependency.setArtifactId("probe-api");
         dependency.setVersion("[1.0.1-SNAPSHOT,)");
-        dependency.reform();
         Assert.assertFalse(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.0")));
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1")));
         Assert.assertTrue(dependency.accept(new Dependency("net.happyonroad", "probe-api", "1.0.1-SNAPSHOT")));
@@ -273,7 +271,7 @@ public class DependencyTest extends TestCase {
     }
 
     public void testParseSpecialArtifacts() throws Exception{
-        Dependency dependency = Dependency.parse("org.neo4j.neo4j-cypher-compiler-1.9-2.0.1.jar");
+        Dependency dependency = Dependency.parse("org.neo4j/neo4j-cypher-compiler-1.9@2.0.1.jar");
         Assert.assertEquals( "org.neo4j",dependency.getGroupId());
         Assert.assertEquals( "neo4j-cypher-compiler-1.9",dependency.getArtifactId());
         Assert.assertEquals( "2.0.1",dependency.getVersion());
@@ -281,7 +279,7 @@ public class DependencyTest extends TestCase {
     }
 
     public void testParseSpecialVersion() throws Exception{
-        Dependency dependency = Dependency.parse("org.fusesource.scalate.scalate-util-1.5.3-scala_2.8.2.jar");
+        Dependency dependency = Dependency.parse("org.fusesource.scalate/scalate-util@1.5.3-scala_2.8.2.jar");
         Assert.assertEquals( "org.fusesource.scalate",dependency.getGroupId());
         Assert.assertEquals( "scalate-util",dependency.getArtifactId());
         Assert.assertEquals( "1.5.3",dependency.getVersion());

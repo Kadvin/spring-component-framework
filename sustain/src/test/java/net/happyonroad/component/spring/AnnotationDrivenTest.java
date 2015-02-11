@@ -17,15 +17,15 @@ public class AnnotationDrivenTest extends ComponentTestSupport{
     @BeforeClass
     public static void setUpTotal() throws Exception {
         System.setProperty("app.prefix","dnt.;spring.test");
-        createPom("comp_0", "spring.test-0.0.1", tempFolder);
-        createJar("comp_9", "spring.test.comp_9-0.0.1", "spring/test/ann_application", tempFolder);
-        createJar("comp_a", "spring.test.comp_a-0.0.1", "spring/test/ann_service_export", tempFolder);
-        createJar("comp_b", "spring.test.comp_b-0.0.1", "spring/test/ann_service_import", tempFolder);
+        createPom("comp_0", "spring/test@0.0.1", tempFolder);
+        createJar("comp_9", "spring.test/comp_9@0.0.1", "spring/test/ann_application", tempFolder);
+        createJar("comp_a", "spring.test/comp_a@0.0.1", "spring/test/ann_service_export", tempFolder);
+        createJar("comp_b", "spring.test/comp_b@0.0.1", "spring/test/ann_service_import", tempFolder);
     }
 
     @Test
     public void testLoadApplicationByAnnotation() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_9-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_9@0.0.1");
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
@@ -35,7 +35,7 @@ public class AnnotationDrivenTest extends ComponentTestSupport{
 
     @Test
     public void testLoadServiceWithExportByAnnotation() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_a-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_a@0.0.1");
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
@@ -44,7 +44,7 @@ public class AnnotationDrivenTest extends ComponentTestSupport{
 
     @Test
     public void testLoadServiceWithImportByAnnotation() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_b-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_b@0.0.1");
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);

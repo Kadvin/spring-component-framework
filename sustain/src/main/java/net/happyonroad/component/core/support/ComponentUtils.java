@@ -6,6 +6,7 @@ package net.happyonroad.component.core.support;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 
+import java.io.File;
 import java.util.*;
 import java.util.regex.Matcher;
 
@@ -19,6 +20,14 @@ public final class ComponentUtils
 
     private ComponentUtils()
     {
+    }
+
+    public static  String relativePath(String filePath) {
+        return relativePath(new File(filePath));
+    }
+
+    public static  String relativePath(File file) {
+        return file.getParentFile().getName() + "/" + file.getName();
     }
 
     public static boolean isSnapshot( String version )

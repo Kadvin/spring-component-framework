@@ -19,15 +19,15 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
     @BeforeClass
     public static void setUpTotal() throws Exception {
         System.setProperty("app.prefix", "dnt.;spring.test");
-        createPom("comp_0", "spring.test-0.0.1", tempFolder);
-        createJar("comp_1", "spring.test.comp_1-0.0.1", "spring/test/api", tempFolder);
-        createJar("comp_2", "spring.test.comp_2-0.0.1", "spring/test/standalone", tempFolder);
-        createJar("comp_3", "spring.test.comp_3-0.0.1", "spring/test/provider", tempFolder);
-        createJar("comp_4", "spring.test.comp_4-0.0.1", "spring/test/user", tempFolder);
-        createJar("comp_5", "spring.test.comp_5-0.0.1", "spring/test/mixed", tempFolder);
-        createJar("comp_6", "spring.test.comp_6-0.0.1", "spring/test/scan_p", tempFolder, new Filter("Provider"));
-        createJar("comp_7", "spring.test.comp_7-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
-        createJar("comp_8", "spring.test.comp_8-0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
+        createPom("comp_0", "spring/test@0.0.1", tempFolder);
+        createJar("comp_1", "spring.test/comp_1@0.0.1", "spring/test/api", tempFolder);
+        createJar("comp_2", "spring.test/comp_2@0.0.1", "spring/test/standalone", tempFolder);
+        createJar("comp_3", "spring.test/comp_3@0.0.1", "spring/test/provider", tempFolder);
+        createJar("comp_4", "spring.test/comp_4@0.0.1", "spring/test/user", tempFolder);
+        createJar("comp_5", "spring.test/comp_5@0.0.1", "spring/test/mixed", tempFolder);
+        createJar("comp_6", "spring.test/comp_6@0.0.1", "spring/test/scan_p", tempFolder, new Filter("Provider"));
+        createJar("comp_7", "spring.test/comp_7@0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
+        createJar("comp_8", "spring.test/comp_8@0.0.1", "spring/test/scan_u", tempFolder, new Filter("User"));
 
     }
 
@@ -46,7 +46,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testLoadLibrary() throws Exception {
-        target = repository.resolveComponent("spring.test.comp_1-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_1@0.0.1");
         ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
@@ -72,7 +72,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testLoadApplication() throws Exception {
-        target = repository.resolveComponent("spring.test.comp_2-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_2@0.0.1");
         ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
@@ -109,7 +109,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testLoadServiceWithExport() throws Exception {
-        target = repository.resolveComponent("spring.test.comp_3-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_3@0.0.1");
         ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
@@ -144,7 +144,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testLoadServiceWithImport() throws Exception {
-        target = repository.resolveComponent("spring.test.comp_4-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_4@0.0.1");
         ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
@@ -178,7 +178,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testLoadServiceWithExportAndImport() throws Exception {
-        target = repository.resolveComponent("spring.test.comp_5-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_5@0.0.1");
         ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
@@ -213,7 +213,7 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testScanComponents() throws Exception {
-        target = repository.resolveComponent("spring.test.comp_7-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_7@0.0.1");
         ClassLoader realm = target.getClassLoader();
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
@@ -235,9 +235,9 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      */
     @Test
     public void testLoadComponentWithRangeDependent() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_8-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_8@0.0.1");
         Assert.assertNotNull(target);
-        Component depended = repository.resolveComponent("spring.test.comp_6-0.0.1");
+        Component depended = repository.resolveComponent("spring.test/comp_6@0.0.1");
         target.getDependedComponents().contains(depended);
     }
 

@@ -11,20 +11,19 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.exception.ResourceNotFoundException;
 import net.happyonroad.component.core.support.ComponentJarResource;
+import net.happyonroad.component.core.support.ComponentUtils;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
-import net.happyonroad.util.FilenameFilterBySuffix;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.access.BootstrapException;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -37,10 +36,7 @@ import static net.happyonroad.util.LogUtils.banner;
  * 组件仓库
  * 请注意，该对象的工作依赖系统环境变量 app.home
  */
-public class DefaultComponentRepository
-        implements MutableComponentRepository {
-    private static FilenameFilter jarFilter = new FilenameFilterBySuffix(".jar");
-    private static FilenameFilter pomFilter = new FilenameFilterBySuffix(".pom");
+public class DefaultComponentRepository implements MutableComponentRepository {
 
     private static DefaultComponentRepository sharedInstance;
 
@@ -100,23 +96,22 @@ public class DefaultComponentRepository
         try {
             scanJars(libFolder);
         } catch (Exception e) {
-            logger.error("Failed to scan {} dir: {}", libFolder, e.getMessage());
+            logger.error("Failed to scan {} dir for jars: {}", libFolder, e.getMessage());
         }
-        File poms = new File(libFolder, "poms");
-        if( poms.exists() )
-            try {
-                //而后再遍历lib/poms下面的pom.xml，把packaging = pom 的父pom预加载进来
-                scanPoms(poms);
-            } catch (Exception e) {
-                logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
-            }
+        File poms = libFolder;
+        try {
+            //而后再遍历lib/poms下面的pom.xml，把packaging = pom 的父pom预加载进来
+            scanPoms(poms);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir for poms: {}", poms, e.getMessage());
+        }
         File pomsJar = new File(libFolder, "poms.jar");
         if( pomsJar.exists())
             try {
                 //而后再遍历lib/poms下面的pom.xml，把packaging = pom 的父pom预加载进来
                 scanPomsJar(pomsJar);
             } catch (Exception e) {
-                logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
+                logger.error("Failed to scan {} poms.jar in {}", poms, e.getMessage());
             }
 
         //最后还要扫描扩展仓库目录 repository/*.jar
@@ -124,38 +119,29 @@ public class DefaultComponentRepository
         try {
             scanJars(repositoryFolder);
         } catch (Exception e) {
-            logger.error("Failed to scan {} dir: {}", repositoryFolder, e.getMessage());
+            logger.error("Failed to scan {} dir for jars: {}", repositoryFolder, e.getMessage());
         }
-        poms = new File(repositoryFolder, "poms");
-        if( poms.exists() )
-            try {
-                //而后再遍历repository/poms下面的pom.xml，把不存在对应jar的 group pom预加载进来
-                scanPoms(poms);
-            } catch (Exception e) {
-                logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
-            }
+        poms = repositoryFolder;
+        try {
+            //而后再遍历repository/poms下面的pom.xml，把不存在对应jar的 group pom预加载进来
+            scanPoms(poms);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir for poms: {}", poms, e.getMessage());
+        }
         pomsJar = new File(repositoryFolder, "poms.jar");
         if( pomsJar.exists())
             try {
                 //而后再遍历lib/poms下面的pom.xml，把packaging = pom 的父pom预加载进来
                 scanPomsJar(pomsJar);
             } catch (Exception e) {
-                logger.error("Failed to scan {} dir: {}", poms, e.getMessage());
+                logger.error("Failed to scan poms.jar in {}: {}", poms, e.getMessage());
             }
-        // 扫描 repository/lib 下的jar，这里面存放的是扩展包的依赖
-        File repositoryLibFolder = new File(repositoryFolder, "lib");
-        try {
-            scanJars(repositoryLibFolder);
-        } catch (Exception e) {
-            logger.error("Failed to scan {} dir: {}", repositoryFolder, e.getMessage());
-        }
         logger.info(banner("Scanned  jars"));
     }
 
     private void scanJars(File folder) throws InvalidComponentNameException, IOException {
-        File[] jars = folder.listFiles(jarFilter);
-        if (jars == null)
-            jars = new File[0]; /*也可能在boot或lib目录下没有jar*/
+        if( !folder.isDirectory() ) return;
+        Collection<File> jars = FileUtils.listFiles(folder, new String[]{"jar"}, true);
         logger.debug("Scanning {}", folder.getAbsolutePath());
         for (File jar : jars) {
             if(jar.getPath().endsWith("-sources.jar")){
@@ -170,13 +156,22 @@ public class DefaultComponentRepository
                 logger.trace("Skip poms.jar");
                 continue;
             }
-            Dependency dependency = Dependency.parse(jar.getName());
+            Dependency dependency;
+            String briefId;
+            if( jar.getName().contains("spring-component-framework")){
+                String version = StringUtils.substringBetween(jar.getName(), "@", ".jar");
+                dependency = new Dependency("net.happyonroad", "spring-component-framework", version);
+                briefId = "net.happyonroad/" + FilenameUtils.getName(jar.getName());
+            }else{
+                dependency = Dependency.parse(jar);
+                briefId = ComponentUtils.relativePath(jar);
+            }
             //先放到cache里面，避免构建 component jar resource时无法寻址
             cache.put(dependency, new FileSystemResource(jar));
             InputStream stream = null;
             ComponentJarResource resource = null;
             try {
-                resource = new ComponentJarResource(dependency, jar.getName());
+                resource = new ComponentJarResource(dependency, briefId);
                 stream = resource.getPomStream();
                 //只有存在 pom.xml 的jar包才直接解析
                 //而不存在 pom.xml 的jar包，需要依赖 poms里面的定义进行解析
@@ -201,11 +196,11 @@ public class DefaultComponentRepository
     }
 
     private void scanPoms(File poms) throws InvalidComponentNameException {
+        if( !poms.isDirectory() ) return;
         logger.trace("Scan {}", poms.getAbsolutePath());
-        File[] pomFiles = poms.listFiles(pomFilter);
-        if(pomFiles == null) pomFiles = new File[0];
+        Collection<File> pomFiles = FileUtils.listFiles(poms, new String[]{"pom"}, true);
         for (File pomFile : pomFiles) {
-            Dependency dependency = Dependency.parse(pomFile.getName());
+            Dependency dependency = Dependency.parse(pomFile);
             //如果lib/*.jar已经设置了相应的依赖解析路径，那么不需要在这里再重新设置
             //注意，Dependency的equals和hashCode方法被重写过，所以，指向 jar和pom的依赖是一回事
             if (cache.get(dependency) != null) continue;
@@ -222,8 +217,7 @@ public class DefaultComponentRepository
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if(entry.getName().endsWith(".pom")){
-                    String baseName = FilenameUtils.getBaseName(entry.getName());
-                    Dependency dependency = Dependency.parse(baseName);
+                    Dependency dependency = Dependency.parse(entry.getName());
                     if (cache.get(dependency) != null) continue;
                     cache.put(dependency, new InputStreamResource(jarFile.getInputStream(entry), entry.getName()));
                     logger.trace("Mapping {} -> {}", dependency, jarFile.getName() + "!/" + entry.getName());
@@ -319,7 +313,7 @@ public class DefaultComponentRepository
         final List<Component> components = new ArrayList<Component>(candidateComponentJars.length);
         final Map<File, Component> mapping = new HashMap<File, Component>();
         for (File file : candidateComponentJars) {
-            Component component = resolveComponent(file.getName());
+            Component component = resolveComponent(file.getPath());
             components.add(component);
             mapping.put(file, component);
         }

@@ -18,15 +18,15 @@ import java.io.IOException;
 @Mojo(name = "clean", inheritByDefault = false, defaultPhase = LifecyclePhase.CLEAN)
 public class SpringComponentCleaning extends AbstractMojo {
     @Parameter
-    private File output;
+    private File target;
 
     public void execute() throws MojoExecutionException {
-        getLog().info("Hello, I'm cleaning for: " + output.getPath());
+        getLog().info("Hello, I'm cleaning for: " + target.getPath());
         try {
-            FileUtils.deleteDirectory(output);
+            FileUtils.deleteDirectory(target);
         } catch (IOException e) {
-            getLog().error("Can't clean " + output.getPath() + ", because of:" + e.getMessage());
-            throw new MojoExecutionException("Can't clean " + output.getPath(), e);
+            getLog().error("Can't clean " + target.getPath() + ", because of:" + e.getMessage());
+            throw new MojoExecutionException("Can't clean " + target.getPath(), e);
         }
     }
 }

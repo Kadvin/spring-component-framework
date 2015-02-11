@@ -3,11 +3,11 @@
  */
 package net.happyonroad.component.classworld;
 
+import net.happyonroad.component.core.support.ComponentUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
 import sun.misc.URLClassPath;
 
-import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashSet;
@@ -30,6 +30,8 @@ class SharedClassLoader extends URLClassLoader {
 
     protected void digSysURLs(ClassLoader classLoader) {
         if (classLoader instanceof URLClassLoader) {
+            //肯定已经 normalized
+            String appHome = System.getProperty("app.home");
             try {
                 URLClassPath ucp = (URLClassPath) FieldUtils.readField(classLoader, "ucp", true);
                 List loaders = (List) FieldUtils.readField(ucp, "loaders", true);
@@ -37,7 +39,11 @@ class SharedClassLoader extends URLClassLoader {
                     try {
                         URL base = (URL) FieldUtils.readField(loader, "csu", true);
                         if( base.getProtocol().equals("file")){
-                            sysUrls.add(new URL("component:" + FilenameUtils.getName(base.getFile())));
+                            String fileName = FilenameUtils.normalize(base.getFile());
+                            if(fileName.startsWith(appHome))
+                                sysUrls.add(new URL("component:" + ComponentUtils.relativePath(base.getFile())));
+                            else
+                                sysUrls.add(base);
                         }
                     } catch (Exception ex) {
                         //continue; // can not

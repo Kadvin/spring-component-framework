@@ -4,6 +4,7 @@
 package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.ComponentResource;
+import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.exception.ResourceNotFoundException;
 import org.springframework.core.io.Resource;
 import sun.net.www.protocol.jar.Handler;
@@ -20,6 +21,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
+
 /**
  * 组件以Jar包形式，封闭状态运行
  */
@@ -28,11 +31,12 @@ public class ComponentJarResource extends ComponentResource {
 
     private final JarFile          file;
 
-    public ComponentJarResource(Dependency dependency, String briefId) {
+    public ComponentJarResource(Dependency dependency, String briefId) throws InvalidComponentNameException {
         this(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), briefId);
     }
 
-    public ComponentJarResource(String groupId, String artifactId, String version, String briefId) {
+    public ComponentJarResource(String groupId, String artifactId, String version, String briefId)
+            throws InvalidComponentNameException {
         super(groupId, artifactId, version, briefId);
         try {
             URL manifestUrl = new URL(assemble("META-INF/MANIFEST.MF"));
@@ -42,7 +46,7 @@ public class ComponentJarResource extends ComponentResource {
             this.file = connection.getJarFile();
             this.manifest = connection.getManifest();
         } catch (IOException e) {
-            throw new IllegalArgumentException("Bad component: " + getFileName(), e);
+            throw new InvalidComponentNameException("Bad component: " + relativePath(getFileName()), e);
         }
     }
 

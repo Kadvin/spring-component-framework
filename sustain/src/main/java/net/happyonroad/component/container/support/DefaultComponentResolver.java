@@ -4,6 +4,7 @@
 package net.happyonroad.component.container.support;
 
 import com.thoughtworks.xstream.XStream;
+import net.happyonroad.component.classworld.ComponentClassLoader;
 import net.happyonroad.component.container.ComponentResolver;
 import net.happyonroad.component.container.MutableComponentRepository;
 import net.happyonroad.component.core.Component;
@@ -11,13 +12,16 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.*;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
+
+import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
 
 /** 解析pom xml的缺省实现对象 */
 public class DefaultComponentResolver implements ComponentResolver {
@@ -224,7 +228,6 @@ public class DefaultComponentResolver implements ComponentResolver {
         List<Dependency> dependencies = component.getDependencies();
         List<Component> dependedComponents = new ArrayList<Component>(dependencies.size());
         for (Dependency depended : dependencies) {
-            depended.reform();//move the artifactId prefix with dot into group Id
             if (dependency.exclude(depended)) {
                 logger.trace("Skip excluded {}", depended);
                 continue;
@@ -268,13 +271,17 @@ public class DefaultComponentResolver implements ComponentResolver {
     public Component resolveComponent(final Dependency dependency, Resource resource)
             throws InvalidComponentNameException, DependencyNotMeetException {
         logger.debug("Resolving {} from {}", dependency, resource);
-        String originName = resource.getFilename();
-        if( originName == null ) originName = resource.getDescription();
-        String fileName = FilenameUtils.getName(originName);
-        Dependency basic = Dependency.parse(fileName);
-        if (!dependency.accept(basic)) {
-            throw new InvalidComponentNameException("The component file name: " + fileName +
-                                                    " does not satisfy the dependency: " + dependency);
+        File originFile;
+        try {
+            originFile = resource.getFile();
+        } catch (IOException e) {
+            originFile = null;
+        }
+        String fileName;
+        if( originFile != null ) {
+            fileName = originFile.getAbsolutePath();
+        }else{
+            fileName = resource.getDescription();
         }
         DefaultComponent comp;
         InputStream stream = null;
@@ -286,7 +293,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                 if (!comp.isAggregating()) {
                     File jarFile = digJarFilePath(fileName);
                     if (jarFile != null) {
-                        ComponentJarResource jarResource = new ComponentJarResource(dependency, jarFile.getName());
+                        ComponentJarResource jarResource = new ComponentJarResource(dependency, relativePath(jarFile));
                         comp.setResource(jarResource);
                     } else {
                         logger.warn("Can't find jar file for {}", comp);
@@ -301,15 +308,16 @@ public class DefaultComponentResolver implements ComponentResolver {
                 } catch (IOException ex) {/**/}
             }
         } else {
-            if( dependency.getVersion() == null ){
-                dependency.setVersion(basic.getVersion());
-            }
-            ComponentJarResource jarResource = new ComponentJarResource(dependency, fileName);
+            ComponentJarResource jarResource = new ComponentJarResource(dependency, relativePath(fileName));
             try {
                 stream = jarResource.getPomStream();
                 comp = (DefaultComponent) resolveComponent(dependency, stream);
                 comp.setUnderlyingResource(resource);
                 comp.setResource(jarResource);
+                if( dependency.getVersion() == null ){
+                    dependency.setVersion(comp.getVersion());
+                }
+
             } catch (IOException e) {
                 throw new InvalidComponentException(dependency.getGroupId(), dependency.getArtifactId(),
                                                     dependency.getVersion(), "jar",

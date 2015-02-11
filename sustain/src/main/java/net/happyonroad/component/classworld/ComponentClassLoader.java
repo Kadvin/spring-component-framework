@@ -1,9 +1,8 @@
 /**
  * Developer: Kadvin Date: 14/11/12 下午2:32
  */
-package net.happyonroad.component.container.support;
+package net.happyonroad.component.classworld;
 
-import net.happyonroad.component.classworld.LoadUnit;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 

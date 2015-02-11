@@ -24,19 +24,20 @@ public class ClassLoaderRepresentationTest extends ComponentTestSupport {
 
     @BeforeClass
     public static void prepareResources()throws Exception{
-        URL jdomUrl = ClassLoaderRepresentationTest.class.getClassLoader().getResource("jars/jdom.jdom-1.0.jar");
+        URL jdomUrl = ClassLoaderRepresentationTest.class.getClassLoader().getResource("jars/jdom/jdom@1.0.jar");
         assert jdomUrl != null;
-        URL antUrl = ClassLoaderRepresentationTest.class.getClassLoader().getResource("jars/ant-contrib.ant-contrib-20020829.jar");
+        URL antUrl = ClassLoaderRepresentationTest.class.getClassLoader().getResource(
+                "jars/ant-contrib/ant-contrib@20020829.jar");
         assert antUrl != null;
-        FileUtils.copyURLToFile(jdomUrl, new File(tempFolder, "lib/jdom.jdom-1.0.jar"));
-        FileUtils.copyURLToFile(antUrl, new File(tempFolder, "lib/ant-contrib.ant-contrib-20020829.jar"));
+        FileUtils.copyURLToFile(jdomUrl, new File(tempFolder, "lib/jdom/jdom@1.0.jar"));
+        FileUtils.copyURLToFile(antUrl, new File(tempFolder, "lib/ant-contrib/ant-contrib@20020829.jar"));
     }
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        URL jdomUrl = new URL("component:jdom.jdom-1.0.jar");
-        URL antUrl = new URL("component:ant-contrib.ant-contrib-20020829.jar");
+        URL jdomUrl = new URL("component:jdom/jdom@1.0.jar");
+        URL antUrl = new URL("component:ant-contrib/ant-contrib@20020829.jar");
         HashSet<URL> jdomSet = new HashSet<URL>();
         jdomSet.add(jdomUrl);
         HashSet<URL> antSet = new HashSet<URL>();

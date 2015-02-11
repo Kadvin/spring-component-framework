@@ -3,6 +3,10 @@
  */
 package net.happyonroad.component.core.support;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.lang.StringUtils;
 import sun.net.www.protocol.component.Handler;
 
 import java.io.File;
@@ -10,13 +14,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * The component url stream handler factory
  */
-public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory{
+public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory, IOFileFilter{
     private static ComponentURLStreamHandlerFactory instance;
     // component id to real file
     private        Map<String, File>                componentFiles;
@@ -54,8 +59,15 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
      */
     public File getMappingFile(URL url) throws IOException {
         if (componentFiles == null) initFastIndexes();
-        String fileName = url.getFile();
+        String fileName = FilenameUtils.normalize(url.getFile());
         if( !fileName.endsWith(".jar") ) fileName = fileName + ".jar";
+        if( fileName.startsWith("boot/" ) ){
+            fileName = "net.happyonroad/" + FilenameUtils.getName(fileName);
+        }
+        // lib
+        if(StringUtils.countMatches(fileName, "/") > 1 ){
+            fileName  = ComponentUtils.relativePath(fileName);
+        }
         File componentFile = componentFiles.get(fileName);
         if( componentFile == null )
         {
@@ -63,8 +75,6 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
             // 尝试看lib下后来有没有相应的文件
             componentFile = guessFile(url, "lib");
             if( componentFile == null ) componentFile = guessFile(url, "repository");
-            if( componentFile == null ) componentFile = guessFile(url, "repository/lib");
-            if( componentFile == null ) componentFile = guessFile(url, "boot");
             if( componentFile == null )
                 throw new IOException("there is no component named as " + fileName);
         }
@@ -74,22 +84,36 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
     protected Map<String, File> initFastIndexes() {
         componentFiles = new HashMap<String, File>();
         String home = getAppHome();
-        File[] libFiles = new File(home, "lib").listFiles();
-        if (libFiles != null)
+        File bootFolder = new File(home, "boot");
+        if( bootFolder.isDirectory() ){
+            Collection<File> frameworkJars = FileUtils.listFiles(bootFolder, this, null);
+            for (File frameworkJar : frameworkJars) {
+                String relativeName = "net.happyonroad/" + frameworkJar.getName();
+                componentFiles.put(relativeName, frameworkJar);
+            }
+        }
+        File libFolder = new File(home, "lib");
+        if( libFolder.isDirectory()){
+            Collection<File> libFiles = FileUtils.listFiles(libFolder, new String[]{"jar"}, true);
             for (File libFile : libFiles) {
                 if (libFile.isFile() && libFile.getName().endsWith(".jar")) {
-                    componentFiles.put(libFile.getName(), libFile);
+                    String relativeName = ComponentUtils.relativePath(libFile);
+                    componentFiles.put(relativeName, libFile);
                 }
             }
-        File[] repositoryFiles = new File(home, "repository").listFiles();
-        if (repositoryFiles != null)
+        }
+        File repositoryFolder = new File(home, "repository");
+        if( repositoryFolder.isDirectory() ){
+            Collection<File> repositoryFiles = FileUtils.listFiles(repositoryFolder, new String[]{"jar"}, true);
             for (File repositoryFile : repositoryFiles) {
                 if (repositoryFile.isFile() && repositoryFile.getName().endsWith(".jar")) {
-                    componentFiles.put(repositoryFile.getName(), repositoryFile);
+                    componentFiles.put(ComponentUtils.relativePath(repositoryFile), repositoryFile);
                 }
             }
+        }
         return componentFiles;
     }
+
 
     protected File guessFile(URL url, String folder){
         File file = new File(getAppHome(), folder + "/" + url.getFile());
@@ -106,4 +130,13 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
         return System.getProperty("app.home", System.getProperty("user.dir"));
     }
 
+    @Override
+    public boolean accept(File file) {
+        return file.getName().contains("spring-component-framework@");
+    }
+
+    @Override
+    public boolean accept(File dir, String name) {
+        return false;
+    }
 }

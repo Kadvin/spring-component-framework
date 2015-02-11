@@ -19,14 +19,14 @@ public class ComponentMessageSourceTest extends ComponentTestSupport{
     @BeforeClass
     public static void setUpTotal() throws Exception {
         System.setProperty("app.prefix","dnt.;spring.test");
-        createPom("comp_0", "spring.test-0.0.1", tempFolder);
-        createJar("comp_c", "spring.test.comp_c-0.0.1", "spring/test/api", tempFolder);
-        createJar("comp_d", "spring.test.comp_d-0.0.1", "spring/test/api", tempFolder);
+        createPom("comp_0", "spring/test@0.0.1", tempFolder);
+        createJar("comp_c", "spring.test/comp_c@0.0.1", "spring/test/api", tempFolder);
+        createJar("comp_d", "spring.test/comp_d@0.0.1", "spring/test/api", tempFolder);
     }
 
     @Test
     public void testProvideSelfDefinedMessageSources() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_d-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_d@0.0.1");
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
@@ -40,7 +40,7 @@ public class ComponentMessageSourceTest extends ComponentTestSupport{
 
     @Test
     public void testProvideMissingMessageSources() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_d-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_d@0.0.1");
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);
@@ -54,7 +54,7 @@ public class ComponentMessageSourceTest extends ComponentTestSupport{
 
     @Test
     public void testProvideDependedMessageSources() throws Exception{
-        target = repository.resolveComponent("spring.test.comp_d-0.0.1");
+        target = repository.resolveComponent("spring.test/comp_d@0.0.1");
         loader.load(target);
         Assert.assertTrue(loader.isLoaded(target));
         ApplicationContext context = loader.getApplicationFeature(target);

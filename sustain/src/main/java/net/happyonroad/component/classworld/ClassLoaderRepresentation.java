@@ -151,9 +151,12 @@ public class ClassLoaderRepresentation extends ClassLoader {
     // 将 component:../path/to/component.jar这种形式的url字符串
     private String simplify(String componentUrlString) {
         String path = StringUtils.substringAfter(componentUrlString , "component:");
-        if( path.contains(File.separator) ) {
-            path = FilenameUtils.getName(path);
-            return "component:" + path;
+        if( path.startsWith("../" ) ){
+            String home = System.getProperty("app.home");
+            String newPath =
+                    FilenameUtils.normalize(new File(home, path).getAbsolutePath());
+
+            return "component:" + newPath.substring(home.length());
         }
         return componentUrlString;
     }

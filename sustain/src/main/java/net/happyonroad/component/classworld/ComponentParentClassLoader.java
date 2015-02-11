@@ -1,9 +1,11 @@
 /**
  * Developer: Kadvin Date: 14/11/14 上午6:57
  */
-package net.happyonroad.component.container.support;
+package net.happyonroad.component.classworld;
 
 import net.happyonroad.component.classworld.ClassLoaderRepresentation;
+import net.happyonroad.component.classworld.ComponentClassLoader;
+import net.happyonroad.component.container.support.DefaultComponentRepository;
 import net.happyonroad.component.core.Component;
 
 import java.io.IOException;

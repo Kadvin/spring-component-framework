@@ -74,7 +74,7 @@ public class SpringComponentIndexDetails extends AbstractFromDependenciesMojo {
         List<String> lines = new ArrayList<String>(artifacts.size());
         for (Artifact artifact : artifacts) {
             if( artifact.getType().equals("pom") ) continue;
-            String line = String.format("%s.%s-%s.%s",
+            String line = String.format("%s/%s@%s.%s",
                                         artifact.getGroupId() , artifact.getArtifactId() ,
                                         artifact.getVersion() , artifact.getType());
             lines.add(line);

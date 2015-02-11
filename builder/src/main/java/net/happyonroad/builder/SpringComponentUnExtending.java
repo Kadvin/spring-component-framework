@@ -24,7 +24,7 @@ public class SpringComponentUnExtending extends AbstractMojo {
     @Component
     protected MavenProject project;
     @Parameter
-    File targetRelease;
+    File target;
     // 扩展包存放的位置，默认是 repository
     @Parameter
     String extensionPath = "repository";
@@ -36,14 +36,14 @@ public class SpringComponentUnExtending extends AbstractMojo {
     }
 
     private File artifactFile() {
-        if( project.getPackaging().equalsIgnoreCase("pom")){
-            String artifactName =  project.getGroupId() + "." + project.getArtifactId() +
-                                   "-" + project.getVersion()  + "." + project.getPackaging() ;
-            return new File(targetRelease, extensionPath + "/poms/" + artifactName);
-        }else{
-            String artifactName =  project.getGroupId() + "." + project.getArtifactId() +
-                                   "-" + project.getVersion()  + "." + project.getPackaging() ;
-            return new File(targetRelease, extensionPath + "/" + artifactName);
+        if (project.getPackaging().equalsIgnoreCase("pom")) {
+            String artifactName = project.getGroupId() + "/" + project.getArtifactId() +
+                                  "@" + project.getVersion() + "." + project.getPackaging();
+            return new File(target, extensionPath + "/" + artifactName);
+        } else {
+            String artifactName = project.getGroupId() + "/" + project.getArtifactId() +
+                                  "@" + project.getVersion()  + "." + project.getPackaging() ;
+            return new File(target, extensionPath + "/" + artifactName);
         }
     }
 }

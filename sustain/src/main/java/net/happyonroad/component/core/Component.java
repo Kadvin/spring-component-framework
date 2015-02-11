@@ -1,7 +1,7 @@
 package net.happyonroad.component.core;
 
 import net.happyonroad.component.container.RepositoryScanner;
-import net.happyonroad.component.container.support.ComponentClassLoader;
+import net.happyonroad.component.classworld.ComponentClassLoader;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.DependencyManagement;
 import org.springframework.context.ApplicationContext;
