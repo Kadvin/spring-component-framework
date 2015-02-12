@@ -5,7 +5,6 @@ package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import net.happyonroad.component.core.exception.ResourceNotFoundException;
 import org.springframework.core.io.Resource;
 import sun.net.www.protocol.jar.Handler;
 import sun.net.www.protocol.jar.JarURLConnection;
@@ -20,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
 
@@ -65,6 +65,11 @@ public class ComponentJarResource extends ComponentResource {
     // 重载父类方法
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public URL getURL() throws MalformedURLException {
+        return new URL("component:" + getFileName());
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 内部实现方法
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +77,13 @@ public class ComponentJarResource extends ComponentResource {
     public InputStream getInputStream(String innerPath) throws IOException {
         JarEntry entry = file.getJarEntry(innerPath);
         if( entry == null )
-            throw new ResourceNotFoundException("Can't find " + innerPath + " from " + file.getName());
-        return file.getInputStream(entry);
+            throw new IllegalArgumentException("Can't find " + innerPath + " from " + file.getName());
+        //class loader可能还没有正确配置好,此时直接从file里面获取
+        try {
+            return super.getResource(innerPath).getInputStream();
+        } catch (IOException e) {
+            return file.getInputStream(entry);
+        }
     }
 
     @Override
@@ -92,14 +102,8 @@ public class ComponentJarResource extends ComponentResource {
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
             if(entry.getName().startsWith(path)) {
-                try {
-                    String url = assemble(entry.getName());
-                    Resource resource = new JarInputStreamResource(url, file.getInputStream(entry));
-                    //UrlResource resource = new UrlResource("jar:file:" + file.getName() +"!/" + entry.getName());
-                    matches.add(resource);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                Resource resource = super.getResource(entry.getName());
+                matches.add(resource);
             }
         }
         return matches.toArray(new Resource[matches.size()]);
@@ -107,26 +111,12 @@ public class ComponentJarResource extends ComponentResource {
 
     @Override
     public Resource getLocalResourceUnder(String path) {
-        String url = assemble(path);
         if( isIndexed() && Arrays.binarySearch(indexes, path) >= 0){
-            try {
-                return new JarInputStreamResource(url, file.getInputStream(file.getEntry(path)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            return super.getResource(path);
         }else{
-            Enumeration<JarEntry> entries = file.entries();
-            while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                if(entry.getName().equalsIgnoreCase(path)) {
-                    try {
-                        return new JarInputStreamResource(url, file.getInputStream(entry));
-                        //return new UrlResource(url);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            ZipEntry entry = file.getEntry(path);
+            if( entry != null )
+                return super.getResource(path);
         }
         return null;
     }

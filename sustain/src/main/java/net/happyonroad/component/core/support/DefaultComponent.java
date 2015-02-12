@@ -4,26 +4,27 @@
 package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.container.RepositoryScanner;
-import net.happyonroad.component.classworld.ComponentClassLoader;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.Versionize;
 import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.spring.support.ComponentResourcePatternResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.export.naming.SelfNaming;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import java.util.*;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,11 +38,15 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 @ManagedResource(description = "Spring Component")
 public class DefaultComponent implements Component, SelfNaming {
-    private static       Logger   logger          = LoggerFactory.getLogger(DefaultComponent.class.getName());
-    private static final Pattern  INTERPOLATE_PTN = Pattern.compile("\\$\\{([^}]+)\\}");
-    private static final String[] ATTRIBUTE_NAMES = new String[]{"groupId", "artifactId", "version", "type",
-                                                                 "classifier", "release", "name", "description",
-                                                                 "url"};
+    private static final String CLASSPATH_THIS_URL_PREFIX = "classpath*:";
+    private static       Logger           logger                    =
+            LoggerFactory.getLogger(DefaultComponent.class.getName());
+    private static final Pattern          INTERPOLATE_PTN           = Pattern.compile("\\$\\{([^}]+)\\}");
+    private static final String[]         ATTRIBUTE_NAMES           =
+            new String[]{"groupId", "artifactId", "version", "type",
+                         "classifier", "release", "name",
+                         "description",
+                         "url"};
 
     static {
         Arrays.sort(ATTRIBUTE_NAMES);
@@ -75,10 +80,11 @@ public class DefaultComponent implements Component, SelfNaming {
     private String name, description, url;
 
     private Properties              properties;
-    private ComponentClassLoader    classLoader;
+    private ClassLoader             classLoader;
     private ApplicationContext      application;
     private Map<String, String>     defaults;
     private List<RepositoryScanner> scanners;
+    private ResourcePatternResolver resourceLoader;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -221,6 +227,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     public void setResource(ComponentResource resource) {
         this.resource = resource;
+        this.resourceLoader = new ComponentResourcePatternResolver(this);
     }
 
     @ManagedAttribute
@@ -233,11 +240,11 @@ public class DefaultComponent implements Component, SelfNaming {
     public URL getURL() {
         String fileName = null;
         try {
-            if( resource == null ){
+            if (resource == null) {
                 String originName = underlyingResource.getFilename();
-                if( originName == null ) originName = underlyingResource.getDescription();
+                if (originName == null) originName = underlyingResource.getDescription();
                 fileName = originName.replace(".pom", ".jar");
-            }else{
+            } else {
                 fileName = resource.getFileName();
             }
             return new URL("component:" + fileName);
@@ -252,7 +259,7 @@ public class DefaultComponent implements Component, SelfNaming {
         String[] strings = resource == null ? new String[0] : resource.getDependencies();
         for (String line : strings) {
             try {
-                if( isApplication(line) ) continue;
+                if (isApplication(line)) continue;
                 urls.add(new URL("component:" + line));
             } catch (Exception e) {
                 throw new IllegalStateException("The " + this + " META-INF/INDEX.DEPENDS: " + line + " is invalid");
@@ -266,7 +273,7 @@ public class DefaultComponent implements Component, SelfNaming {
         List<String> briefIds = new ArrayList<String>();
         String[] strings = resource == null ? new String[0] : resource.getDependencies();
         for (String line : strings) {
-            if( isApplication(line) ) briefIds.add(line);
+            if (isApplication(line)) briefIds.add(line);
         }
         return briefIds;
     }
@@ -456,7 +463,6 @@ public class DefaultComponent implements Component, SelfNaming {
         }
         return all;
     }
-
 
 
     public void setDependedComponents(List<Component> dependedComponents) {
@@ -676,7 +682,7 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     static public boolean isApplication(String briefId) {
-        if( briefId.startsWith("net.happyonroad") ) return true;
+        if (briefId.startsWith("net.happyonroad")) return true;
         //这个属性可以通过设置 app.prefix系统属性进行干预，支持多个prefix用分号分隔
         //当符合该条件的模块没有被解析出来时，系统将会停止解析，抛出异常；
         //而不符合该条件的模块，往往是第三方未用到的模块，解析失败不应该停止
@@ -688,11 +694,11 @@ public class DefaultComponent implements Component, SelfNaming {
         return false;
     }
 
-    public ComponentClassLoader getClassLoader() {
+    public ClassLoader getClassLoader() {
         return classLoader;
     }
 
-    public void setClassLoader(ComponentClassLoader classLoader) {
+    public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 
@@ -743,7 +749,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public void registerScanner(RepositoryScanner scanner) {
-        if( scanners == null ){
+        if (scanners == null) {
             scanners = new LinkedList<RepositoryScanner>();
         }
         scanners.add(scanner);
@@ -752,6 +758,11 @@ public class DefaultComponent implements Component, SelfNaming {
     @Override
     public List<RepositoryScanner> getScanners() {
         return scanners;
+    }
+
+    @Override
+    public ResourcePatternResolver getResourceLoader() {
+        return resourceLoader;
     }
 }
 

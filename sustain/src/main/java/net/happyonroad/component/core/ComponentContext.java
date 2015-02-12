@@ -24,8 +24,6 @@ public interface ComponentContext {
 
     Object removeFeature(Component component, String name);
 
-    ClassLoader getClassRealm(String componentId);
-
     <T> T getFeature(Component component, String name);
 
     ClassLoader getLibraryFeature(Component component);

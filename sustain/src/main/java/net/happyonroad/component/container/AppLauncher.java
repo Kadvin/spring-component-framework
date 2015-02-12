@@ -3,6 +3,7 @@
  */
 package net.happyonroad.component.container;
 
+import net.happyonroad.component.classworld.MainClassLoader;
 import net.happyonroad.component.container.support.DefaultLaunchEnvironment;
 import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
@@ -58,10 +59,6 @@ public class AppLauncher implements Executable {
         //this.pomWorld.setMainComponentId(this.mainComponent.getId());
     }
 
-    public ClassLoader getMainClassLoader(){
-        return this.mainComponent.getClassLoader();
-    }
-
     /**
      * 启动当前的组件Jar包
      *
@@ -69,8 +66,6 @@ public class AppLauncher implements Executable {
     public void start() throws Exception {
         try {
             long start = System.currentTimeMillis();
-            //主线程设置为该class loader，可以让RMI序列化的时候工作
-            Thread.currentThread().setContextClassLoader(getMainClassLoader());
             logger.info(banner("Loading components starts from {}", this.mainComponent));
             environment.load(this.mainComponent);
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
@@ -261,7 +256,7 @@ public class AppLauncher implements Executable {
         try {
             // When started by Service wrapper, the context class loader is URLClassLoader of wrapper.jar
             //  but this main class is loaded by the framework jar's ClassLoader(FactoryClassLoader)
-            Thread.currentThread().setContextClassLoader(AppLauncher.class.getClassLoader());
+            Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance());
             // To register the url handler by current context class loader, instead of system bootstrap class loader
             URL.setURLStreamHandlerFactory(ComponentURLStreamHandlerFactory.getFactory());
             int exitCode = mainWithExitCode(args);

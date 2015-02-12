@@ -1,11 +1,10 @@
 /**
  * @author XiongJie, Date: 13-12-27
  */
-package net.happyonroad.spring;
+package net.happyonroad.spring.support;
 
-import net.happyonroad.component.core.Component;
+import net.happyonroad.component.core.support.DefaultComponent;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.Assert;
 
@@ -18,11 +17,12 @@ import java.util.Set;
  * <p/>
  * 将 classpath*:path/of/package/** / *.class 限制在当前组件的jar中搜索
  */
-public class SpringPathMatchingResourcePatternResolver extends PathMatchingResourcePatternResolver {
-    private Component component;
+public class ComponentResourcePatternResolver extends PathMatchingResourcePatternResolver {
+    final DefaultComponent component;
 
-    public SpringPathMatchingResourcePatternResolver(ResourceLoader loader) {
-        super(loader);
+    public ComponentResourcePatternResolver(DefaultComponent component) {
+        super(component.getResource());
+        this.component = component;
     }
 
     @Override
@@ -64,9 +64,5 @@ public class SpringPathMatchingResourcePatternResolver extends PathMatchingResou
         } else {
             return super.getResources(locationPattern);
         }
-    }
-
-    public void setComponent(Component component) {
-        this.component = component;
     }
 }

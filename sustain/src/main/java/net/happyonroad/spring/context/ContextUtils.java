@@ -3,8 +3,6 @@
  */
 package net.happyonroad.spring.context;
 
-import net.happyonroad.component.core.Component;
-import net.happyonroad.spring.SpringPathMatchingResourcePatternResolver;
 import net.happyonroad.spring.support.SmartApplicationEventMulticaster;
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
@@ -56,17 +54,6 @@ public class ContextUtils {
             beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, multicaster);
         }
         setApplicationEventMulticaster(context, multicaster);
-
-    }
-
-    public static void applyComponentToResourcePatternResolver(GenericApplicationContext context, Component component){
-        try {
-            SpringPathMatchingResourcePatternResolver rpr =
-                    (SpringPathMatchingResourcePatternResolver) FieldUtils.readField(context, "resourcePatternResolver", true);
-            rpr.setComponent(component);
-        } catch (IllegalAccessException e) {
-            throw new ApplicationContextException("Can't hacking the spring context for resourcePatternResolver", e);
-        }
 
     }
 

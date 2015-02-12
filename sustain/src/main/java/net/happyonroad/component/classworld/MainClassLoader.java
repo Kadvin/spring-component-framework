@@ -1,5 +1,5 @@
 /**
- * @author XiongJie, Date: 13-11-27
+ * Developer: Kadvin Date: 15/2/12 上午9:09
  */
 package net.happyonroad.component.classworld;
 
@@ -15,20 +15,52 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 共享的第三方类加载器
+ * <h1>主类加载器</h1>
+ * 本加载器是spring-component-framework启动的系统的主加载器
+ * 其父ClassLoader为系统Bootstrap加载器(也就是spring-component-framework.jar的Class-Path指定的加载器)
+ * 继承于 URLClassLoader，其 url 范围为AppLaunch启动时，目标组件的所有依赖包（除开父加载器的Class-Path相关url）
  */
-class SharedClassLoader extends URLClassLoader {
+public class MainClassLoader extends ManipulateClassLoader{
+    static MainClassLoader instance;
+    //parent class loader可见的url
     final Set<URL> sysUrls;
-    final Set<URL> allUrls;
+    //当前class loader可见的url
+    final Set<URL> mainUrls;
 
-    public SharedClassLoader(ClassLoader classLoader) {
-        super(new URL[0], classLoader);
+    private MainClassLoader(ClassLoader parent) {
+        super(parent);
         sysUrls = new HashSet<URL>();
-        digSysURLs(classLoader);
-        allUrls = new HashSet<URL>();
+        digSysURLs(parent);
+        mainUrls = new HashSet<URL>();
     }
 
-    protected void digSysURLs(ClassLoader classLoader) {
+    public void addURL(URL url) {
+        innerAddURL(url);
+    }
+
+
+    public void addURLs(Set<URL> urls) {
+        for (URL url : urls) {
+            innerAddURL(url);
+        }
+    }
+
+    protected void innerAddURL(URL url){
+        if (sysUrls.contains(url))
+            return;
+        if (!mainUrls.contains(url)) {
+            mainUrls.add(url);
+            super.innerAddURL(url);
+        }
+    }
+
+    public static MainClassLoader getInstance() {
+        if( instance == null )
+            instance = new MainClassLoader(getSystemClassLoader());
+        return instance;
+    }
+
+    void digSysURLs(ClassLoader classLoader) {
         if (classLoader instanceof URLClassLoader) {
             //肯定已经 normalized
             String appHome = System.getProperty("app.home");
@@ -55,27 +87,4 @@ class SharedClassLoader extends URLClassLoader {
         }
     }
 
-    public void addURLs(Set<URL> urls) {
-        for (URL url : urls) {
-            if (sysUrls.contains(url))
-                continue;
-            if (!allUrls.contains(url)) {
-                allUrls.add(url);
-                super.addURL(url);
-            }
-        }
-    }
-
-    // Get the host url of the class loaded by this class
-    public URL hostUrl(Class<?> theClass) {
-        String path = theClass.getName().replace(".", "/") + ".class";
-        URL url = this.findResource(path);
-        if (url != null) {
-            for (URL jarUrl : allUrls) {
-                if (url.getPath().contains(jarUrl.getPath()))
-                    return url;
-            }
-        }
-        return null;
-    }
 }

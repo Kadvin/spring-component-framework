@@ -7,6 +7,7 @@ import net.happyonroad.component.ComponentTestSupport;
 import net.happyonroad.component.core.Component;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 
@@ -14,6 +15,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 
 /** 组件加载器的测试 */
+@Ignore
 public class DefaultComponentLoaderTest extends ComponentTestSupport {
 
     @BeforeClass
@@ -202,11 +204,11 @@ public class DefaultComponentLoaderTest extends ComponentTestSupport {
      * <dd>Spring components scanner(context:component-scan) behavior </dd>
      * <dt>Assumption:</dt>
      * <dd>There are two service components:</dd>
-     * <dd>component-1: spring.test.scan.Provider (exported service)</dd>
-     * <dd>component-2: spring.test.scan.User (depends service: provider)</dd>
+     * <dd>component-6: spring.test.scan.Provider (exported service)</dd>
+     * <dd>component-7: spring.test.scan.User (depends service: provider)</dd>
      * <dt>Verification:</dt>
-     * <dd>component-2 scanner won't instantiate the component-1's provider</dd>
-     * <dd>component-2 scanner depends on component-1's provider by service</dd>
+     * <dd>component-7 scanner won't instantiate the component-6's provider</dd>
+     * <dd>component-7 scanner depends on component-6's provider by service</dd>
      * </dl>
      *
      * @throws Exception Any Exception

@@ -25,4 +25,9 @@ public class JarInputStreamResource extends InputStreamResource {
     public URL getURL() throws IOException {
         return url;
     }
+
+    @Override
+    public boolean isOpen() {
+        return false; // to be work with XmlBeanDefinitionReader
+    }
 }

@@ -52,6 +52,6 @@ public class InvalidComponentException extends RuntimeException {
 
     public String getArtifactKey()
     {
-        return groupId + ":" + artifactId + ":" + version + ":" + type;
+        return groupId + "/" + artifactId + "@" + version + "." + type;
     }
 }

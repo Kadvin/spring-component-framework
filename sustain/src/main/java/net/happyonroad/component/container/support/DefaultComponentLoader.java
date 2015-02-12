@@ -8,8 +8,6 @@ import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.feature.ApplicationFeatureResolver;
 import net.happyonroad.component.container.feature.StaticFeatureResolver;
 import net.happyonroad.component.core.*;
-import net.happyonroad.component.core.exception.DependencyNotMeetException;
-import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.spring.service.MutableServiceRegistry;
 import net.happyonroad.spring.service.ServiceRegistry;
 import net.happyonroad.spring.support.CombinedMessageSource;
@@ -146,17 +144,6 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             contexts.add(feature);
         }
         return contexts;
-    }
-
-    @Override
-    public ClassLoader getClassRealm(String componentId) {
-        try {
-            return repository.resolveComponent(componentId).getClassLoader();
-        } catch (DependencyNotMeetException e) {
-            throw new IllegalArgumentException("The component " + componentId + " is not exist", e);
-        } catch (InvalidComponentNameException e) {
-            throw new IllegalArgumentException("The component " + componentId + " is invalid", e);
-        }
     }
 
     @Override

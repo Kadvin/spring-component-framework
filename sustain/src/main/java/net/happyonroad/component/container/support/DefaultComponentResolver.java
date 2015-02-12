@@ -4,7 +4,7 @@
 package net.happyonroad.component.container.support;
 
 import com.thoughtworks.xstream.XStream;
-import net.happyonroad.component.classworld.ComponentClassLoader;
+import net.happyonroad.component.classworld.ManipulateClassLoader;
 import net.happyonroad.component.container.ComponentResolver;
 import net.happyonroad.component.container.MutableComponentRepository;
 import net.happyonroad.component.core.Component;
@@ -12,6 +12,7 @@ import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.*;
+import net.happyonroad.spring.exception.ApplicationConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -19,6 +20,9 @@ import org.springframework.core.io.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
 import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
@@ -271,6 +275,7 @@ public class DefaultComponentResolver implements ComponentResolver {
     public Component resolveComponent(final Dependency dependency, Resource resource)
             throws InvalidComponentNameException, DependencyNotMeetException {
         logger.debug("Resolving {} from {}", dependency, resource);
+        ClassLoader currentCL = Thread.currentThread().getContextClassLoader();
         File originFile;
         try {
             originFile = resource.getFile();
@@ -317,7 +322,6 @@ public class DefaultComponentResolver implements ComponentResolver {
                 if( dependency.getVersion() == null ){
                     dependency.setVersion(comp.getVersion());
                 }
-
             } catch (IOException e) {
                 throw new InvalidComponentException(dependency.getGroupId(), dependency.getArtifactId(),
                                                     dependency.getVersion(), "jar",
@@ -335,7 +339,28 @@ public class DefaultComponentResolver implements ComponentResolver {
         if (!dependency.accept(comp))
             throw new InvalidComponentNameException("The component file name: " + fileName +
                                                     " conflict with its inner pom: " + comp.toString());
-        comp.setClassLoader(new ComponentClassLoader(comp));
+
+        if( !(currentCL instanceof ManipulateClassLoader)){
+            throw new ApplicationConfigurationException("Current thread's Class Loader should implements ManipulateClassLoader");
+        }
+        ManipulateClassLoader mcl = (ManipulateClassLoader) currentCL;
+        //将该组件依赖的第三方包添加到当前Class Loader的ucp中
+        // 可能是MainClassLoader，也可能是ExtensionClassLoader，或者其他
+        mcl.addURLs(comp.getLibURLs());
+        //将该组件自身的url添加到当前Class Loader中
+        if( comp.getResource() != null ){
+            try {
+                URL compUrl = comp.getResource().getURL();
+                URLClassLoader singleURLCL = new URLClassLoader(new URL[]{compUrl}, ClassLoader.getSystemClassLoader());
+                //让component jar resource的bind cl为仅能获取单个url的cl
+                comp.getResource().setClassLoader(singleURLCL);
+                mcl.addURL(compUrl);
+            } catch (MalformedURLException e) {
+                throw new InvalidComponentException(comp.getGroupId(), comp.getArtifactId(), comp.getVersion(), comp.getType(),
+                                                    "Can't get component url " + e.getMessage());
+            }
+        }
+        comp.setClassLoader(mcl);
         return comp;
     }
 

@@ -1,11 +1,11 @@
 package net.happyonroad.component.core;
 
 import net.happyonroad.component.container.RepositoryScanner;
-import net.happyonroad.component.classworld.ComponentClassLoader;
 import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.component.core.support.DependencyManagement;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.net.URL;
 import java.util.List;
@@ -106,7 +106,13 @@ public interface Component extends Comparable<Component>, Versionize {
      * 获得相应的类加载器
      * @return 类加载器
      */
-    ComponentClassLoader getClassLoader();
+    ClassLoader getClassLoader();
+
+    /**
+     * 获取组件的资源加载器(for Spring)
+     * @return Spring 资源加载器
+     */
+    ResourcePatternResolver getResourceLoader();
 
     /**
      * 组件依赖关系

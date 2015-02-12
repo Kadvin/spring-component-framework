@@ -3,13 +3,13 @@
  */
 package net.happyonroad.component.container.support;
 
+import net.happyonroad.component.classworld.MainClassLoader;
 import net.happyonroad.component.container.ComponentResolver;
 import net.happyonroad.component.container.MutableComponentRepository;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import net.happyonroad.component.core.exception.ResourceNotFoundException;
 import net.happyonroad.component.core.support.ComponentJarResource;
 import net.happyonroad.component.core.support.ComponentUtils;
 import net.happyonroad.component.core.support.DefaultComponent;
@@ -56,6 +56,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
      */
     public DefaultComponentRepository(String home) {
         sharedInstance = this;
+        Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance());
         this.home = new File(home);
         File libFolder = new File(home, "lib");
         if (!libFolder.exists()) {
@@ -168,8 +169,8 @@ public class DefaultComponentRepository implements MutableComponentRepository {
             }
             //先放到cache里面，避免构建 component jar resource时无法寻址
             cache.put(dependency, new FileSystemResource(jar));
-            InputStream stream = null;
             ComponentJarResource resource = null;
+            InputStream stream = null;
             try {
                 resource = new ComponentJarResource(dependency, briefId);
                 stream = resource.getPomStream();
@@ -177,14 +178,14 @@ public class DefaultComponentRepository implements MutableComponentRepository {
                 //而不存在 pom.xml 的jar包，需要依赖 poms里面的定义进行解析
             } catch (IOException e) {
                 cache.remove(dependency);
-            } catch (ResourceNotFoundException e) {
+            } catch (IllegalArgumentException e) {
                 //Not cache it by the concrete jar
                 cache.remove(dependency);
                 //logger.error("Error while read :" + jar.getPath(), e);
             } finally {
                 try {
-                    if(resource != null ) resource.close();
                     if (stream != null) stream.close();
+                    if(resource != null ) resource.close();
                 } catch (IOException e) {
                     logger.error("Error while close:" + jar.getPath(), e);
                 }

@@ -6,7 +6,6 @@ package net.happyonroad.component.core.support;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.lang.StringUtils;
 import sun.net.www.protocol.component.Handler;
 
 import java.io.File;
@@ -63,9 +62,9 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
         if( !fileName.endsWith(".jar") ) fileName = fileName + ".jar";
         if( fileName.startsWith("boot/" ) ){
             fileName = "net.happyonroad/" + FilenameUtils.getName(fileName);
-        }
-        // lib
-        if(StringUtils.countMatches(fileName, "/") > 1 ){
+        }else if(fileName.startsWith("lib/")){
+            //正常的组件component url里面肯定不是lib开头；
+            // 但是 spring-component-framework的Class-Path指定的那些url被normalize之后却会如此
             fileName  = ComponentUtils.relativePath(fileName);
         }
         File componentFile = componentFiles.get(fileName);

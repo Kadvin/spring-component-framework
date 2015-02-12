@@ -4,10 +4,12 @@
 package net.happyonroad.component.core;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.jar.Manifest;
 /**
  * 组件的资源
  */
-public abstract class ComponentResource {
+public abstract class ComponentResource extends DefaultResourceLoader {
     protected final String groupId, artifactId;
     private final String   version;
     private final String   fileName;
@@ -97,6 +99,8 @@ public abstract class ComponentResource {
 
     public abstract Resource getLocalResourceUnder(String path);
 
+    public abstract URL getURL() throws MalformedURLException;
+
     /**
      * 判断本组件包是否被索引
      *
@@ -157,4 +161,5 @@ public abstract class ComponentResource {
         }
         return dependencies;
     }
+
 }
