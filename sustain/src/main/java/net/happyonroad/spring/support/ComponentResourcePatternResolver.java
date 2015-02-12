@@ -18,11 +18,23 @@ import java.util.Set;
  * 将 classpath*:path/of/package/** / *.class 限制在当前组件的jar中搜索
  */
 public class ComponentResourcePatternResolver extends PathMatchingResourcePatternResolver {
+    static final String CLASSPATH_THIS_URL_PREFIX = "classpath?:";
+
     final DefaultComponent component;
 
     public ComponentResourcePatternResolver(DefaultComponent component) {
         super(component.getResource());
         this.component = component;
+    }
+
+    @Override
+    public Resource getResource(String location) {
+        if( location.startsWith(CLASSPATH_THIS_URL_PREFIX)){
+            location = location.substring(CLASSPATH_THIS_URL_PREFIX.length());
+            return component.getResource().getLocalResourceUnder(location);
+        }else {
+            return super.getResource(location);
+        }
     }
 
     @Override
