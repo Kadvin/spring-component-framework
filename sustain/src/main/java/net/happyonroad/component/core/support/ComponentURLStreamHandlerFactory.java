@@ -60,9 +60,9 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
         if (componentFiles == null) initFastIndexes();
         String fileName = FilenameUtils.normalize(url.getFile());
         if( !fileName.endsWith(".jar") ) fileName = fileName + ".jar";
-        if( fileName.startsWith("boot/" ) ){
+        if( fileName.startsWith("boot/") || fileName.startsWith("boot\\") ){
             fileName = "net.happyonroad/" + FilenameUtils.getName(fileName);
-        }else if(fileName.startsWith("lib/")){
+        }else if(fileName.startsWith("lib/") || fileName.startsWith("lib\\")){
             //正常的组件component url里面肯定不是lib开头；
             // 但是 spring-component-framework的Class-Path指定的那些url被normalize之后却会如此
             fileName  = ComponentUtils.relativePath(fileName);
