@@ -58,7 +58,7 @@ public class ComponentURLStreamHandlerFactory implements URLStreamHandlerFactory
      */
     public File getMappingFile(URL url) throws IOException {
         if (componentFiles == null) initFastIndexes();
-        String fileName = FilenameUtils.normalize(url.getFile());
+        String fileName = FilenameUtils.normalize(url.getFile(), true);
         if( !fileName.endsWith(".jar") ) fileName = fileName + ".jar";
         if( fileName.startsWith("boot/") || fileName.startsWith("boot\\") ){
             fileName = "net.happyonroad/" + FilenameUtils.getName(fileName);
