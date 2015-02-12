@@ -228,7 +228,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             logger.warn("You should configure a MBeanExporter in main app context");
             return;
         }
-        Set<Component> components = repository.getComponents();
+        List<Component> components = repository.getComponents();
         for (Component comp : components) {
             if( repository.isApplication(comp.getGroupId())){
                 exporter.registerManagedResource(comp, ((DefaultComponent) comp).getObjectName());

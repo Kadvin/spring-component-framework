@@ -131,17 +131,11 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
 
     @Override
     public List<ApplicationContext> getApplicationFeatures() {
-        List<Component> components = new LinkedList<Component>();
-        for (Map.Entry<Component, Features> entry : loadedFeatures.entrySet()) {
-            if (entry.getValue().getApplicationFeature() != null) {
-                components.add(entry.getKey());
-            }
-        }
-        repository.sortComponents(components);
+        List<Component> components = repository.getComponents();
         List<ApplicationContext> contexts = new LinkedList<ApplicationContext>();
         for (Component component : components) {
             ApplicationContext feature = getApplicationFeature(component);
-            contexts.add(feature);
+            if( feature != null ) contexts.add(feature);
         }
         return contexts;
     }

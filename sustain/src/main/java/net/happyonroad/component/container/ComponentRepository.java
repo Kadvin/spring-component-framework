@@ -57,9 +57,9 @@ public interface ComponentRepository{
 
     /**
      * 所有已经解析的组件
-     * @return 所有已经解析的组件
+     *
+     * @return 所有已经解析的组件，按照解析的先后顺序
      */
-    Set<Component> getComponents();
+    List<Component> getComponents();
 
-    String getMainComponentId();
 }

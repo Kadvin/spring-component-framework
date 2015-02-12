@@ -44,7 +44,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
 
     private File                      home;
     private String                    mainComponentId;
-    private Set<Component>            components;
+    private List<Component>           components;
     private Map<Dependency, Resource> cache;
 
     /*package*/ ComponentResolver resolver;
@@ -67,14 +67,9 @@ public class DefaultComponentRepository implements MutableComponentRepository {
                                                    + "] not exist and can't be auto created: " + e.getMessage());
             }
         }
-        components = new HashSet<Component>();
+        components = new LinkedList<Component>();
         cache = new HashMap<Dependency, Resource>();
         resolver = new DefaultComponentResolver(this);
-    }
-
-    @Override
-    public String getMainComponentId() {
-        return mainComponentId;
     }
 // ------------------------------------------------------------
     //     本身的Lifecycle方法
@@ -304,8 +299,8 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     }
 
     @Override
-    public Set<Component> getComponents() {
-        return Collections.unmodifiableSet(components);
+    public List<Component> getComponents() {
+        return Collections.unmodifiableList(components);
     }
 
     @Override
