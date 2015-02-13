@@ -54,6 +54,14 @@ public class MainClassLoader extends ManipulateClassLoader{
         }
     }
 
+    public Set<URL> getSysUrls() {
+        return sysUrls;
+    }
+
+    public Set<URL> getMainUrls() {
+        return mainUrls;
+    }
+
     public static MainClassLoader getInstance() {
         if( instance == null )
             instance = new MainClassLoader(getSystemClassLoader());

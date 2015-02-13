@@ -342,13 +342,12 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             mappingStream = new FileOutputStream(new File(target, "webapp/frontend/.mappings"));
             StringBuilder sb = new StringBuilder();
             sb.append("{\n");
-            Set<String> names = mappings.stringPropertyNames();
-            for (String name : names) {
-                sb.append(String.format("  \"%s\" : \"%s\",\n", name, mappings.getProperty(name)));
+            Iterator<String> names = mappings.stringPropertyNames().iterator();
+            while (names.hasNext()) {
+                String name = names.next();
+                sb.append(String.format("  \"%s\" : \"%s\"", name, mappings.getProperty(name)));
+                if( names.hasNext() ) sb.append(",\n");
             }
-            //delete the last ,\n
-            sb.deleteCharAt(sb.length()-1);
-            sb.deleteCharAt(sb.length()-1);
             sb.append("\n}\n");
             IOUtils.write(sb.toString(), mappingStream);
         } catch (Exception ex){
@@ -389,6 +388,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             Dependency dep = Dependency.parse(componentJar);
             String source = dep.getGroupId() + "." + dep.getArtifactId();
             JarFile jarFile = new JarFile(componentJar);
+            if( jarFile.getEntry("frontend") == null ) return;
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
