@@ -102,8 +102,7 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
 
     @Override
     protected void copyFile(File artifact, File destFile) throws MojoExecutionException {
-        String relativePath = relativePath(destFile);
-        if (new File(outputDirectory, relativePath).exists())
+        if (destFile.exists() && destFile.lastModified() == artifact.lastModified())
             return;
         super.copyFile(artifact, destFile);
     }
