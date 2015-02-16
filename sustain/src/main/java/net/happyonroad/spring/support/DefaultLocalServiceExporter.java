@@ -24,8 +24,12 @@ public class DefaultLocalServiceExporter implements LocalServiceExporter{
 
     @Override
     public <T> void exports(Class<T> serviceClass, String hint) {
-        T service = provider.getBean(serviceClass);
+        T service = getBean(serviceClass);
         exporter.exports(serviceClass, service, hint);
+    }
+
+    public <T> T getBean(Class<T> serviceClass) {
+        return provider.getBean(serviceClass);
     }
 
     @Override

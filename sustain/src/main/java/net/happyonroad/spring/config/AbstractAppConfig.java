@@ -82,6 +82,10 @@ public abstract class AbstractAppConfig extends AbstractUserConfig implements In
         localExporter().exports(serviceClass);
     }
 
+    protected <T> T getBean(Class<T> serviceClass){
+        return localExporter().getBean(serviceClass);
+    }
+
     @Override
     public final void afterPropertiesSet() throws Exception {
         beforeExports();

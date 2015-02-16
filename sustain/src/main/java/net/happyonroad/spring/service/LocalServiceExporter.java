@@ -26,4 +26,12 @@ public interface LocalServiceExporter {
      * @param <T>          服务的类型
      */
     <T> void exports(Class<T> serviceClass);
+
+    /**
+     * <h2>获取某个服务对应的bean对象</h2>
+     * @param serviceClass 服务的接口
+     * @param <T> bean的类型
+     * @return bean对象
+     */
+    <T> T getBean(Class<T> serviceClass);
 }
