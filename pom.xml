@@ -4,7 +4,7 @@
     <parent>
         <groupId>dnt</groupId>
         <artifactId>parent</artifactId>
-        <version>23</version>
+        <version>24</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>net.happyonroad</groupId>

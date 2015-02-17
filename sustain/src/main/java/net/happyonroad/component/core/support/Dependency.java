@@ -307,7 +307,8 @@ public class Dependency implements Versionize{
      * @return 是否依赖
      */
     public boolean accept(Versionize componentOrDependency) {
-        boolean accept = getGroupId().equals(componentOrDependency.getGroupId()) && getArtifactId().equals(componentOrDependency.getArtifactId());
+        boolean accept = getGroupId().equals(componentOrDependency.getGroupId()) &&
+                         getArtifactId().equals(componentOrDependency.getArtifactId());
         if (!accept) return false;
         if (getVersion() != null) {
             //有version需要，暂时不知道是否需要支持version的表达式，maven自身好像没有这个机制
