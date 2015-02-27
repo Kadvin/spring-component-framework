@@ -728,7 +728,7 @@ public class BasisUserConfig extends AbstractUserConfig{
 }
 ```
 
- 5. 相应依赖其的AppConfig可以使用Spring的@Import语义
+ 5。 相应依赖其的AppConfig可以使用Spring的@Import语义
  如RouterAppConfig可以被改写为：
 
 ```java
