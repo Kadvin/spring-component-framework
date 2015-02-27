@@ -6,12 +6,12 @@ spring-component-framework
 
 Spring component framework 是一个基于SpringFramework和Maven的组件化的微内核Java独立程序框架(规划3.0.0版本将支持Web应用）。
 
-它能帮助你将应用程序切割成为独立的小块（一个Jar包就是一个模块），且对你的应用程序**完全**没有任何侵入性。
+它能帮助你将应用程序切割成为独立的小块（一个Jar包就是一个模块），且对你的应用程序没有太多侵入性。
 不需要像OSGi那样，需要实现BundleContext接口，了解MANEFEST.MF里面一堆Bundle-*语义
 
 在此之外，它还可以辅助你打包应用程序，并且在Maven的支持下，保持你的应用程序中在开发态与运行态的一致性。
 
-在阅读以下介绍时，你可以下载并参考完整的 [示例程序](https://github.com/Kadvin/spring-component-example)
+在阅读以下介绍时，你可以下载并参考完整的 [示例程序](http://git.itsnow.com/happyonroad/spring-component-framework/tree/master/example)
 
 2. 使用方式
 ----------
@@ -205,7 +205,7 @@ Basis模块的Pom大致如下:
   Router模块依赖Basis模块。
 
 ```java
-  package com.myapp.route;
+package com.myapp.route;
 
 @org.springframework.stereotype.Component
 public class Router implements RouteAPI {
@@ -353,8 +353,8 @@ public class CLI {
   
   静态组件包只需要按照Maven规范进行打包，将pom.xml文件放到META-INF/$groupId/$artifactId目录下，成为如下格式：
 
-```
-  path/to/com.myapp.api-2.2.0.jar!
+```sh
+  path/to/com.myapp/api@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 一般性打包工具生成
     |  |-com.myapp
@@ -381,7 +381,7 @@ Spring Component Framework在运行时，会根据pom.xml文件的定义，为�
 ##### 2.1 基于Annotation
 
 1. 通过maven-jar-plugin，在pom.xml中声明如下配置
-```
+```xml
     <build>
         <plugins>
             <plugin>
@@ -405,7 +405,6 @@ App-Config: com.myapp.WorkerAppConfig
 ```
 
 3. 相应的WorkerAppConfig内容为：
-
 ```JAVA
 @Configuration
 @ComponentScan("com.myapp.work")
@@ -428,8 +427,7 @@ public class WorkerAppConfig {
 }
 ```
 
-打包之后的文件形如：
-
+4. 打包之后的文件形如：
 ```
   path/to/com.myapp/worker@2.2.0.jar!
     |-META-INF
@@ -449,7 +447,6 @@ Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig
 ##### 2.2 基于XML
 
 1. 在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
-
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -471,7 +468,6 @@ Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig
 ```
 
 2. 打包之后的jar内容如下：
-
 ```
   path/to/com.myapp/worker@2.2.0.jar!
     |-META-INF
@@ -486,7 +482,6 @@ Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig
     |  |  |  |-Worker.class
 ```
 
-
 #### 3. 服务组件(扮演服务提供者角色)
 
 Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需要将其 **暴露** 给其他模块使用。
@@ -496,8 +491,7 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
 ##### 3.1 Annotation配置方式
 
 1. 通过maven-jar-plugin，在pom.xml中声明如下配置
-
-```
+```xml
     <build>
         <plugins>
             <plugin>
@@ -516,16 +510,13 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
 ```
 
 2. 以便在最终jar包得Manifest里面有App-Config指令：
-
 ```
 App-Config: com.myapp.BasisAppConfig
 ```
 
 3. BasisAppConfig的内容
-
-开发者需要在其 BasisAppConfig 里面将 cache service暴露到服务注册表，为此，需要extends AbstractAppConfig
-并继承 doExports方法，通过exports方法将服务暴露出去
-
+  开发者需要在其 BasisAppConfig 里面将 cache service暴露到服务注册表，为此，需要extends AbstractAppConfig
+  并继承 doExports方法，通过exports方法将服务暴露出去
 ```java
 /**
  * Basis App Config
@@ -541,7 +532,6 @@ public class BasisAppConfig extends AbstractAppConfig{
 ```
 
 4. 最终打包成为的形态：
-
 ```
   path/to/com.myapp/basis@2.2.0.jar!
     |-META-INF
@@ -555,7 +545,6 @@ public class BasisAppConfig extends AbstractAppConfig{
     |  |  |  |-CacheServiceImpl.class
     |  |  |-BasisAppConfig.class
 ```
-
 
 ##### 3.2 XML配置方式
 
@@ -578,7 +567,6 @@ public class BasisAppConfig extends AbstractAppConfig{
 ```
 
 2. 最终打包成为的形态：
-
 ```
   path/to/com.myapp/basis@2.2.0.jar!
     |-META-INF
@@ -597,11 +585,10 @@ public class BasisAppConfig extends AbstractAppConfig{
 
 示例程序的Router也是一个 **服务** 组件，它不仅仅需要创建一个Router实例，还需要依赖Basis提供的Cache服务。
 
-### 4.1 Annotation方式
+##### 4.1 Annotation方式
 
 1. 通过maven-jar-plugin，在pom.xml中声明如下配置
-
-```
+```xml
     <build>
         <plugins>
             <plugin>
@@ -620,13 +607,11 @@ public class BasisAppConfig extends AbstractAppConfig{
 ```
 
 2. 以便在最终jar包得Manifest里面有App-Config指令：
-
 ```
 App-Config: com.myapp.RouterAppConfig
 ```
 
 3. RouterAppConfig的内容如下：
-
 ```java
 @Configuration
 @ComponentScan("com.myapp.route")
@@ -655,7 +640,6 @@ public class RouterAppConfig extends AbstractAppConfig {
 ```
 
 4. 最终打包的结果如下：
-
 ```
   path/to/com.myapp/router@2.2.0.jar!
     |-META-INF
@@ -670,7 +654,7 @@ public class RouterAppConfig extends AbstractAppConfig {
     |  |  |-RouterAppConfig.class
 ```
 
-### 4.2 XML方式
+##### 4.2 XML方式
 
 1. 其内部的application.xml大致如下
 (特别注意：当前并未实现对service:export的解析):
@@ -696,7 +680,6 @@ public class RouterAppConfig extends AbstractAppConfig {
 ```
 
 2. 需要被打包成如下格式(XML Based):
-
 ```
   path/to/com.myapp/router@2.2.0.jar!
     |-META-INF
@@ -720,7 +703,6 @@ public class RouterAppConfig extends AbstractAppConfig {
 1. 组件的内部实现类应该尽量采用package visible（隔离，断了其他使用者直接构建相关实例的念想）
 2. 组件的尽量采用Annotation方式开发
 3. 组件的内部App-Config一般取名为: XxxAppConfig，并与组件的内容包名同级，如：
-
 ```
     |-com
     |  |-myapp
@@ -729,7 +711,6 @@ public class RouterAppConfig extends AbstractAppConfig {
     |  |  |-BasisAppConfig.class
 ```
 4. 对于会被别人依赖/导入的组件，一般应该再提供一个XxxUserConfig，如：
-
 ```
     |-com
     |  |-myapp
@@ -752,9 +733,7 @@ public class BasisUserConfig extends AbstractUserConfig{
 ```
 
 5. 相应依赖其的AppConfig可以使用Spring的@Import语义
-
  如RouterAppConfig可以被改写为：
-
 ```java
 @Configuration
 @ComponentScan("com.myapp.route")
@@ -828,6 +807,7 @@ Listening for transport dt_socket at address: 5004
 2015-02-27 15:20:46,885 [main] INFO  - ******* The My_App_Router is started ***************************************************************
 27 15:20:46.885 [main] INFO  AppLauncher               - ******* System starts took 0:00:00.696 *************************************************************
 2015-02-27 15:20:46,885 [main] INFO  - ******* System starts took 0:00:00.696 *******************************************************```
+```
 
 #### 2. 自动发布应用
 
@@ -885,7 +865,7 @@ Listening for transport dt_socket at address: 5004
 
 该插件三个任务默认在maven的package/process-classes/clean阶段工作，作用分别为索引/打包/清除
 
-1. package
+  1. package
 
 | 参数          | 作用                             |
 |--------------|---------------------------------|
@@ -905,29 +885,16 @@ Listening for transport dt_socket at address: 5004
 | appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;dnt开头 |
 | wrapper      | 是否生成Java Service Wrapper       |
 
-2. index-detail
+  2. index-detail
 
 没有什么参数需要设置
 
-3. clean
+  3. clean
 
 | 参数          | 作用                            |
 |--------------|---------------------------------|
 | target       | 需要清理的输出目录                 |
 
-4. extend
-
-| 参数              | 作用                            |
-|------------------|---------------------------------|
-| target           | 输出目录                         |
-| extensionPath    | 扩展目录                         |
-| copyDependencies | 是否copy该扩展引入的依赖           |
-
-5. unextend
-
-| 参数          | 作用                            |
-|--------------|---------------------------------|
-| target       | 需要清理的输出目录                 |
 
 当你在示例程序(worker/router)的根目录执行:
 
@@ -1027,14 +994,12 @@ Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
 | order | Feature Resolver             |   内容         |
 |-------|------------------------------|----------------|
 | 10    | Static Feature Resolver      | 构建组件需要的class loader |
-| 25    | Service Feature Resolver     | 根据 import 指令，将依赖的service对象组织到 service context中（留待可能的app context引用））；如果有子context started，根据export指令，将子context中的对象发布到服务注册表中，留待其他组件使用 |
 | 30    | Application Feature Resolver | 构建组件内的app context（为 service context的子context【如果有】） |
 
   系统基本的卸载顺序为：
   
 | order | Feature Resolver             | 内容     |  
 |-------|------------------------------|---------|
-| 65    | Service Feature Resolver     | 关闭service context |
 | 70    | Application Feature Resolver | 关闭app context |
 | 100   | Static Feature Resolver      | 卸载 class loader |
   
@@ -1102,14 +1067,14 @@ Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
                         <id>extend-app</id>
                         <goals><goal>extend</goal></goals>
                         <configuration>
-                            <targetRelease>${release.dir}</targetRelease>
+                            <target>${release.dir}</target>
                         </configuration>
                     </execution>
                     <execution>
                         <id>un_extend-app</id>
                         <goals><goal>un_extend</goal></goals>
                         <configuration>
-                            <targetRelease>${release.dir}</targetRelease>
+                            <target>${release.dir}</target>
                         </configuration>
                     </execution>
                 </executions>
@@ -1119,14 +1084,24 @@ Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
     </build>
 ```
 
-其中的 targetRelease参数需要提供目标部署系统，我们将会扩展部署到相应 ${release.dir}/repository目录
+其中的 target参数需要提供目标部署系统，我们将会扩展部署到相应 ${release.dir}/repository目录
 
-支持如下参数：
+相关两个插件任务分别支持如下参数：
 
-1. targetRelease: 被扩展的系统
-2. extensionPath （默认值 就是 repository）: 扩展所在目录 
-3. copyDependencies (默认false): 是否需要将扩展的依赖也copy过去，为了提高扩展效率，默认为false，但对于引入了自身依赖的扩展包而言，这个选项必须设置为true
- 
+  1. extend
+
+| 参数              | 作用                            |
+|------------------|---------------------------------|
+| target           | 输出目录                         |
+| extensionPath    | 扩展目录                         |
+| copyDependencies | 是否copy该扩展引入的依赖           |
+
+  2. unextend
+
+| 参数          | 作用                            |
+|--------------|---------------------------------|
+| target       | 需要清理的输出目录                 |
+
 
 4. 技术原理
 ---------------
