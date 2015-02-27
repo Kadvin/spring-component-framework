@@ -654,7 +654,6 @@ public class RouterAppConfig extends AbstractAppConfig {
 
  1. 其内部的application.xml大致如下
 (特别注意：当前并未实现对service:export的解析):
-
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -729,8 +728,9 @@ public class BasisUserConfig extends AbstractUserConfig{
 }
 ```
 
-5. 相应依赖其的AppConfig可以使用Spring的@Import语义
+ 5. 相应依赖其的AppConfig可以使用Spring的@Import语义
  如RouterAppConfig可以被改写为：
+
 ```java
 @Configuration
 @ComponentScan("com.myapp.route")
@@ -750,7 +750,6 @@ public class RouterAppConfig extends AbstractAppConfig {
     }
 }
 ```
-
 
 ### 2.3 项目发布
 
