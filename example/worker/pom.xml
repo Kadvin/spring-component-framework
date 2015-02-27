@@ -5,8 +5,8 @@
         <artifactId>spring-component-example</artifactId>
         <version>2.2.0</version>
     </parent>
-    <artifactId>client</artifactId>
-    <name>My App Client</name>
+    <artifactId>worker</artifactId>
+    <name>My App Worker</name>
 
     <dependencies>
         <dependency>
@@ -19,13 +19,24 @@
             <groupId>net.happyonroad</groupId>
             <artifactId>spring-component-framework</artifactId>
             <version>${version.component-framework}</version>
-            <scope>runtime</scope>
         </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <App-Config>com.myapp.WorkerAppConfig</App-Config>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>net.happyonroad</groupId>
                 <artifactId>spring-component-builder</artifactId>
@@ -35,12 +46,13 @@
                         <id>package-app</id>
                         <goals><goal>package</goal></goals>
                         <configuration>
-                            <output>${release.root}/${project.artifactId}</output>
+                            <target>${release.root}/${project.artifactId}</target>
                             <appPort>1096</appPort>
-                            <jvmOptions>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5003</jvmOptions>
+                            <debug>5003</debug>
+                            <jvmOptions>-Dapp.prefix=com.myapp</jvmOptions>
                             <properties>
                                 <property>
-                                    <name>server.app.port</name>
+                                    <name>router.port</name>
                                     <value>1097</value>
                                 </property>
                             </properties>
@@ -51,7 +63,7 @@
                         <id>clean-app</id>
                         <goals><goal>clean</goal></goals>
                         <configuration>
-                            <output>${release.root}/${project.artifactId}</output>
+                            <target>${release.root}/${project.artifactId}</target>
                         </configuration>
                     </execution>
                 </executions>

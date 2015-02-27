@@ -2,6 +2,8 @@
 
     <property file="${app.home}/config/${app.name}.properties" />
 
+    <include resource="logback-basic.xml"/>
+
     <jmxConfigurator/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

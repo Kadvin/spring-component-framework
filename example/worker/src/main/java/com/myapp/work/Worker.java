@@ -1,10 +1,10 @@
 /**
  * @author XiongJie, Date: 13-11-27
  */
-package com.myapp.client;
+package com.myapp.work;
 
-import com.myapp.api.ClientAPI;
-import com.myapp.api.ServerAPI;
+import com.myapp.api.WorkAPI;
+import com.myapp.api.RouteAPI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.Lifecycle;
 import org.springframework.remoting.rmi.RmiProxyFactoryBean;
@@ -18,14 +18,14 @@ import java.util.UUID;
  *   which will return some random UUID as work effort
  */
 @org.springframework.stereotype.Component
-public class ClientImpl implements ClientAPI, Lifecycle {
-    @Value("${server.app.port}")
-    private       int     serverPort;
+class Worker implements WorkAPI, Lifecycle {
+    @Value("${router.port}")
+    private       int     routerPort;
     private final String  id;
     private final String  ip;
     private       boolean running;
 
-    public ClientImpl() {
+    public Worker() {
         this.id = UUID.randomUUID().toString();
         try {
             this.ip = InetAddress.getLocalHost().getHostAddress();
@@ -37,7 +37,7 @@ public class ClientImpl implements ClientAPI, Lifecycle {
     @Override
     public Object perform(String job) {
         UUID uuid = UUID.randomUUID();
-        System.out.println(String.format("Return server job %s with %s", job, uuid.toString()));
+        System.out.println(String.format("Return router job %s with %s", job, uuid.toString()));
         return uuid;
     }
 
@@ -45,11 +45,11 @@ public class ClientImpl implements ClientAPI, Lifecycle {
     public void start() {
         this.running = true;
         RmiProxyFactoryBean factoryBean = new RmiProxyFactoryBean();
-        factoryBean.setServiceInterface(ServerAPI.class);
-        factoryBean.setServiceUrl(String.format("rmi://localhost:%d/server", serverPort));
+        factoryBean.setServiceInterface(RouteAPI.class);
+        factoryBean.setServiceUrl(String.format("rmi://localhost:%d/router", routerPort));
         factoryBean.afterPropertiesSet();
-        ServerAPI serverAPI = (ServerAPI) factoryBean.getObject();
-        serverAPI.register(id, this.ip);
+        RouteAPI routeAPI = (RouteAPI) factoryBean.getObject();
+        routeAPI.register(id, this.ip);
     }
 
     @Override

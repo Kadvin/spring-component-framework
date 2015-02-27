@@ -9,9 +9,9 @@ package com.myapp.api;
  * <p/>
  * called by server by RMI
  */
-public interface ClientAPI {
+public interface WorkAPI {
     /**
-     * A service export to server to be assigned with some job
+     * A service export to router to be assigned with some job
      *
      * @param job the job to be performed
      * @return the job result

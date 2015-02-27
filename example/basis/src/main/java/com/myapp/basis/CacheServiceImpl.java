@@ -13,7 +13,7 @@ import java.util.Map;
  *   which can be deployed and used by others(server).
  */
 @org.springframework.stereotype.Component
-public class CacheServiceImpl implements CacheService{
+class CacheServiceImpl implements CacheService{
     private Map<String, Object> store = new HashMap<String, Object>();
 
     @Override

@@ -62,7 +62,7 @@
                         <configuration>
                             <target>
                                 <mkdir dir="${release.root}/${project.artifactId}/" />
-                                <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar" tofile="${release.root}/${project.artifactId}/${project.groupId}.${project.artifactId}-${project.version}.jar" overwrite="true" />
+                                <copy file="${project.build.directory}/${project.artifactId}@${project.version}.jar" tofile="${release.root}/${project.artifactId}/${project.groupId}.${project.artifactId}@${project.version}.jar" overwrite="true" />
                             </target>
                         </configuration>
                     </execution>

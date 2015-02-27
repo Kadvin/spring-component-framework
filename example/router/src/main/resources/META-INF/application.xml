@@ -7,14 +7,15 @@
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:property-placeholder location="file://${app.home}/config/*.properties" file-encoding="utf-8"/>
+    <import resource="properties.xml"/>
 
-    <context:component-scan base-package="com.myapp.client"/>
+    <context:component-scan base-package="com.myapp.route"/>
 
-    <bean name="clientExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
-        <property name="serviceInterface" value="com.myapp.api.ClientAPI"/>
-        <property name="serviceName" value="client"/>
-        <property name="registryPort" value="${app.port}"/>
-        <property name="service" ref="clientImpl"/>
+    <bean name="routerExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+        <property name="serviceInterface" value="com.myapp.api.RouteAPI"/>
+        <property name="serviceName" value="router"/>
+        <property name="registryPort" value="${router.port}"/>
+        <property name="service" ref="router"/>
     </bean>
+
 </beans>

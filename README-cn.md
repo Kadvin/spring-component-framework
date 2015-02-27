@@ -4,7 +4,7 @@ spring-component-framework
 1. 使用场景
 -----------
 
-Spring component framework 是一个基于SpringFramework和Maven的组件化的微内核Java独立程序框架(未来版本将支持Web应用）。
+Spring component framework 是一个基于SpringFramework和Maven的组件化的微内核Java独立程序框架(规划3.0.0版本将支持Web应用）。
 
 它能帮助你将应用程序切割成为独立的小块（一个Jar包就是一个模块），且对你的应用程序**完全**没有任何侵入性。
 不需要像OSGi那样，需要实现BundleContext接口，了解MANEFEST.MF里面一堆Bundle-*语义
@@ -18,22 +18,22 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
 ### 2.1 普通应用程序
 
-假设你需要开发一个分布式程序，包括服务器端和客户端两个部分。
+假设开发一个分布式程序，包括服务器端(router)和分布式工作端(worker)两个部分。
 
 ```
               +---------+           +--------+
-              | server  |           | client |
-   Caller --> |  |-basis|           |  |     |
+              | router  |           | worker |
+   Caller --> |  |-basis|       (n) |  |     |
               |  |-api  |<---RMI--->|  |-api |
               +---------+           +--------+
 
 ```
 
-服务器和客户端部署在不同的进程空间，相互之间通过RMI访问，共同遵守api中定义的接口。
+服务器(router)和工作端(worker)部署在不同的进程空间，相互之间通过RMI访问，共同遵守api中定义的接口。
 
-服务器比客户端额外多一个部署一个basis组件，用于为server提供存储/缓存功能。
+服务器比客户端额外多一个basis模块，用于提供存储/缓存功能。
 
-调用者(caller)可以被视为对系统外部程序的一种模拟，通过RMI发起对Server的调用。
+调用者(Caller)可以被视为对系统外部程序的一种模拟，通过RMI发起对Router的调用。
 
 我们可以将程序分为如下几个模块：
 
@@ -44,39 +44,38 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
     <groupId>com.myapp</groupId>
     <artifactId>spring-component-example</artifactId>
-    <version>0.0.1</version>
-
-    <name>My app</name>
+    <version>2.2.0</version>
+    <name>My App</name>
     <modules>
         <module>api</module>
-        <module>basis</module>
-        <module>server</module>
-        <module>client</module>
         <module>caller</module>
+        <module>router</module>
+        <module>basis</module>
+        <module>worker</module>
     </modules>
 </project>
 ```
 
 #### 1. com.myapp.api
 
-  定义模块之间的API.
+  我们将模块之间的契约作为公开API全部定义在本模块中.
 
 ```java
   //all below API is in this package;
   package com.myapp.api;
 
   /**
-   * 服务器的API，被客户端或者外部调用者调用
+   * Router的API，被客户端或者外部调用者调用
    */
-  public interface ServerAPI{
+  public interface RouteAPI{
     /**
-     * A service export to client to register
+     * A service export to worker to register
      */
-    String register(String clientId, String address);
+    String register(String workerId, String address);
 
     /**
      * Receive some job assigned by outer system
-     * and the server will pick a client to perform the job, cache the result.
+     * and the router will pick a worker to perform the job, cache the result.
      */
     Object perform(String job);
   }
@@ -84,11 +83,11 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
 ```java
   /**
-   * 客户端API，被服务器调用
+   * Worker API，被Router调用
    */
-  public interface ClientAPI{
+  public interface WorkAPI{
     /**
-     * A service export to server to be assigned with some job
+     * A service export to router to be assigned with some job
      */
     Object perform(String job);
   }
@@ -97,7 +96,7 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
 ```java
   /**
-   * 缓存服务，被服务器内部模块调用
+   * 缓存服务，被Router内部模块调用
    */
   public interface CacheService{
     boolean store(String key, Object value);
@@ -113,22 +112,22 @@ API项目的Maven Pom定义文件大致如下:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>0.0.1</version>
+        <version>2.2.0</version>
     </parent>
     <artifactId>api</artifactId>
     <name>My App API</name>
 </project>
 ```
 
-#### 2. com.myapp.client
+#### 2. com.myapp.worker
 
-  客户端伪码如下：
+  Worker可能在多台机器中被启动多个实例，伪码如下：
 
 ```java
-  package com.myapp.client;
+  package com.myapp.work;
 
   @org.springframework.stereotype.Component
-  public class ClientImpl implements ClientAPI{
+  class Worker implements WorkAPI{
     public Object perform(String job){
       //do some real staff
       //and return the result;
@@ -144,11 +143,10 @@ API项目的Maven Pom定义文件大致如下:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>0.0.1</version>
+        <version>2.2.0</version>
     </parent>
-    <artifactId>client</artifactId>
-    <name>My App Client</name>
-
+    <artifactId>worker</artifactId>
+    <name>My App Worker</name>
     <dependencies>
       <dependency>
         <groupId>com.myapp</groupId>
@@ -161,13 +159,13 @@ API项目的Maven Pom定义文件大致如下:
 
 #### 3. com.myapp.basis
 
-  提供简单的缓存服务，被服务器模块调用
+  Basis被Router模块依赖，为其提供简单的缓存服务
 
 ```java
   package com.myapp.basis;
 
   @org.springframework.stereotype.Component
-  public class CacheServiceImpl implements CacheService{
+  class CacheServiceImpl implements CacheService{
     private Map<String, Object> store = new HashMap<String,Object>();
     public boolean store(String key, Object value){
       store.put(key, value);
@@ -188,11 +186,10 @@ Basis模块的Pom大致如下:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>0.0.1</version>
+        <version>2.2.0</version>
     </parent>
     <artifactId>basis</artifactId>
     <name>My App Basis</name>
-
     <dependencies>
       <dependency>
         <groupId>com.myapp</groupId>
@@ -203,28 +200,33 @@ Basis模块的Pom大致如下:
 </project>
 ```
 
-#### 4. com.myapp.server
+#### 4. com.myapp.router
 
-  Server模块依赖API项目，同时集成Basis模块。
+  Router模块依赖Basis模块。
 
 ```java
-  package com.myapp.server;
+  package com.myapp.route;
 
-  @org.springframework.stereotype.Component
-  public class ServerImpl implements ServerAPI{
-    @org.springframework.beans.factory.annotation.Autowired
+@org.springframework.stereotype.Component
+public class Router implements RouteAPI {
+    @Autowired
     private CacheService cacheService;
 
-    private Map<String, ClientAPI> clients = new HashMap<String, ClientAPI>();
+    @Value("${worker.port}")
+    int workerPort;
 
-    public String register(String clientId, String address) {
+    private Map<String, WorkAPI> workers = new HashMap<String, WorkAPI>();
+
+    public String register(String workerId, String address) {
         RmiProxyFactoryBean factoryBean = new RmiProxyFactoryBean();
-        factoryBean.setServiceInterface(ClientAPI.class);
-        factoryBean.setServiceUrl(String.format("rmi://%s:%d/client", address, 1099));
+        factoryBean.setServiceInterface(WorkAPI.class);
+        factoryBean.setServiceUrl(String.format("rmi://%s:%s/worker", address, workerPort));
         factoryBean.afterPropertiesSet();
-        ClientAPI client = (ClientAPI) factoryBean.getObject();
+        WorkAPI worker = (WorkAPI) factoryBean.getObject();
         String token = UUID.randomUUID().toString();
-        clients.put(token, client);
+        workers.put(token, worker);
+        System.out.println(String.format("A worker(%s) at %s registered, and assigned with token(%s)",
+                                         workerId, address, token));
         return token;
     }
 
@@ -232,27 +234,30 @@ Basis模块的Pom大致如下:
         // Reused cached result first
         Object result = cacheService.pick(job);
         if( result != null )
+        {
+            System.out.println(String.format("Return cached job(%s) with effort %s", job, result));
             return result;
-        // pick a client to perform the job if no cached result
-        ClientAPI client = pickClient();
-        if( client == null )
-            throw new IllegalStateException("There is no client available to perform the job: " + job);
-        result = client.perform(job);
-        // store the result to reused latter
+        }
+        // pick a worker to perform the job if no cached result
+        WorkAPI worker = randomPick();
+        if( worker == null )
+            throw new IllegalStateException("There is no worker available to perform the job: " + job);
+        result = worker.perform(job);
+        // store the result to be reused later
         cacheService.store(job, result);
+        System.out.println(String.format("Worker perform job(%s) with effort %s", job, result));
         return result;
     }
 
-    private ClientAPI pickClient() {
-        //pick a client by random
-        int max = clients.size();
+    private WorkAPI randomPick() {
+        int max = workers.size();
         int randIndex = new Random().nextInt(max);
-        return (ClientAPI) clients.values().toArray()[randIndex];
+        return (WorkAPI) workers.values().toArray()[randIndex];
     }
-  }
+}
 ```
 
-Server模块的Pom大致如下:
+Router模块的Pom大致如下:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -260,11 +265,10 @@ Server模块的Pom大致如下:
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>0.0.1</version>
+        <version>2.2.0</version>
     </parent>
-    <artifactId>server</artifactId>
-    <name>My App Server</name>
-
+    <artifactId>router</artifactId>
+    <name>My App Router</name>
     <dependencies>
       <dependency>
         <groupId>com.myapp</groupId>
@@ -289,7 +293,7 @@ Server模块的Pom大致如下:
 public class CLI {
 
     /**
-     * java -Dserver.port=1097 -Dserver.address=localhost -jar path/to/com.myapp.caller-0.0.1.jar jobId
+     * java -Drouter.port=1097 -Drouter.address=localhost -jar path/to/com.myapp.caller-1.0.0.jar jobId
      *
      * @param args jobId(mandatory)
      */
@@ -298,14 +302,14 @@ public class CLI {
             throw new IllegalArgumentException("You must specify a job id");
         String jobId = args[0];
         RmiProxyFactoryBean factoryBean = new RmiProxyFactoryBean();
-        factoryBean.setServiceInterface(ServerAPI.class);
-        factoryBean.setServiceUrl(String.format("rmi://%s:%s/server",
-                                                System.getProperty("server.address", "localhost"),
-                                                System.getProperty("server.port", "1097")));
+        factoryBean.setServiceInterface(RouteAPI.class);
+        factoryBean.setServiceUrl(String.format("rmi://%s:%s/router",
+                                                System.getProperty("router.address", "localhost"),
+                                                System.getProperty("router.port", "1097")));
         factoryBean.afterPropertiesSet();
-        ServerAPI server = (ServerAPI) factoryBean.getObject();
-        Object result = server.perform(jobId);
-        System.out.println("Got server response: " + result);
+        RouteAPI router = (RouteAPI) factoryBean.getObject();
+        Object result = router.perform(jobId);
+        System.out.println("Got router response: " + result);
     }
 }
 ```
@@ -318,7 +322,7 @@ public class CLI {
     <parent>
         <groupId>com.myapp</groupId>
         <artifactId>spring-component-example</artifactId>
-        <version>0.0.1</version>
+        <version>2.2.0</version>
     </parent>
     <artifactId>caller</artifactId>
     <name>My App Caller</name>
@@ -350,250 +354,326 @@ public class CLI {
   静态组件包只需要按照Maven规范进行打包，将pom.xml文件放到META-INF/$groupId/$artifactId目录下，成为如下格式：
 
 ```
-  path/to/com.myapp.api-0.0.1.jar!
+  path/to/com.myapp.api-2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 一般性打包工具生成
     |  |-com.myapp
     |  |  |-api
-    |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
+    |  |    |-pom.xml              # Maven打包时会自动加上，组件标识
     |-com
     |  |-myapp
     |  |  |-api
-    |  |  |  |-ServerAPI.class
-    |  |  |  |-ClientAPI.class
     |  |  |  |-CacheService.class
+    |  |  |  |-RouteAPI.class
+    |  |  |  |-WorkAPI.class
 ```
 
-Spring Component Framework在运行时，会根据pom.xml文件的定义，为其解析相关依赖。
+Spring Component Framework在运行时，会根据pom.xml文件的定义，为其解析相关依赖，并将其作为library放在应用程序的classpath中。
 
 #### 2. 应用组件
 
-示例的客户端是作为一个独立的运行时程序运行，它通过RMI暴露服务给服务器调用（而不是进程内依赖）。
+示例的Worker是作为一个独立的运行时程序运行，它通过RMI暴露服务给服务器调用（而不是进程内依赖）。
 
 我们将其定义为 **应用** 组件
 
-开发者有两种配置方式
+开发者有两种配置方式，强烈推荐采用第一种Annotation方式
 
-##### 2.1 基于XML
+##### 2.1 基于Annotation
 
-在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
-
-打包之后的发布结构如下：
-
+1. 通过maven-jar-plugin，在pom.xml中声明如下配置
 ```
-  path/to/com.myapp.api-0.0.1.jar!
-    |-META-INF
-    |  |-MANIFEST.MF               # 一般性打包工具生成
-    |  |-application.xml           # 相应Spring Context的Resource
-    |  |-com.myapp
-    |  |  |-api
-    |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
-    |-com
-    |  |-myapp
-    |  |  |-client
-    |  |  |  |-ClientImpl.class
-```
-
-application.xml文件内容：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context.xsd">
-
-    <context:component-scan base-package="com.myapp.client"/>
-
-    <bean name="clientExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
-      <property name="serviceInterface" value="com.myapp.api.ClientAPI"/>
-      <property name="serviceName" value="client"/>
-      <property name="servicePort" value="1099"/>
-      <property name="service" ref="clientImpl"/>
-    </bean>
-</beans>  
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <App-Config>com.myapp.WorkerAppConfig</App-Config>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 ```
 
-##### 2.2 基于Annotation
-
-在Manifest里面增加App-Config指令：
-
+2. 以便在最终jar包得Manifest里面有App-Config指令：
 ```
-App-Config: com.myapp.client.ClientAppConfig
+App-Config: com.myapp.WorkerAppConfig
 ```
 
-相应的ClientAppConfig内容为：
+3. 相应的WorkerAppConfig内容为：
 
 ```JAVA
-  @Configuration
-  @ComponentScan("com.app.client")
-  public class ClientAppConfig{
-    @Bean 
-    public RmiServiceExporter clientExporter(){
-      RmiServiceExporter exporter = new RmiServiceExporter();
-      exporter.setServiceInterface(ClientAPI.class)
-      exporter.setServiceName("client");
-      exporter.setServicePort(1099);
-      exporter.setObject(clientImpl);
-      return exporter;
+@Configuration
+@ComponentScan("com.myapp.work")
+public class WorkerAppConfig {
+
+    @Autowired
+    WorkAPI workAPI;
+    @Value("${app.port}")
+    int workerPort;
+
+    @Bean
+    public RmiServiceExporter workAPIExporter() {
+        RmiServiceExporter exporter = new RmiServiceExporter();
+        exporter.setServiceInterface(WorkAPI.class);
+        exporter.setServiceName("worker");
+        exporter.setRegistryPort(workerPort);
+        exporter.setService(workAPI);
+        return exporter;
     }
-  }
+}
 ```
 
 打包之后的文件形如：
 
 ```
-  path/to/com.myapp.client-0.0.1.jar!
+  path/to/com.myapp/worker@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 其中包括 App-Config指令
     |  |-com.myapp
-    |  |  |-client
-    |  |    |-pom.xml              # Maven打包时会自动加上，静态组件标识
+    |  |  |-worker
+    |  |    |-pom.xml              # 组件标识
     |-com
     |  |-myapp
-    |  |  |-client
-    |  |  |  |-ClientImpl.class
-    |  |  |  |-ClientAppConfig.class
+    |  |  |-work
+    |  |  |  |-Worker.class
+    |  |  |-WorkerAppConfig.class
 ```
 
-Spring Component Framework在运行时加载该jar时，会根据application.xml 或者 ClientAppConfig 创建一个Spring Context，并与该组件关联起来。
+Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig 创建一个Spring Context，并与该组件关联起来。
+
+##### 2.2 基于XML
+
+1. 在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+    <import resource="properties.xml"/>
+    <context:component-scan base-package="com.myapp.work"/>
+    <bean name="workerExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+      <property name="serviceInterface" value="com.myapp.api.WorkAPI"/>
+      <property name="serviceName" value="worker"/>
+      <property name="registryPort" value="${worker.port}"/>
+      <property name="service" ref="worker"/>
+    </bean>
+</beans>
+```
+
+2. 打包之后的jar内容如下：
+
+```
+  path/to/com.myapp/worker@2.2.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF               # 一般性打包工具生成
+    |  |-application.xml           # 相应Spring Context的Resource
+    |  |-com.myapp
+    |  |  |-worker
+    |  |    |-pom.xml              # Maven打包时会自动加上，组件标识
+    |-com
+    |  |-myapp
+    |  |  |-work
+    |  |  |  |-Worker.class
+```
+
 
 #### 3. 服务组件(扮演服务提供者角色)
 
 Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需要将其 **暴露** 给其他模块使用。
 
-我们将其视为 **服务** 组件，它需要在application context之外，再提供一个 **service context** 
+我们将其视为 **服务** 组件
 
-也有两种配置方式：
+##### 3.1 Annotation配置方式
 
-##### 3.1 XML配置方式
-
-basis应该被打包成为带上service.xml的格式:
+1. 通过maven-jar-plugin，在pom.xml中声明如下配置
 
 ```
-  path/to/com.myapp.basis-0.0.1.jar!
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <App-Config>com.myapp.BasisAppConfig</App-Config>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+2. 以便在最终jar包得Manifest里面有App-Config指令：
+
+```
+App-Config: com.myapp.BasisAppConfig
+```
+
+3. BasisAppConfig的内容
+
+开发者需要在其 BasisAppConfig 里面将 cache service暴露到服务注册表，为此，需要extends AbstractAppConfig
+并继承 doExports方法，通过exports方法将服务暴露出去
+
+```java
+/**
+ * Basis App Config
+ */
+@Configuration
+@ComponentScan("com.myapp.basis")
+public class BasisAppConfig extends AbstractAppConfig{
+    @Override
+    protected void doExports() {
+        exports(CacheService.class);
+    }
+}
+```
+
+4. 最终打包成为的形态：
+
+```
+  path/to/com.myapp/basis@2.2.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF               # 包括了 App-Config 指令
+    |  |-com.myapp
+    |  |  |-basis
+    |  |  |  |-pom.xml             # 组件标识
+    |-com
+    |  |-myapp
+    |  |  |-basis
+    |  |  |  |-CacheServiceImpl.class
+    |  |  |-BasisAppConfig.class
+```
+
+
+##### 3.2 XML配置方式
+
+1. 相应application.xml 内容大致如下
+(特别注意：当前并未实现对service:export的解析):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:component-scan base-package="com.myapp.basis"/>
+    <service:export role="com.myapp.CacheService"/>
+    <!-- optional: hint="*" ref="cacheServiceImpl"/> -->
+</beans>
+```
+
+2. 最终打包成为的形态：
+
+```
+  path/to/com.myapp/basis@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF
     |  |-com.myapp
     |  |  |-basis
-    |  |  |  |-pom.xml             # 静态组件标识
+    |  |  |  |-pom.xml             # 组件标识
     |  |-application.xml           # 应用组件标识
-    |  |-service.xml               # 服务组件标识
     |-com
     |  |-myapp
     |  |  |-basis
     |  |  |  |-CacheServiceImpl.class
 ```
-
-其service.xml内容如下：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<service xmlns="http://www.happyonroad.net/schema/service"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.happyonroad.net/schema/service
-       http://www.happyonroad.net/schema/service.xsd">
-    <export>
-        <role>com.myapp.api.CacheService</role>
-    </export>
-</service>
-```
-
-其应用特征可以用XML方式配置，也可以用Annotation方式配置，假设XML方式，相应application.xml 内容大致如下:
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context.xsd">
-
-    <context:component-scan base-package="com.myapp.basis"/>
-</beans>  
-```
-
-##### 3.2 Annotation配置方式
-
-```
-  path/to/com.myapp.basis-0.0.1.jar!
-    |-META-INF
-    |  |-MANIFEST.MF               # 包括了 Service-Config 指令
-    |  |-com.myapp
-    |  |  |-basis
-    |  |  |  |-pom.xml             # 静态组件标识
-    |-com
-    |  |-myapp
-    |  |  |-basis
-    |  |  |  |-CacheServiceImpl.class
-    |  |  |  |-BasicAppConfig.class
-    |  |  |  |-BasicServiceConfig.class
-```
-
-假设其Application特征也以Annotation方式配置，Manifest.MF内容如下：
-
-```
-App-Config: com.myapp.basis.BasicAppConfig
-Service-Config: com.myapp.basis.BasicServiceConfig
-```
-
-其中 BasicAppConfig 内容类似：
-
-```java
-  @Configuration
-  @ComponentScan("com.myapp.basis")
-  public class BasicAppConfig{
-  }
-```
-
-BasicServiceConfig 内容如下：
-
-```java
-  public class BasicServiceConfig extends DefaultServiceConfig{
-  
-    public void defineServices(){
-      super.defineServices();
-      exportService(CacheService.class);
-    }
-  }
-```
-
-特别注意：  **Service Config 类不需要 用 @Configuration 标记，但需要从 DefaultServiceConfig继承**
-
-Spring Component Framework在加载这个jar包之后，会通过某种机制，将其声明的服务 **暴露** 出去给其他服务组件使用。
 
 #### 4. 服务组件(服务的使用者)
 
-示例程序的服务器端也是一个 **服务** 组件，它不仅仅需要创建一个ServerImpl实例，还需要依赖Basis提供的服务。
+示例程序的Router也是一个 **服务** 组件，它不仅仅需要创建一个Router实例，还需要依赖Basis提供的Cache服务。
 
-为了导入依赖的Basis服务，它需要在service.xml里面做如下声明：
+### 4.1 Annotation方式
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<service xmlns="http://www.happyonroad.net/schema/service"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.happyonroad.net/schema/service
-       http://www.happyonroad.net/schema/service.xsd">
-    <import>
-        <role>com.myapp.api.CacheService</role>
-    </import>
-</service>
+1. 通过maven-jar-plugin，在pom.xml中声明如下配置
+
+```
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <App-Config>com.myapp.RouterAppConfig</App-Config>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 ```
 
-或者在其 Service Config 的 defineServices 函数里面做如下声明：
+2. 以便在最终jar包得Manifest里面有App-Config指令：
+
+```
+App-Config: com.myapp.RouterAppConfig
+```
+
+3. RouterAppConfig的内容如下：
 
 ```java
-  public void defineServices(){
-    importService(CacheService.class);
-  }
+@Configuration
+@ComponentScan("com.myapp.route")
+@ImportResource("classpath:META-INF/properties.xml")
+public class RouterAppConfig extends AbstractAppConfig {
+    @Autowired
+    RouteAPI routeAPI;
+    @Value("${app.port}")
+    int routerPort;
+
+    @Bean
+    CacheService cacheService(){
+      return imports(CacheService.class);
+    }
+
+    @Bean
+    public RmiServiceExporter workAPIExporter() {
+        RmiServiceExporter exporter = new RmiServiceExporter();
+        exporter.setServiceInterface(RouteAPI.class);
+        exporter.setServiceName("router");
+        exporter.setRegistryPort(routerPort);
+        exporter.setService(routeAPI);
+        return exporter;
+    }
+}
 ```
 
-其内部的application.xml大致如下:
+4. 最终打包的结果如下：
+
+```
+  path/to/com.myapp/router@2.2.0.jar!
+    |-META-INF
+    |  |-MANIFEST.MF               # App-Config: com.myapp.router.RouterAppConfig
+    |  |-com.myapp
+    |  |  |-router
+    |  |  |  |-pom.xml             # 组件标识
+    |-com
+    |  |-myapp
+    |  |  |-route
+    |  |  |  |-Router.class
+    |  |  |-RouterAppConfig.class
+```
+
+### 4.2 XML方式
+
+1. 其内部的application.xml大致如下
+(特别注意：当前并未实现对service:export的解析):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -604,104 +684,97 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
-
-    <context:component-scan base-package="com.myapp.server"/>
-</beans>  
+    <context:component-scan base-package="com.myapp.router"/>
+    <service:import role="com.myapp.CacheService"/>
+    <bean name="routerExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+        <property name="serviceInterface" value="com.myapp.api.RouteAPI"/>
+        <property name="serviceName" value="router"/>
+        <property name="registryPort" value="2000"/>
+        <property name="service" ref="router"/>
+    </bean>
+</beans>
 ```
 
-或者其 App Config 写为:
-
-```java
-  @Configuration
-  @ComponentScan("com.myapp.server")
-  public ServerAppConfig{
-  }
-```
-
-最后，它需要被打包成如下格式(XML Based):
+2. 需要被打包成如下格式(XML Based):
 
 ```
-  path/to/com.myapp.server-0.0.1.jar!
+  path/to/com.myapp/router@2.2.0.jar!
     |-META-INF
-    |  |-MANIFEST.MF               # 可用 App-Config 指令代替 application.xml
-    |  |                           # 或者 Service-Config 指令代替 service.xml
+    |  |-MANIFEST.MF
     |  |-com.myapp
-    |  |  |-server
-    |  |  |  |-pom.xml             # 静态组件标识
+    |  |  |-router
+    |  |  |  |-pom.xml             # 组件标识
     |  |-application.xml           # 应用组件标识
-    |  |-service.xml               # 服务组件标识
     |-com
     |  |-myapp
-    |  |  |-server
-    |  |  |  |-ServerImpl.class
+    |  |  |-route
+    |  |  |  |-Router.class
 ```
 
-或者(annotation based)
-
-```
-  path/to/com.myapp.server-0.0.1.jar!
-    |-META-INF
-    |  |-MANIFEST.MF               # App-Config: com.myapp.server.ServerAppConfig
-    |  |                           # Service-Config: com.myapp.server.ServerServiceConfig
-    |  |-com.myapp
-    |  |  |-server
-    |  |  |  |-pom.xml             # 静态组件标识
-    |-com
-    |  |-myapp
-    |  |  |-server
-    |  |  |  |-ServerImpl.class
-    |  |  |  |-ServerAppConfig.class
-    |  |  |  |-ServerServiceConfig.class
-```
-
-#### 5. 服务组件(混合)
+#### 5. 组件开发规范
 
 大多数情况，一个服务组件，既会引用其他组件提供的服务，也可能暴露一些服务给别的组件。
+当组件越来越多时，开发者可能发现，难以维护组件与组件之间的服务import/export关系；
+为了解决该问题，设定如下的组件开发规范：
 
-我们可以将服务的依赖与导出一起定义在service.xml里面，此时组件就是一个混合式的服务组件。
+1. 组件的内部实现类应该尽量采用package visible（隔离，断了其他使用者直接构建相关实例的念想）
+2. 组件的尽量采用Annotation方式开发
+3. 组件的内部App-Config一般取名为: XxxAppConfig，并与组件的内容包名同级，如：
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<service xmlns="http://www.happyonroad.net/schema/service"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://www.happyonroad.net/schema/service
-       http://www.happyonroad.net/schema/service.xsd">
-    <import>
-        <role>com.someapp.api.ServiceA</role>
-        <hint>default</hint>
-    </import>
-    <import>
-        <role>com.someapp.api.ServiceA</role>
-        <hint>myapp</hint>
-        <as>myappServiceA</as>
-    </import>
+```
+    |-com
+    |  |-myapp
+    |  |  |-basis
+    |  |  |  |-CacheServiceImpl.class
+    |  |  |-BasisAppConfig.class
+```
+4. 对于会被别人依赖/导入的组件，一般应该再提供一个XxxUserConfig，如：
 
-    <export>
-        <role>com.someapp.api.ServiceB</role>
-        <hint>someapp</hint>
-        <ref>someAppBeanNameOrId</ref>
-    </export>
-</service>
+```
+    |-com
+    |  |-myapp
+    |  |  |-basis
+    |  |  |  |-CacheServiceImpl.class
+    |  |  |-BasisAppConfig.class
+    |  |  |-BasisUserConfig.class
 ```
 
-或者相应Service-Config指令指示的类中：
+BasisUserConfig的内容如下：
 
 ```java
- public class XxxServiceConfig extends DefaultServiceConfig{
-   public void defineServices(){
-     super.defineServices();
-     importService(ServiceA.class, "default");
-     importService(ServiceA.class, "myappServiceA");
-     exportService(ServiceB.class, "someapp", "someAppBeanNameOrId")
-   }
- }
+@Configuration
+public class BasisUserConfig extends AbstractUserConfig{
+    @Bean
+    CacheService cacheService(){
+        return imports(CacheService.class);
+    }
+}
 ```
 
-  * 当某个组件依赖的同一接口的服务实例可能存在多个时，服务组件的导入/导出关系可以通过 `hint` 节点进行限制  
+5. 相应依赖其的AppConfig可以使用Spring的@Import语义
 
-  * 当某个组件内部的Spring Context包含多个需要导出的接口的实现实例，可以通过设定 `ref` 节点来定向导出相应的bean作为服务。
+ 如RouterAppConfig可以被改写为：
 
-  * 导入的服务，可以通过设定 `as` 元素来为其取名，而后组件内部的application context可以将其视为普通的bean，通过spring内置的 `@Qualifier` 加以限定。
+```java
+@Configuration
+@ComponentScan("com.myapp.route")
+@Import(BasisUserConfig.class)
+public class RouterAppConfig extends AbstractAppConfig {
+    @Autowired
+    RouteAPI routeAPI;
+
+    @Bean
+    public RmiServiceExporter workAPIExporter() {
+        RmiServiceExporter exporter = new RmiServiceExporter();
+        exporter.setServiceInterface(RouteAPI.class);
+        exporter.setServiceName("router");
+        exporter.setServicePort(2000);
+        exporter.setService(routeAPI);
+        return exporter;
+    }
+}
+```
+
 
 ### 2.3 项目发布
 
@@ -709,56 +782,56 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
 
 示例的应用程序发布需要遵循一些约束与规范：
 
-假设示例服务发布的目录是: path/to/server
+假设示例服务发布的目录是: path/to/router
 
   1. 所有该运行时实际要用到的jar包（包括 com.myapp.*, 第三方包)都应该被放到lib目录下
-  2. 所有的包文件名需要符合格式: $groupId.$artifactId-$version.jar
-  3. 对于第三方包，其内部没有按照我们的规范内嵌 pom.xml， 我们需要将其pom.xml解析出来，放在 lib/poms下
+  2. 所有的包文件名需要符合格式: $groupId/$artifactId@$version.jar
+  3. 对于第三方包，其内部没有按照我们的规范内嵌 pom.xml， 我们需要将其pom.xml解析出来，放在 lib/poms.jar中
   4. Spring Component Framework 的Jar包应该被单独放在 boot 目录
 
 ```
-  path/to/server
+  path/to/router
     |  |-boot
-    |  |  |-net.happyonroad.spring-component-framework-0.0.1.jar
+    |  |  |-net.happyonroad.spring-component-framework-2.2.0.jar
     |  |-lib
-    |  |  |-com.myapp.server-0.0.1.jar
-    |  |  |-com.myapp.api-0.0.1.jar
-    |  |  |-com.myapp.basis-0.0.1.jar
-    |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
+    |  |  |-com.myapp
+    |  |  |  |-router@2.2.0.jar
+    |  |  |  |-api@2.2.0.jar
+    |  |  |  |-basis@2.2.0.jar
+    |  |  |-org.springframework
+    |  |  |  |-spring-beans@3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
-    |  |  |-poms
-    |  |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.pom
-    |  |  |  |-<other depended poms>
+    |  |  |-poms.jar
 ```
 
 按照如下格式部署之后，我们就可以使用如下命令行启动应用程序：
 
 ```
-  cd path/to/server
-  java -jar boot/net.happyonroad.spring-component-framework-0.0.1.jar com.myapp.server-0.0.1
+  cd path/to/router
+  java -jar boot/spring-component-framework@2.2.0.jar com.myapp/router@2.2.0
 ```
 最后一个参数就是告诉Spring Component Framework，哪里是程序的入口，也就是从哪里开始加载jar包。
 
 启动后，你将会看到如下输出：
 
 ```
-2013-12-10 17:11:26,864 [main] WARN  - app.host is not set, use localhost as default
-2013-12-10 17:11:27,152 [main] INFO  - ********* Scanning jars ************************************************************************************************
-2013-12-10 17:11:27,177 [main] INFO  - ********* Scanned jars *************************************************************************************************
-2013-12-10 17:11:27,178 [main] INFO  - ********* Resolving starts from com.myapp.server-0.0.1 *****************************************************************
-2013-12-10 17:11:27,382 [main] INFO  - ********* Resolved  starts from com.myapp.server-0.0.1 *****************************************************************
-2013-12-10 17:11:27,385 [main] INFO  - ********* Configuring main realm for com.myapp.server-0.0.1.jar ********************************************************
-2013-12-10 17:11:27,415 [main] INFO  - ********* Configured  main realm ClassRealm[com.myapp.server-0.0.1.jar, parent: net.happyonroad.component.classworld.Cla
-2013-12-10 17:11:27,431 [main] INFO  - ********* Loading components starts from com.myapp.server-0.0.1.jar ****************************************************
-2013-12-10 17:11:29,396 [main] INFO  - ********* Loaded  components starts from com.myapp.server-0.0.1.jar ****************************************************
-2013-12-10 17:11:29,514 [main] INFO  - ********* Export Executable Service at rmi://localhost:1097/My_App_ServerLauncher **************************************
-2013-12-10 17:11:29,515 [main] INFO  - ********* The My_App_Server is started *********************************************************************************
-```
+Listening for transport dt_socket at address: 5004
+27 15:20:46.191 [main] INFO  AppLauncher               - ******* Loading components starts from com.myapp/router@2.2.0.jar **********************************
+2015-02-27 15:20:46,191 [main] INFO  - ******* Loading components starts from com.myapp/router@2.2.0.jar **********************************
+27 15:20:46.866 [main] INFO  AppLauncher               - ******* Container starts took 0:00:00.672 **********************************************************
+2015-02-27 15:20:46,866 [main] INFO  - ******* Container starts took 0:00:00.672 **********************************************************
+27 15:20:46.866 [main] INFO  AppLauncher               - ******* Loaded  components starts from com.myapp/router@2.2.0.jar **********************************
+2015-02-27 15:20:46,866 [main] INFO  - ******* Loaded  components starts from com.myapp/router@2.2.0.jar **********************************
+27 15:20:46.884 [main] INFO  AppLauncher               - ******* Export Executable Service at rmi://localhost:1097/My_App_RouterLauncher ********************
+2015-02-27 15:20:46,884 [main] INFO  - ******* Export Executable Service at rmi://localhost:1097/My_App_RouterLauncher ********************
+27 15:20:46.885 [main] INFO  AppLauncher               - ******* The My_App_Router is started ***************************************************************
+2015-02-27 15:20:46,885 [main] INFO  - ******* The My_App_Router is started ***************************************************************
+27 15:20:46.885 [main] INFO  AppLauncher               - ******* System starts took 0:00:00.696 *************************************************************
+2015-02-27 15:20:46,885 [main] INFO  - ******* System starts took 0:00:00.696 *******************************************************```
 
 #### 2. 自动发布应用
 
-我们需要在实际运行时的主模块pom文件中声明对 spring-component-framework 的依赖，强烈建议将该依赖类型设置为 runtime
-  避免开发者在开发过程中直接使用spring-component-framework的静态API，从而引入不必要的侵入性。
+我们需要在实际运行时的主模块pom文件中声明对 spring-component-framework 的依赖
 
 ```xml
 <dependencies>
@@ -766,12 +839,11 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
     <groupId>net.happyonroad</groupId>
     <artifactId>spring-component-framework</artifactId>
     <version>0.1.0</version>
-    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
 
-我们可以在示例程序的client，server中增加一个定制化的Maven插件来完成以上描述的复杂过程：
+我们可以在示例程序 worker，router中增加一个定制化的Maven插件来完成以上描述的复杂过程：
 
 需要更多信息，请参考该插件的 [详细说明](https://github.com/Kadvin/spring-component-builder)
 
@@ -781,7 +853,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
       <plugin>
         <groupId>net.happyonroad</groupId>
         <artifactId>spring-component-builder</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>2.2.0-SNAPSHOT</version>
         <executions>
 
           <execution>
@@ -792,8 +864,9 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
           <execution>
             <id>package-app</id>
             <goals><goal>package</goal></goals>
+            <jvmOptions>-Dapp.prefix=com.myapp</jvmOptions>
             <configuration>
-              <outputDirectory>path/to/${project.artifactId}</outputDirectory>
+              <target>path/to/${project.artifactId}</target>
             </configuration>
           </execution>
 
@@ -801,7 +874,7 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
             <id>clean-app</id>
             <goals><goal>clean</goal></goals>
             <configuration>
-              <outputDirectory>path/to/${project.artifactId}</outputDirectory>
+              <target>path/to/${project.artifactId}</target>
             </configuration>
           </execution>
         </executions>
@@ -810,7 +883,53 @@ Spring Component Framework在加载这个jar包之后，会通过某种机制，
   </build>
 ```
 
-该插件三个任务默认在maven的package/process-classes/clean阶段工作，作用分别为索引/打包/清除，当你在示例程序(client/server)的根目录执行:
+该插件三个任务默认在maven的package/process-classes/clean阶段工作，作用分别为索引/打包/清除
+
+1. package
+
+| 参数          | 作用                             |
+|--------------|---------------------------------|
+| target       | 输出目录                         |
+| extensionPath| 扩展目录                         |
+| appName      | 设定本应用的控制台/日志显示名称      |
+| appPort      | 设定本应用所绑定的RMI端口，缺省1099 |
+| jvmOptions   | 设定本应用启动时的JVM选项          |
+| debug        | 调试端口号，如果设置了，最终通过修改jvmOptions实现 |
+| jmx          | JMX端口号，如果设置了，最终通过修改jvmOptions实现 |
+| properties   | 设定本应用的config/${app.name}.properties内容|
+| propertyFile | 直接设定config/${app.name}.properties文件|
+| logbackFile  | 直接设定config/logback.xml文件，如果不设置，将会自动生成一个|
+| folders      | 从当前项目中copy哪些目录到最终输出目录 |
+| files        | 从当前项目中copy哪些文件到最终输出目录 |
+| frontendNodeModules | 前端npm项目缓存位置          |
+| appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;dnt开头 |
+| wrapper      | 是否生成Java Service Wrapper       |
+
+2. index-detail
+
+没有什么参数需要设置
+
+3. clean
+
+| 参数          | 作用                            |
+|--------------|---------------------------------|
+| target       | 需要清理的输出目录                 |
+
+4. extend
+
+| 参数              | 作用                            |
+|------------------|---------------------------------|
+| target           | 输出目录                         |
+| extensionPath    | 扩展目录                         |
+| copyDependencies | 是否copy该扩展引入的依赖           |
+
+5. unextend
+
+| 参数          | 作用                            |
+|--------------|---------------------------------|
+| target       | 需要清理的输出目录                 |
+
+当你在示例程序(worker/router)的根目录执行:
 
 ```bash
 mvn package
@@ -819,7 +938,7 @@ mvn package
 我们将会看到如下输出:
 
 ```
-  path/to/server
+  path/to/router
     |  |-bin
     |  |  |-start.bat
     |  |  |-stop.bat
@@ -828,22 +947,22 @@ mvn package
     |  |-config
     |  |  |-logback.xml
     |  |-boot
-    |  |  |-net.happyonroad.spring-component-framework-0.0.1.jar
+    |  |  |-spring-component-framework@2.2.0.jar
     |  |-lib
-    |  |  |-com.myapp.server-0.0.1.jar
-    |  |  |-com.myapp.api-0.0.1.jar
-    |  |  |-com.myapp.basis-0.0.1.jar
-    |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
+    |  |  |-com.myapp
+    |  |  |  |-router@2.2.0.jar
+    |  |  |  |-api@2.2.0.jar
+    |  |  |  |-basis@2.2.0.jar
+    |  |  |-org.springframework
+    |  |  |  |-spring-beans@3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
-    |  |  |-poms
-    |  |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.pom
-    |  |  |  |-<other depended poms>
+    |  |  |-poms.jar
     |  |-logs
     |  |-tmp
 ```
 
 ```
-  path/to/client
+  path/to/worker
     |  |-bin
     |  |  |-start.bat
     |  |  |-stop.bat
@@ -852,21 +971,43 @@ mvn package
     |  |-config
     |  |  |-logback.xml
     |  |-boot
-    |  |  |-net.happyonroad.spring-component-framework-0.0.1.jar
+    |  |  |-spring-component-framework@2.2.0.jar
     |  |-lib
-    |  |  |-com.myapp.client-0.0.1.jar
-    |  |  |-com.myapp.api-0.0.1.jar
-    |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.jar
+    |  |  |-com.myapp
+    |  |  |  |-worker@2.2.0.jar
+    |  |  |  |-api@2.2.0.jar
+    |  |  |-org.springframework
+    |  |  |  |-spring-beans@3.2.4.RELEASE.jar
     |  |  |-<other depended jars>
-    |  |  |-poms
-    |  |  |  |-org.springframework.spring-beans-3.2.4.RELEASE.pom
-    |  |  |  |-<other depended poms>
+    |  |  |-poms.jar
     |  |-logs
     |  |-tmp
 
 ```
 
-此时Client与Server已经准备就绪，可以通过start(bat|sh)运行。
+此时Worker与Router已经准备就绪，可以通过start(bat|sh)运行，启动后，您可以采用Caller测试一下以上程序是否可以正常工作：
+
+```
+java  -jar com.myapp.caller\@2.2.0.jar hello
+```
+将会看到 Router控制台输出：
+
+```
+A worker(5c0c2711-27a7-46bd-b0ce-f014cf947158) at 192.168.12.63 registered, and assigned with token(fa514ee3-eb2e-4538-ad98-17666a40d4de)
+Worker perform job(hello) with effort 0fcc09c1-279a-472b-b292-f6dd48ed162a
+```
+
+Worker控制台输出：
+
+```
+Return router job hello with 0fcc09c1-279a-472b-b292-f6dd48ed162a
+```
+
+Caller控制台输出：
+
+```
+Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
+```
 
 3. 扩展组件
 ------------

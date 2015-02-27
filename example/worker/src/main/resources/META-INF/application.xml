@@ -7,15 +7,14 @@
        http://www.springframework.org/schema/context
        http://www.springframework.org/schema/context/spring-context.xsd">
 
-    <context:property-placeholder location="file://${app.home}/config/*.properties" file-encoding="utf-8"/>
+    <import resource="properties.xml"/>
 
-    <context:component-scan base-package="com.myapp.server"/>
+    <context:component-scan base-package="com.myapp.work"/>
 
-    <bean name="serverExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
-        <property name="serviceInterface" value="com.myapp.api.ServerAPI"/>
-        <property name="serviceName" value="server"/>
-        <property name="registryPort" value="${app.port}"/>
-        <property name="service" ref="serverImpl"/>
+    <bean name="workerExporter" class="org.springframework.remoting.rmi.RmiServiceExporter">
+        <property name="serviceInterface" value="com.myapp.api.WorkAPI"/>
+        <property name="serviceName" value="worker"/>
+        <property name="registryPort" value="${worker.port}"/>
+        <property name="service" ref="worker"/>
     </bean>
-
 </beans>

@@ -15,8 +15,8 @@
     <modules>
         <module>api</module>
         <module>basis</module>
-        <module>server</module>
-        <module>client</module>
+        <module>router</module>
+        <module>worker</module>
         <module>caller</module>
     </modules>
 
@@ -28,6 +28,6 @@
 
     <properties>
         <version.component-framework>${project.parent.version}</version.component-framework>
-        <release.root>/opt/releases/spring</release.root>
+        <release.root>/opt/releases/spring-component-example</release.root>
     </properties>
 </project>

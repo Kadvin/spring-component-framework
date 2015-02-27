@@ -3,14 +3,14 @@
  */
 package com.myapp.caller;
 
-import com.myapp.api.ServerAPI;
+import com.myapp.api.RouteAPI;
 import org.springframework.remoting.rmi.RmiProxyFactoryBean;
 
 /** Accept test caller */
 public class CLI {
 
     /**
-     * java -Dserver.port=1097 -Dserver.address=localhost -jar path/to/com.myapp.caller-1.0.0.jar jobId
+     * java -Drouter.port=1097 -Drouter.address=localhost -jar path/to/com.myapp.caller-1.0.0.jar jobId
      *
      * @param args jobId(mandatory)
      */
@@ -19,13 +19,13 @@ public class CLI {
             throw new IllegalArgumentException("You must specify a job id");
         String jobId = args[0];
         RmiProxyFactoryBean factoryBean = new RmiProxyFactoryBean();
-        factoryBean.setServiceInterface(ServerAPI.class);
-        factoryBean.setServiceUrl(String.format("rmi://%s:%s/server",
-                                                System.getProperty("server.address", "localhost"),
-                                                System.getProperty("server.port", "1097")));
+        factoryBean.setServiceInterface(RouteAPI.class);
+        factoryBean.setServiceUrl(String.format("rmi://%s:%s/router",
+                                                System.getProperty("router.address", "localhost"),
+                                                System.getProperty("router.port", "1097")));
         factoryBean.afterPropertiesSet();
-        ServerAPI server = (ServerAPI) factoryBean.getObject();
-        Object result = server.perform(jobId);
-        System.out.println("Got server response: " + result);
+        RouteAPI router = (RouteAPI) factoryBean.getObject();
+        Object result = router.perform(jobId);
+        System.out.println("Got router response: " + result);
     }
 }

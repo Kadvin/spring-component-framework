@@ -10,6 +10,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.EnableMBeanExport;
+import org.springframework.jmx.support.RegistrationPolicy;
 
 /**
  * <h1>抽象的Application Configuration</h1>
@@ -23,6 +25,7 @@ import org.springframework.context.annotation.Bean;
  * <li>提供简便的 本地 exports 方法（无需 bean reference)</li>
  * </ul>
  */
+@EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
 public abstract class AbstractAppConfig extends AbstractUserConfig implements InitializingBean {
     @Autowired
     protected ServiceExporter exporter;

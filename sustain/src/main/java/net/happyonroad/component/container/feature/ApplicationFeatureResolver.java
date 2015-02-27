@@ -75,7 +75,7 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
                 throw new ApplicationContextException("Shouldn't get to this branch");
             }
         } else if (byXml(component)) {
-            logger.warn("You configure {} by annotation and xml, the xml will be yield", component);
+            logger.warn("{} is configured by annotation and xml, the xml file will be ignored", component);
         }
 
         String env = System.getProperty("spring.env", "production");
