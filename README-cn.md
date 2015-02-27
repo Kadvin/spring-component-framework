@@ -380,8 +380,8 @@ Spring Component Framework在运行时，会根据pom.xml文件的定义，为�
 
 ##### 2.1 基于Annotation
 
-1. 通过maven-jar-plugin，在pom.xml中声明如下配置
-```xml
+ 1. 通过maven-jar-plugin，在pom.xml中声明如下配置
+```XML
     <build>
         <plugins>
             <plugin>
@@ -399,12 +399,12 @@ Spring Component Framework在运行时，会根据pom.xml文件的定义，为�
     </build>
 ```
 
-2. 以便在最终jar包得Manifest里面有App-Config指令：
+ 2. 以便在最终jar包得Manifest里面有App-Config指令：
 ```
 App-Config: com.myapp.WorkerAppConfig
 ```
 
-3. 相应的WorkerAppConfig内容为：
+ 3. 相应的WorkerAppConfig内容为：
 ```JAVA
 @Configuration
 @ComponentScan("com.myapp.work")
@@ -427,8 +427,8 @@ public class WorkerAppConfig {
 }
 ```
 
-4. 打包之后的文件形如：
-```
+ 4. 打包之后的文件形如：
+```sh
   path/to/com.myapp/worker@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 其中包括 App-Config指令
@@ -446,7 +446,7 @@ Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig
 
 ##### 2.2 基于XML
 
-1. 在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
+ 1. 在组件的META-INF目录下提供一个application.xml，用Spring Context对这些Bean加以管理。
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -467,8 +467,8 @@ Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig
 </beans>
 ```
 
-2. 打包之后的jar内容如下：
-```
+ 2. 打包之后的jar内容如下：
+```sh
   path/to/com.myapp/worker@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 一般性打包工具生成
@@ -490,8 +490,8 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
 
 ##### 3.1 Annotation配置方式
 
-1. 通过maven-jar-plugin，在pom.xml中声明如下配置
-```xml
+ 1. 通过maven-jar-plugin，在pom.xml中声明如下配置
+```XML
     <build>
         <plugins>
             <plugin>
@@ -509,18 +509,15 @@ Basis模块在运行时需要创建一个CacheServiceImpl实例，而且还需�
     </build>
 ```
 
-2. 以便在最终jar包得Manifest里面有App-Config指令：
+ 2. 以便在最终jar包得Manifest里面有App-Config指令：
 ```
 App-Config: com.myapp.BasisAppConfig
 ```
 
-3. BasisAppConfig的内容
+ 3. BasisAppConfig的内容
   开发者需要在其 BasisAppConfig 里面将 cache service暴露到服务注册表，为此，需要extends AbstractAppConfig
   并继承 doExports方法，通过exports方法将服务暴露出去
 ```java
-/**
- * Basis App Config
- */
 @Configuration
 @ComponentScan("com.myapp.basis")
 public class BasisAppConfig extends AbstractAppConfig{
@@ -531,8 +528,8 @@ public class BasisAppConfig extends AbstractAppConfig{
 }
 ```
 
-4. 最终打包成为的形态：
-```
+ 4. 最终打包成为的形态：
+```sh
   path/to/com.myapp/basis@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # 包括了 App-Config 指令
@@ -548,9 +545,8 @@ public class BasisAppConfig extends AbstractAppConfig{
 
 ##### 3.2 XML配置方式
 
-1. 相应application.xml 内容大致如下
+ 1. 相应application.xml 内容大致如下
 (特别注意：当前并未实现对service:export的解析):
-
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
@@ -566,8 +562,8 @@ public class BasisAppConfig extends AbstractAppConfig{
 </beans>
 ```
 
-2. 最终打包成为的形态：
-```
+ 2. 最终打包成为的形态：
+```sh
   path/to/com.myapp/basis@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF
@@ -587,7 +583,7 @@ public class BasisAppConfig extends AbstractAppConfig{
 
 ##### 4.1 Annotation方式
 
-1. 通过maven-jar-plugin，在pom.xml中声明如下配置
+ 1. 通过maven-jar-plugin，在pom.xml中声明如下配置
 ```xml
     <build>
         <plugins>
@@ -606,12 +602,12 @@ public class BasisAppConfig extends AbstractAppConfig{
     </build>
 ```
 
-2. 以便在最终jar包得Manifest里面有App-Config指令：
+ 2. 以便在最终jar包得Manifest里面有App-Config指令：
 ```
 App-Config: com.myapp.RouterAppConfig
 ```
 
-3. RouterAppConfig的内容如下：
+ 3. RouterAppConfig的内容如下：
 ```java
 @Configuration
 @ComponentScan("com.myapp.route")
@@ -639,8 +635,8 @@ public class RouterAppConfig extends AbstractAppConfig {
 }
 ```
 
-4. 最终打包的结果如下：
-```
+ 4. 最终打包的结果如下：
+```sh
   path/to/com.myapp/router@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF               # App-Config: com.myapp.router.RouterAppConfig
@@ -656,7 +652,7 @@ public class RouterAppConfig extends AbstractAppConfig {
 
 ##### 4.2 XML方式
 
-1. 其内部的application.xml大致如下
+ 1. 其内部的application.xml大致如下
 (特别注意：当前并未实现对service:export的解析):
 
 ```xml
@@ -679,8 +675,8 @@ public class RouterAppConfig extends AbstractAppConfig {
 </beans>
 ```
 
-2. 需要被打包成如下格式(XML Based):
-```
+ 2. 需要被打包成如下格式(XML Based):
+```sh
   path/to/com.myapp/router@2.2.0.jar!
     |-META-INF
     |  |-MANIFEST.MF
@@ -700,18 +696,19 @@ public class RouterAppConfig extends AbstractAppConfig {
 当组件越来越多时，开发者可能发现，难以维护组件与组件之间的服务import/export关系；
 为了解决该问题，设定如下的组件开发规范：
 
-1. 组件的内部实现类应该尽量采用package visible（隔离，断了其他使用者直接构建相关实例的念想）
-2. 组件的尽量采用Annotation方式开发
-3. 组件的内部App-Config一般取名为: XxxAppConfig，并与组件的内容包名同级，如：
-```
+ 1. 组件的内部实现类应该尽量采用package visible（隔离，断了其他使用者直接构建相关实例的念想）
+ 2. 组件的尽量采用Annotation方式开发
+ 3. 组件的内部App-Config一般取名为: XxxAppConfig，并与组件的内容包名同级，如：
+```sh
     |-com
     |  |-myapp
     |  |  |-basis
     |  |  |  |-CacheServiceImpl.class
     |  |  |-BasisAppConfig.class
 ```
-4. 对于会被别人依赖/导入的组件，一般应该再提供一个XxxUserConfig，如：
-```
+
+ 4. 对于会被别人依赖/导入的组件，一般应该再提供一个XxxUserConfig，如：
+```sh
     |-com
     |  |-myapp
     |  |  |-basis
