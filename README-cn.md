@@ -764,7 +764,7 @@ public class RouterAppConfig extends AbstractAppConfig {
   3. 对于第三方包，其内部没有按照我们的规范内嵌 pom.xml， 我们需要将其pom.xml解析出来，放在 lib/poms.jar中
   4. Spring Component Framework 的Jar包应该被单独放在 boot 目录
 
-```
+```sh
   path/to/router
     |  |-boot
     |  |  |-net.happyonroad.spring-component-framework-2.2.0.jar
@@ -781,7 +781,7 @@ public class RouterAppConfig extends AbstractAppConfig {
 
 按照如下格式部署之后，我们就可以使用如下命令行启动应用程序：
 
-```
+```sh
   cd path/to/router
   java -jar boot/spring-component-framework@2.2.0.jar com.myapp/router@2.2.0
 ```
@@ -789,7 +789,7 @@ public class RouterAppConfig extends AbstractAppConfig {
 
 启动后，你将会看到如下输出：
 
-```
+```sh
 Listening for transport dt_socket at address: 5004
 27 15:20:46.191 [main] INFO  AppLauncher               - ******* Loading components starts from com.myapp/router@2.2.0.jar **********************************
 2015-02-27 15:20:46,191 [main] INFO  - ******* Loading components starts from com.myapp/router@2.2.0.jar **********************************
@@ -809,7 +809,7 @@ Listening for transport dt_socket at address: 5004
 
 我们需要在实际运行时的主模块pom文件中声明对 spring-component-framework 的依赖
 
-```xml
+```XML
 <dependencies>
   <dependency>
     <groupId>net.happyonroad</groupId>
@@ -861,7 +861,7 @@ Listening for transport dt_socket at address: 5004
 
 该插件三个任务默认在maven的package/process-classes/clean阶段工作，作用分别为索引/打包/清除
 
-  1. package
+1、package
 
 | 参数          | 作用                             |
 |--------------|---------------------------------|
@@ -881,11 +881,11 @@ Listening for transport dt_socket at address: 5004
 | appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;dnt开头 |
 | wrapper      | 是否生成Java Service Wrapper       |
 
-  2. index-detail
+2、 index-detail
 
 没有什么参数需要设置
 
-  3. clean
+3、 clean
 
 | 参数          | 作用                            |
 |--------------|---------------------------------|
@@ -894,13 +894,13 @@ Listening for transport dt_socket at address: 5004
 
 当你在示例程序(worker/router)的根目录执行:
 
-```bash
+```sh
 mvn package
 ```
 
 我们将会看到如下输出:
 
-```
+```sh
   path/to/router
     |  |-bin
     |  |  |-start.bat
@@ -924,7 +924,7 @@ mvn package
     |  |-tmp
 ```
 
-```
+```sh
   path/to/worker
     |  |-bin
     |  |  |-start.bat
@@ -950,25 +950,25 @@ mvn package
 
 此时Worker与Router已经准备就绪，可以通过start(bat|sh)运行，启动后，您可以采用Caller测试一下以上程序是否可以正常工作：
 
-```
+```sh
 java  -jar com.myapp.caller\@2.2.0.jar hello
 ```
 将会看到 Router控制台输出：
 
-```
+```sh
 A worker(5c0c2711-27a7-46bd-b0ce-f014cf947158) at 192.168.12.63 registered, and assigned with token(fa514ee3-eb2e-4538-ad98-17666a40d4de)
 Worker perform job(hello) with effort 0fcc09c1-279a-472b-b292-f6dd48ed162a
 ```
 
 Worker控制台输出：
 
-```
+```sh
 Return router job hello with 0fcc09c1-279a-472b-b292-f6dd48ed162a
 ```
 
 Caller控制台输出：
 
-```
+```sh
 Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
 ```
 
@@ -1084,7 +1084,7 @@ Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
 
 相关两个插件任务分别支持如下参数：
 
-  1. extend
+1、 extend
 
 | 参数              | 作用                            |
 |------------------|---------------------------------|
@@ -1092,7 +1092,7 @@ Got router response: 0fcc09c1-279a-472b-b292-f6dd48ed162a
 | extensionPath    | 扩展目录                         |
 | copyDependencies | 是否copy该扩展引入的依赖           |
 
-  2. unextend
+2、 unextend
 
 | 参数          | 作用                            |
 |--------------|---------------------------------|
