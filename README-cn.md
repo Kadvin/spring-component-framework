@@ -565,6 +565,7 @@ App-Config: com.myapp.BasisAppConfig
 ```
 
  3. BasisAppConfig的内容
+
   开发者需要在其 BasisAppConfig 里面将 cache service暴露到服务注册表，为此，需要extends AbstractAppConfig
   并继承 doExports方法，通过exports方法将服务暴露出去
 ```java
@@ -658,6 +659,9 @@ App-Config: com.myapp.RouterAppConfig
 ```
 
  3. RouterAppConfig的内容如下：
+
+关键点在于，该AppConfig类需要`extends` `AbstractAppConfig`，
+要把从其他jar包引入的对象通过`imports`方以`@Bean`的方式集成到Context中
 ```java
 @Configuration
 @ComponentScan("com.myapp.route")
