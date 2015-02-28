@@ -415,9 +415,9 @@ public class CLI {
     |-com
     |  |-myapp
     |  |  |-api
-    |  |  |  |-CacheService.class
-    |  |  |  |-RouteAPI.class
-    |  |  |  |-WorkAPI.class
+    |  |  |  |-CacheService.class  # public/公开接口
+    |  |  |  |-RouteAPI.class      # public/公开接口
+    |  |  |  |-WorkAPI.class       # public/公开接口
 ```
 
 Spring Component Framework在运行时，会根据pom.xml文件的定义，为其解析相关依赖，并将其作为library放在应用程序的classpath中。
@@ -462,7 +462,7 @@ App-Config: com.myapp.WorkerAppConfig
 
 ```JAVA
 @Configuration
-@ComponentScan("com.myapp.work")
+@ComponentScan("com.myapp.work")  //可以扫描到其中的package visible接口
 public class WorkerAppConfig {
 
     @Autowired
@@ -494,7 +494,7 @@ public class WorkerAppConfig {
     |-com
     |  |-myapp
     |  |  |-work
-    |  |  |  |-Worker.class
+    |  |  |  |-Worker.class        # package visible类，被组件保护
     |  |  |-WorkerAppConfig.class
 ```
 
@@ -537,7 +537,7 @@ Spring Component Framework在运行时加载该jar时，会根据WorkerAppConfig
     |-com
     |  |-myapp
     |  |  |-work
-    |  |  |  |-Worker.class
+    |  |  |  |-Worker.class        # package visible类，被组件保护
 ```
 
 #### 3. 服务组件(扮演服务提供者角色)
@@ -584,7 +584,7 @@ App-Config: com.myapp.BasisAppConfig
 public class BasisAppConfig extends AbstractAppConfig{
     @Override
     protected void doExports() {
-        exports(CacheService.class);
+        exports(CacheService.class);    // 关键点：通过该函数exports服务，其会自动寻找当前组件构建的相应服务实例
     }
 }
 ```
@@ -601,7 +601,7 @@ public class BasisAppConfig extends AbstractAppConfig{
     |-com
     |  |-myapp
     |  |  |-basis
-    |  |  |  |-CacheServiceImpl.class
+    |  |  |  |-CacheServiceImpl.class  # package visible类，被组件保护
     |  |  |-BasisAppConfig.class
 ```
 
@@ -638,7 +638,7 @@ public class BasisAppConfig extends AbstractAppConfig{
     |-com
     |  |-myapp
     |  |  |-basis
-    |  |  |  |-CacheServiceImpl.class
+    |  |  |  |-CacheServiceImpl.class  # package visible类，被组件保护
 ```
 
 #### 4. 服务组件(服务的使用者)
@@ -690,7 +690,7 @@ public class RouterAppConfig extends AbstractAppConfig {
 
     @Bean
     CacheService cacheService(){
-      return imports(CacheService.class);
+      return imports(CacheService.class);       // 关键点： 通过该函数从服务注册表导入别的组件包exports的服务实例
     }
 
     @Bean
@@ -717,7 +717,7 @@ public class RouterAppConfig extends AbstractAppConfig {
     |-com
     |  |-myapp
     |  |  |-route
-    |  |  |  |-Router.class
+    |  |  |  |-Router.class        # package visible类，被组件保护
     |  |  |-RouterAppConfig.class
 ```
 
@@ -760,7 +760,7 @@ public class RouterAppConfig extends AbstractAppConfig {
     |-com
     |  |-myapp
     |  |  |-route
-    |  |  |  |-Router.class
+    |  |  |  |-Router.class        # package visible类，被组件保护
 ```
 
 #### 5. 组件开发规范
@@ -777,7 +777,7 @@ public class RouterAppConfig extends AbstractAppConfig {
     |-com
     |  |-myapp
     |  |  |-basis
-    |  |  |  |-CacheServiceImpl.class
+    |  |  |  |-CacheServiceImpl.class  # package visible类，被组件保护
     |  |  |-BasisAppConfig.class
 ```
 
@@ -787,7 +787,7 @@ public class RouterAppConfig extends AbstractAppConfig {
     |-com
     |  |-myapp
     |  |  |-basis
-    |  |  |  |-CacheServiceImpl.class
+    |  |  |  |-CacheServiceImpl.class  # package visible类，被组件保护
     |  |  |-BasisAppConfig.class
     |  |  |-BasisUserConfig.class
 ```
@@ -814,13 +814,15 @@ public class BasisUserConfig extends AbstractUserConfig{
 public class RouterAppConfig extends AbstractAppConfig {
     @Autowired
     RouteAPI routeAPI;
+    @Value("${app.port}")
+    int routerPort;
 
     @Bean
     public RmiServiceExporter workAPIExporter() {
         RmiServiceExporter exporter = new RmiServiceExporter();
         exporter.setServiceInterface(RouteAPI.class);
         exporter.setServiceName("router");
-        exporter.setServicePort(2000);
+        exporter.setRegistryPort(routerPort);
         exporter.setService(routeAPI);
         return exporter;
     }
