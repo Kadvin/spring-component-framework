@@ -770,7 +770,9 @@ public class RouterAppConfig extends AbstractAppConfig {
 为了解决该问题，设定如下的组件开发规范：
 
 1、组件的内部实现类应该尽量采用package visible（隔离，断了其他使用者直接构建相关实例的念想）
+
 2、组件的尽量采用Annotation方式开发
+
 3、组件的内部App-Config一般取名为: XxxAppConfig，并与组件的内容包名同级，如：
 
 ```sh
