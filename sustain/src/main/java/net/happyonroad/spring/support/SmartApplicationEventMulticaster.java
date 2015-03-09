@@ -27,6 +27,10 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
 
     private final Set<ApplicationEvent> events = new HashSet<ApplicationEvent>();
 
+    public Collection<ApplicationListener<?>> getApplicationListeners(ApplicationEvent event){
+        return super.getApplicationListeners(event);
+    }
+
     protected boolean supportsEvent(ApplicationListener<?> listener,
                                     Class<? extends ApplicationEvent> eventType, Class<?> sourceType) {
 
