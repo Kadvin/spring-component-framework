@@ -176,7 +176,9 @@ public class DefaultComponentRepository implements MutableComponentRepository {
             } catch (IllegalArgumentException e) {
                 //Not cache it by the concrete jar
                 cache.remove(dependency);
-                //logger.error("Error while read :" + jar.getPath(), e);
+            } catch (Exception e) {
+                cache.remove(dependency);
+                throw new IOException("Failed scan " + jar.getPath(), e);
             } finally {
                 try {
                     if (stream != null) stream.close();
