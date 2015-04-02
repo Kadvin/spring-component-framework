@@ -155,9 +155,11 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
         }
     }
 
-    protected void cleanEmptyFolders(File folder) {
+    protected void cleanEmptyFolders(File... folders) {
         // Clean all empty folders
-        deleteEmptyDir(folder);
+        for (File folder : folders) {
+            deleteEmptyDir(folder);
+        }
     }
 
 

@@ -115,11 +115,11 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             //根据需要，将前端程序从各个jar包中删除，降低系统运行时的负担
             reduceFrontendResources();
         }
-        cleanEmptyFolders(repositoryFolder);
-        cleanEmptyFolders(libFolder);
 
         // Move app jars from lib to app
         moveAppJars(libFolder, appFolder);
+
+        cleanEmptyFolders(appFolder, libFolder, repositoryFolder);
 
     }
 

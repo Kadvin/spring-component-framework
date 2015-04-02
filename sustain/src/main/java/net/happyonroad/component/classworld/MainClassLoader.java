@@ -63,8 +63,12 @@ public class MainClassLoader extends ManipulateClassLoader{
     }
 
     public static MainClassLoader getInstance() {
+        return getInstance(getSystemClassLoader());
+    }
+
+    public static MainClassLoader getInstance(ClassLoader classLoader) {
         if( instance == null )
-            instance = new MainClassLoader(getSystemClassLoader());
+            instance = new MainClassLoader(classLoader);
         return instance;
     }
 
@@ -94,5 +98,4 @@ public class MainClassLoader extends ManipulateClassLoader{
             }
         }
     }
-
 }

@@ -256,7 +256,12 @@ public class AppLauncher implements Executable {
         try {
             // When started by Service wrapper, the context class loader is URLClassLoader of wrapper.jar
             //  but this main class is loaded by the framework jar's ClassLoader(FactoryClassLoader)
-            Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance());
+            if( AppLauncher.class.getClassLoader() != ClassLoader.getSystemClassLoader() ){
+                //说明是基于Service Wrapper启动
+                Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance(AppLauncher.class.getClassLoader() ));
+            }else{
+                Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance());
+            }
             // To register the url handler by current context class loader, instead of system bootstrap class loader
             URL.setURLStreamHandlerFactory(ComponentURLStreamHandlerFactory.getFactory());
             int exitCode = mainWithExitCode(args);
