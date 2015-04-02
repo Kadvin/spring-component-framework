@@ -7,6 +7,7 @@ import net.happyonroad.component.container.support.DefaultComponentRepository;
 import net.happyonroad.component.core.support.ComponentUtils;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
@@ -28,6 +29,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
+import static org.apache.commons.io.FileUtils.listFiles;
 
 /**
  * 打包一个基于Spring Component 框架的项目
@@ -81,6 +83,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
         prepareFiles();
 
+        File appFolder = new File(target, "app");
         File libFolder = new File(target, "lib");
         File repositoryFolder = getRepositoryFolder();
 
@@ -114,6 +117,10 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         }
         cleanEmptyFolders(repositoryFolder);
         cleanEmptyFolders(libFolder);
+
+        // Move app jars from lib to app
+        moveAppJars(libFolder, appFolder);
+
     }
 
     @Override
@@ -153,7 +160,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         if (!target.exists()) {
             FileUtils.mkdir(target.getAbsolutePath());
         }
-        String[] subFolders = {"bin", "boot", "lib", "lib/poms", "config", "repository", "logs"};
+        String[] subFolders = {"bin", "boot", "app", "lib", "lib/poms", "config", "repository", "logs"};
         for (String relativePath : subFolders) {
             try {
                 prepareFolder(relativePath);
@@ -228,6 +235,21 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         }
     }
 
+    private void moveAppJars(File libFolder, File appFolder) throws MojoExecutionException {
+        Collection<File> appJars = getAppJars(libFolder);
+        for (File appJar : appJars) {
+            // app jar file = target/lib/group/artifact@version.jar
+            // new jar file = target/app/group/artifact@version.jar
+            String fileName = FilenameUtils.getName(appJar.getAbsolutePath());
+            String groupName = FilenameUtils.getName(appJar.getParent());
+            File newFile = new File(appFolder, groupName + "/" + fileName);
+            try {
+                FileUtils.rename(appJar, newFile);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Can't move " + fileName + " to app folder", e);
+            }
+        }
+    }
 
 
     private void generateScripts() throws MojoExecutionException {
@@ -358,17 +380,17 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     }
 
     private File[] getApplicationJars() {
-        File folder = new File(target, "lib");
-        Collection<File>
-                libJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, new String[]{"jar"}, true)
-                                                   : Collections.EMPTY_SET;
-        folder = new File(target, "repository");
-        Collection<File> repositoryJars = folder.exists() ? org.apache.commons.io.FileUtils.listFiles(folder, new String[]{"jar"}, true)
-                                                          : Collections.EMPTY_SET;
+        Collection<File> libJars = getAppJars(new File(target, "lib"));
+        Collection<File> repositoryJars = getAppJars(new File(target, "repository"));
         List<File> allJars = new ArrayList<File>();
         allJars.addAll(libJars);
         allJars.addAll(repositoryJars);
-        Iterator<File> it = allJars.iterator();
+        return allJars.toArray(new File[allJars.size()]);
+    }
+
+    private Collection<File> getAppJars(File folder) {
+        Collection<File> jars = folder.exists() ? listFiles(folder, new String[]{"jar"}, true) : Collections.EMPTY_SET;
+        Iterator<File> it = jars.iterator();
         while (it.hasNext()) {
             File file = it.next();
             String relativePath = ComponentUtils.relativePath(file);
@@ -376,7 +398,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                 it.remove();
             }
         }
-        return allJars.toArray(new File[allJars.size()]);
+        return jars;
     }
 
     private void extractFrontendResources(File componentJar, Properties mappings) throws MojoExecutionException {

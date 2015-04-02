@@ -58,20 +58,27 @@ public class DefaultComponentRepository implements MutableComponentRepository {
         sharedInstance = this;
         Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance());
         this.home = new File(home);
-        File libFolder = new File(home, "lib");
-        if (!libFolder.exists()) {
-            try {
-                FileUtils.forceMkdir(libFolder);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("The lib folder [" + libFolder.getPath()
-                                                   + "] not exist and can't be auto created: " + e.getMessage());
-            }
-        }
+        ensureFolders(home, "app", "lib");
         components = new LinkedList<Component>();
         cache = new HashMap<Dependency, Resource>();
         resolver = new DefaultComponentResolver(this);
     }
-// ------------------------------------------------------------
+
+    protected void ensureFolders(String home, String... folders) {
+        for (String folder : folders) {
+            File file = new File(home, folder);
+            if (!file.exists()) {
+                try {
+                    FileUtils.forceMkdir(file);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("The folder [" + file.getPath()
+                                                       + "] not exist and can't be auto created: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
     //     本身的Lifecycle方法
     // ------------------------------------------------------------
 
@@ -87,6 +94,12 @@ public class DefaultComponentRepository implements MutableComponentRepository {
             logger.error("Failed to scan {} dir: {}", bootFolder, e.getMessage());
         }
 
+        File appFolder = new File(home, "app");
+        try {
+            scanJars(appFolder);
+        } catch (Exception e) {
+            logger.error("Failed to scan {} dir for jars: {}", appFolder, e.getMessage());
+        }
         //再寻找 lib/*.jar，将其预加载为component
         File libFolder = new File(home, "lib");
         try {
