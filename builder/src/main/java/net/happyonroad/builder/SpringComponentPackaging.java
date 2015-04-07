@@ -130,7 +130,10 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         if (repositoryFile.exists() )
         {
             try {
-                org.apache.commons.io.FileUtils.moveFile(repositoryFile, destFile);
+                if( !destFile.exists() )
+                    org.apache.commons.io.FileUtils.moveFile(repositoryFile, destFile);
+                else
+                    getLog().debug(destFile + " exist2");
             } catch (IOException e) {
                 throw new MojoExecutionException("Can't move exist " + repositoryFile.getPath()
                                                  + " to " + destFile.getPath(), e);

@@ -36,10 +36,7 @@ public class SpringComponentExtending extends SpringComponentCopyDependencies {
 
         if (copyDependencies) {
             //把依赖copy到目标目录
-            copyDependencies(repositoryFolder);
-
-            //清除与平台重复的第三方依赖
-            reduceDependencies(repositoryFolder, new File(target, "lib"), false);
+            copyDependencies(new File(target, "lib"));
         }
 
         // 清除与jar重复的pom文件
