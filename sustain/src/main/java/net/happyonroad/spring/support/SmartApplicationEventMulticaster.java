@@ -17,15 +17,13 @@ import java.util.*;
  * 另外，可以防止事件重复
  */
 public class SmartApplicationEventMulticaster extends SimpleApplicationEventMulticaster {
-    //最多存储5m内的事件，5分钟前的事件就删除
-    // 避免这里内存泄露
-    private static final long MAX_STORAGE_TIME = 1000 * 60 * 5;
-
     public SmartApplicationEventMulticaster(BeanFactory beanFactory) {
         super(beanFactory);
     }
-
-    private final Set<ApplicationEvent> events = new HashSet<ApplicationEvent>();
+    //最多存储5m内的事件，5分钟前的事件就删除
+    // 避免这里内存泄露
+    private static final long                  MAX_STORAGE_TIME = 1000 * 60 * 5;
+    private final        Set<ApplicationEvent> events           = new HashSet<ApplicationEvent>();
 
     public Collection<ApplicationListener<?>> getApplicationListeners(ApplicationEvent event){
         return super.getApplicationListeners(event);
@@ -48,8 +46,8 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
         // ...
         if (remembered(event)) return;
         remember(event);
-        super.multicastEvent(event);
         clearExpires();
+        super.multicastEvent(event);
     }
 
 
@@ -62,7 +60,7 @@ public class SmartApplicationEventMulticaster extends SimpleApplicationEventMult
     }
 
     void clearExpires() {
-        //TODO 怎么弄，这里都在前端访问触发时抛出 ConcurrentModificationException
+        if( events.size() < 100 ) return;
         try {
             Iterator<ApplicationEvent> it = events.iterator();
             while (it.hasNext()) {

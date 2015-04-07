@@ -250,10 +250,13 @@ public class DefaultComponentResolver implements ComponentResolver {
                     if( e.getComponent() == null ) e.setComponent(component);
                     //但只有必选的，以及是compile time的找不到才抛出异常
                     if (!depended.isOptional() && depended.isCompile()) {
-                        if( e.getComponent() == component )
-                            throw e;
-                        else
-                            throw new DependencyNotMeetException(component, depended, e);
+                        if(!DefaultComponent.isApplication(depended.getGroupId())){
+                            //只有应用组件缺失依赖时抛错，第三方组件缺失时不抛错
+                            if( e.getComponent() == component )
+                                throw e;
+                            else
+                                throw new DependencyNotMeetException(component, depended, e);
+                        }
                     } else{
                         logger.trace("Can't resolve {} dependency {}", depended.getScope(), depended);
                     }
