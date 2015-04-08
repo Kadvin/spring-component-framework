@@ -3,12 +3,15 @@
  */
 package net.happyonroad.builder;
 
+import net.happyonroad.component.core.support.DefaultComponent;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
+
+import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
 
 /**
  * 对基于Spring Component 框架的项目的扩展部分进行打包
@@ -46,6 +49,12 @@ public class SpringComponentExtending extends SpringComponentCopyDependencies {
         cleanEmptyFolders(repositoryFolder);
     }
 
-
-
+    @Override
+    protected void copyFile(File artifact, File destFile) throws MojoExecutionException {
+        String relativePath = relativePath(destFile);
+        if(DefaultComponent.isApplication(relativePath)){
+            destFile = new File(target, "repository/" + relativePath);
+        }
+        super.copyFile(artifact, destFile);
+    }
 }

@@ -61,21 +61,28 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     String     frontendNodeModules;
     //Debug port
     @Parameter(defaultValue = "0")
-    private int        debug;
+    private int     debug;
     //Jmx port
     @Parameter(defaultValue = "0")
-    private int        jmx;
+    private int     jmx;
     @Parameter
-    private String     appPrefix;
+    private String  appPrefix;
     @Parameter(defaultValue = "true")
-    private Boolean    wrapper;
+    private Boolean wrapper;
+    @Parameter
+    private String  repositoryBase;
 
     private String appBoot, appTarget;
+
 
     private static String lineSeparator = System.getProperty("os.name").contains("Windows") ? "\r\n" : "\n";
 
     public void doExecute() throws MojoExecutionException {
         getLog().info("Hello, I'm packaging to " + target.getPath());
+
+        if( StringUtils.isNotBlank(repositoryBase)){
+            this.repositoryBase = FilenameUtils.normalize(this.repositoryBase);
+        }
 
         initAppParams();
 
@@ -126,20 +133,49 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     @Override
     protected void copyFile(File artifact, File destFile) throws MojoExecutionException {
         String relativePath = relativePath(destFile);
-        File repositoryFile = new File(getRepositoryFolder(), relativePath);
-        if (repositoryFile.exists() )
-        {
+        File repositoryFolder = getRepositoryFolder();
+        File preventFile = null;
+        if(StringUtils.isNotBlank(repositoryBase)){
+            boolean contains = false;
             try {
-                if( !destFile.exists() )
-                    org.apache.commons.io.FileUtils.moveFile(repositoryFile, destFile);
-                else
-                    getLog().debug(destFile + " exist2");
+                contains = FilenameUtils.directoryContains(repositoryBase, artifact.getPath());
             } catch (IOException e) {
-                throw new MojoExecutionException("Can't move exist " + repositoryFile.getPath()
-                                                 + " to " + destFile.getPath(), e);
+                //skip
             }
+            if(contains){
+                //这个文件是Repository文件，不放到lib下
+                destFile = new File(repositoryFolder, relativePath);
+                File libFolder = new File(target, "lib");
+                preventFile = new File(libFolder, relativePath);
+            }
+        }
+        if( preventFile == null )
+            preventFile = new File(repositoryFolder, relativePath);
+
+        try {
+            copyFile(artifact, destFile,  preventFile);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Can't move exist " + preventFile.getPath()
+                                             + " to " + destFile.getPath(), e);
+        }
+    }
+
+    /**
+     * <h2>把artifact文件copy到目标文件，如果另外一个相应的文件存在，则移动之</h2>
+     * @param artifact 原始文件
+     * @param dest     目标文件
+     * @param prevent  防止的文件
+     */
+    protected void copyFile(File artifact, File dest, File prevent) throws IOException, MojoExecutionException {
+        if( dest.exists() ){
+            if( prevent.exists() )
+                //noinspection ResultOfMethodCallIgnored
+                prevent.delete();
         }else{
-            super.copyFile(artifact, destFile);
+            if( prevent.exists() )
+                org.apache.commons.io.FileUtils.moveFile(prevent, dest);
+            else
+                super.copyFile(artifact, dest);
         }
     }
 

@@ -45,15 +45,15 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
 
     @Parameter
     protected File target;
-    private   File repositoryFile;
+    private   File repositoryFolder;
     @Parameter(defaultValue = "repository")
     String extensionPath = "repository";
 
     protected File getRepositoryFolder() {
-        if (repositoryFile == null) {
-            repositoryFile = new File(target, extensionPath);
+        if (repositoryFolder == null) {
+            repositoryFolder = new File(target, extensionPath);
         }
-        return repositoryFile;
+        return repositoryFolder;
     }
 
 
