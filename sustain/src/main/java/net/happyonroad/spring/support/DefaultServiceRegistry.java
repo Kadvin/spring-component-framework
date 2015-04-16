@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-/** 缺省的服务注册表 */
+/**
+ * 缺省的服务注册表
+ */
 @SuppressWarnings("unchecked")
 public class DefaultServiceRegistry implements MutableServiceRegistry {
     protected Logger                          logger   = LoggerFactory.getLogger(getClass());
@@ -106,8 +108,8 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
     }
 
     protected <T> T getServiceFromMap(Map<String, Object> map, String hint) {
-        if(map == null || map.isEmpty()) return null;
-        if(ANY_HINT.equals(hint)){
+        if (map == null || map.isEmpty()) return null;
+        if (ANY_HINT.equals(hint)) {
             return (T) map.values().iterator().next();
         }
         return (T) map.get(hint);
@@ -117,10 +119,10 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
     public <T> T getService(Class[] requiredTypes, String hint) {
         Set<T> found = new HashSet<T>();
         for (Class type : requiredTypes) {
-            T service = (T)getService(type, hint);
+            T service = (T) getService(type, hint);
             found.add(service);
         }
-        if( found.size() != 1 ){
+        if (found.size() != 1) {
             String types = StringUtils.join(requiredTypes, ",");
             throw new ServiceConfigurationException("The service with hint = " + hint +
                                                     " is not exported with multiple interfaces: " + types);
@@ -152,9 +154,15 @@ public class DefaultServiceRegistry implements MutableServiceRegistry {
                     Object service = map.get(key);
                     Object exist = all.get(key);
                     if (exist != null) {
-                        logger.warn("A service instance: {} override another: {} with hint = {}", service, exist, key);
+                        int n = 1;
+                        String newKey;
+                        do {
+                            newKey = key + "#" + n++;
+                        } while (all.containsKey(newKey));
+                        all.put(newKey, service);
+                    } else {
+                        all.put(key, service);
                     }
-                    all.put(key, service);
                 }
             }
         }
