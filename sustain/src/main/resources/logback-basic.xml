@@ -33,6 +33,7 @@
     
     <logger name="net.happyonroad" level="INFO"/>
     <logger name="net.happyonroad.spring" level="WARN"/>
+    <logger name="net.happyonroad.spring.support.DefaultServiceHelper" level="ERROR"/>
     <logger name="net.happyonroad.component.container.support" level="WARN" />
     <logger name="net.happyonroad.component.container.support.DefaultComponentLoader" level="INFO" />
     <logger name="net.happyonroad.platform.repository.support" level="ERROR" />

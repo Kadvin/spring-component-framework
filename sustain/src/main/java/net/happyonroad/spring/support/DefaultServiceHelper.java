@@ -35,7 +35,7 @@ public class DefaultServiceHelper implements ServiceImporter, ServiceExporter{
     @Override
     public <T> void exports(Class<T> serviceClass, T service) {
         if( !Modifier.isAbstract(serviceClass.getModifiers()) ){
-            logger.error("Import a concrete service: " + serviceClass.getName());
+            logger.warn("Import a concrete service: " + serviceClass.getName());
         }
         this.registry.register(serviceClass, service);
     }
