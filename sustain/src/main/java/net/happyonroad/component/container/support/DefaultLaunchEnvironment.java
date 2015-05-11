@@ -22,14 +22,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextException;
 import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.*;
 
 import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
 
@@ -58,9 +58,12 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
         String appHost = System.getProperty("app.host");
         if (!StringUtils.hasText(appHost)) {
-            appHost = "localhost";
-            System.setProperty("app.host", appHost);
-            logger.debug("app.host is not set, use localhost as default");
+            List<String> addresses = getLocalAddresses();
+            if( addresses.isEmpty() ) {
+                throw new ApplicationContextException("You server isn't configure any address");
+            }
+            System.setProperty("app.host", addresses.get(0));
+            logger.debug("app.host is not set, use local ip as default");
         }
         String appPort = System.getProperty("app.port");
         if (!StringUtils.hasText(appPort)) {
@@ -302,4 +305,46 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         logger.info(LogUtils.banner(message, args));
     }
 
+    public static List<String> getLocalAddresses() {
+        List<IndexAndIp> localAddresses = new ArrayList<IndexAndIp>(2);
+        try {
+            Enumeration<NetworkInterface> nics = NetworkInterface.getNetworkInterfaces();
+            while (nics.hasMoreElements()) {
+                NetworkInterface nic = nics.nextElement();
+                Enumeration<InetAddress> addresses = nic.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress address = addresses.nextElement();
+                    String hostAddress = address.getHostAddress();
+                    if (hostAddress.contains(":")) continue; // ipv6
+                    if ("127.0.0.1".equals(hostAddress)) continue;
+                    localAddresses.add(new IndexAndIp(nic.getIndex(), hostAddress));
+                }
+            }
+        } catch (Exception e) {
+            throw new UnsupportedOperationException("Can't find local address", e);
+        }
+        //按照网卡接口号先后排序
+        Collections.sort(localAddresses);
+        List<String> addresses = new ArrayList<String>();
+        for (IndexAndIp indexAndIp : localAddresses) {
+            addresses.add(indexAndIp.ip);
+        }
+        return addresses;
+    }
+
+    static class IndexAndIp implements Comparable<IndexAndIp> {
+        private int    index;
+        private String ip;
+
+        public IndexAndIp(int index, String ip) {
+            this.index = index;
+            this.ip = ip;
+        }
+
+        @Override
+
+        public int compareTo(@SuppressWarnings("NullableProblems") IndexAndIp another) {
+            return this.index - another.index;
+        }
+    }
 }
