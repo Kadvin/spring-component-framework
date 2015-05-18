@@ -16,11 +16,12 @@ import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
@@ -230,7 +231,8 @@ public class DefaultComponentRepository implements MutableComponentRepository {
                 if(entry.getName().endsWith(".pom")){
                     Dependency dependency = Dependency.parse(entry.getName());
                     if (cache.get(dependency) != null) continue;
-                    cache.put(dependency, new InputStreamResource(jarFile.getInputStream(entry), entry.getName()));
+                    byte[] bytes = IOUtils.toByteArray(jarFile.getInputStream(entry));
+                    cache.put(dependency, new ByteArrayResource(bytes, entry.getName()));
                     logger.trace("Mapping {} -> {}", dependency, jarFile.getName() + "!/" + entry.getName());
                 }
             }
@@ -324,7 +326,12 @@ public class DefaultComponentRepository implements MutableComponentRepository {
         final List<Component> components = new ArrayList<Component>(candidateComponentJars.length);
         final Map<File, Component> mapping = new HashMap<File, Component>();
         for (File file : candidateComponentJars) {
-            Component component = resolveComponent(file.getPath());
+            Component component;
+            try {
+                component = resolveComponent(file.getPath());
+            } catch (DependencyNotMeetException e) {
+                continue;//  some file, such as spring-test, maybe excluded
+            }
             components.add(component);
             mapping.put(file, component);
         }
@@ -337,6 +344,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
 
             private int positionOf(File file) {
                 Component component = mapping.get(file);
+                if( component == null ) return 1000;
                 return components.indexOf(component);
             }
         });

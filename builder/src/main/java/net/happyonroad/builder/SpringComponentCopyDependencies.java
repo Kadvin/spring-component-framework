@@ -68,6 +68,7 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
             } else {
                 File srcJar = new File(project.getBasedir(),
                                        "target/" + project.getArtifactId() + "@" + project.getVersion() + ".jar");
+                if( !srcJar.exists() ) return;
                 //copy jar
                 File destJar = new File(outputFolder, relativePath + ".jar");
                 FileUtils.copyFile(srcJar, destJar);
