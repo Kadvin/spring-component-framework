@@ -24,18 +24,22 @@ public class SpringComponentUnExtending extends AbstractMojo {
     @Component
     protected MavenProject project;
     @Parameter
-    File target;
+    String target;
+
     // 扩展包存放的位置，默认是 repository
     @Parameter
     String extensionPath = "repository";
 
     public void execute() throws MojoExecutionException {
-        File artifact = artifactFile();
-        getLog().info("Hello, I'm un extending " + artifact.getPath());
-        FileUtils.deleteQuietly(artifact);
+        String[] targets = target.split(",|;|\\s+");
+        for (String target : targets) {
+            File artifact = artifactFile(target);
+            getLog().info("Hello, I'm un extending " + artifact.getPath());
+            FileUtils.deleteQuietly(artifact);
+        }
     }
 
-    private File artifactFile() {
+    private File artifactFile(String target) {
         if (project.getPackaging().equalsIgnoreCase("pom")) {
             String artifactName = project.getGroupId() + "/" + project.getArtifactId() +
                                   "@" + project.getVersion() + "." + project.getPackaging();

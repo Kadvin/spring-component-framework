@@ -31,30 +31,42 @@ public class SpringComponentExtending extends SpringComponentCopyDependencies {
     private static String lineSeparator = System.getProperty("os.name").contains("Windows") ? "\r\n" : "\n";
 
     public void doExecute() throws MojoExecutionException {
-        getLog().info("Hello, I'm extending " + target.getPath());
+        getLog().info("Hello, I'm extending " + target);
 
-        //把 pom 或者 jar copy 到目标系统的扩展目录
-        File repositoryFolder = getRepositoryFolder();
-        copyTargets(repositoryFolder);
+        File[] folders = getTargetFolders();
+        for (File targetFolder : folders) {
+            //把 pom 或者 jar copy 到目标系统的扩展目录
+            File repositoryFolder = getRepositoryFolder(targetFolder);
+            copyTargets(repositoryFolder);
 
-        if (copyDependencies) {
-            //把依赖copy到目标目录
-            copyDependencies(new File(target, "lib"));
+            if (copyDependencies) {
+                //把依赖copy到目标目录
+                copyDependencies(new File(targetFolder, "lib"));
+            }
+
+            // 清除与jar重复的pom文件
+            reducePoms(repositoryFolder);
+            //sealPoms(repositoryFolder);
+
+            cleanEmptyFolders(repositoryFolder);
         }
 
-        // 清除与jar重复的pom文件
-        reducePoms(repositoryFolder);
-        //sealPoms(repositoryFolder);
-
-        cleanEmptyFolders(repositoryFolder);
     }
 
     @Override
     protected void copyFile(File artifact, File destFile) throws MojoExecutionException {
         String relativePath = relativePath(destFile);
-        if(DefaultComponent.isApplication(relativePath)){
-            destFile = new File(target, "repository/" + relativePath);
+        if (DefaultComponent.isApplication(relativePath)) {
+            destFile = new File(getTargetFolder(destFile), "repository/" + relativePath);
         }
         super.copyFile(artifact, destFile);
+    }
+
+    private File getTargetFolder(File referFile) {
+        for(File file : getTargetFolders()){
+            if( referFile.getAbsolutePath().startsWith(file.getAbsolutePath()))
+                return file;
+        }
+        throw new IllegalStateException("Can't find target folder from " + referFile);
     }
 }

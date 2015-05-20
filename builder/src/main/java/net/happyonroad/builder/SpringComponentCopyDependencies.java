@@ -44,16 +44,40 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
     }
 
     @Parameter
-    protected File target;
+    String target;
+
+    protected File[] targetFolders;
     private   File repositoryFolder;
     @Parameter(defaultValue = "repository")
     String extensionPath = "repository";
 
+    protected File getTargetFolder(){
+        return getTargetFolders()[0];
+    }
+
+    protected File[] getTargetFolders(){
+        if( targetFolders == null )
+        {
+            String[] targets = target.split(",|;|\\s+");
+            targetFolders = new File[targets.length];
+            for (int i = 0; i < targets.length; i++) {
+                String target = targets[i];
+                targetFolders[i] = new File(target);
+            }
+        }
+        return targetFolders;
+
+    }
+
     protected File getRepositoryFolder() {
         if (repositoryFolder == null) {
-            repositoryFolder = new File(target, extensionPath);
+            repositoryFolder = new File(getTargetFolder(), extensionPath);
         }
         return repositoryFolder;
+    }
+
+    protected File getRepositoryFolder(File targetFolder) {
+        return new File(targetFolder, extensionPath);
     }
 
 
@@ -68,7 +92,7 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
             } else {
                 File srcJar = new File(project.getBasedir(),
                                        "target/" + project.getArtifactId() + "@" + project.getVersion() + ".jar");
-                if( !srcJar.exists() ) return;
+                if (!srcJar.exists()) return;
                 //copy jar
                 File destJar = new File(outputFolder, relativePath + ".jar");
                 FileUtils.copyFile(srcJar, destJar);

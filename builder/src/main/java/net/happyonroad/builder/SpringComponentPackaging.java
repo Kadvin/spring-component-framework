@@ -78,7 +78,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     private static String lineSeparator = System.getProperty("os.name").contains("Windows") ? "\r\n" : "\n";
 
     public void doExecute() throws MojoExecutionException {
-        getLog().info("Hello, I'm packaging to " + target.getPath());
+        getLog().info("Hello, I'm packaging to " + getTargetFolder().getPath());
 
         if( StringUtils.isNotBlank(repositoryBase)){
             this.repositoryBase = FilenameUtils.normalize(this.repositoryBase);
@@ -90,8 +90,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
         prepareFiles();
 
-        File appFolder = new File(target, "app");
-        File libFolder = new File(target, "lib");
+        File appFolder = new File(getTargetFolder(), "app");
+        File libFolder = new File(getTargetFolder(), "lib");
         File repositoryFolder = getRepositoryFolder();
 
         copyTargets(libFolder);
@@ -145,7 +145,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             if(contains){
                 //这个文件是Repository文件，不放到lib下
                 destFile = new File(repositoryFolder, relativePath);
-                File libFolder = new File(target, "lib");
+                File libFolder = new File(getTargetFolder(), "lib");
                 preventFile = new File(libFolder, relativePath);
             }
         }
@@ -189,15 +189,15 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         }
         appTarget = String.format("%s/%s@%s", project.getGroupId(), project.getArtifactId(), project.getVersion());
         try {
-            System.setProperty("app.home", target.getCanonicalPath());
+            System.setProperty("app.home", getTargetFolder().getCanonicalPath());
         } catch (IOException e) {
-            System.setProperty("app.home", target.getAbsolutePath());
+            System.setProperty("app.home", getTargetFolder().getAbsolutePath());
         }
     }
 
     private void prepareFolders() throws MojoExecutionException {
-        if (!target.exists()) {
-            FileUtils.mkdir(target.getAbsolutePath());
+        if (!getTargetFolder().exists()) {
+            FileUtils.mkdir(getTargetFolder().getAbsolutePath());
         }
         String[] subFolders = {"bin", "boot", "app", "lib", "lib/poms", "config", "repository", "logs"};
         for (String relativePath : subFolders) {
@@ -205,14 +205,14 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                 prepareFolder(relativePath);
             } catch (IOException e) {
                 throw new MojoExecutionException("Can't prepare sub folder " +
-                                                 relativePath + " in " + target.getPath());
+                                                 relativePath + " in " + getTargetFolder().getPath());
             }
         }
         if (StringUtils.isNotBlank(folders)) {
             for (String path : StringUtils.split(folders, ",")) {
                 try {
                     File folder = new File(path);
-                    File dest = new File(target, folder.getName());
+                    File dest = new File(getTargetFolder(), folder.getName());
                     FileUtils.copyDirectoryStructure(folder, dest);
 //                    String[] propertyFiles = FileUtils.getFilesFromExtension(dest.getAbsolutePath(), new String[]{"properties"});
 //                    Map<String, Object> projectProperties = getProjectProperties();
@@ -233,7 +233,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                     File file = new File(path);
                     String relativePath = StringUtils
                             .substringAfter(file.getAbsolutePath(), getProject().getBasedir().getAbsolutePath() + "/");
-                    File dest = new File(target, relativePath);
+                    File dest = new File(getTargetFolder(), relativePath);
                     FileUtils.copyFile(file, dest);
                 } catch (IOException e) {
                     getLog().error("Can't copy user specified folder: " + path + " because of:" + e.getMessage());
@@ -244,7 +244,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     }
 
     private void moveBootstrapJar() throws MojoExecutionException {
-        File libPath = new File(target, "lib");
+        File libPath = new File(getTargetFolder(), "lib");
         List<File> bootJars;
         try {
             bootJars = FileUtils.getFiles(libPath, "net.happyonroad/spring-component-framework@*.jar", null);
@@ -260,7 +260,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             throw new MojoExecutionException("There are more than one net.happyonroad/spring-component-framework");
         }
         File bootJar = bootJars.get(0);
-        File destJar = new File(target, "boot/" + bootJar.getName());
+        File destJar = new File(getTargetFolder(), "boot/" + bootJar.getName());
         try {
             FileUtils.rename(bootJar, destJar);
         } catch (IOException e) {
@@ -293,7 +293,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
     private void generateScripts() throws MojoExecutionException {
         try {
-            List<String> bootJars = FileUtils.getFileNames(new File(target, "boot"),
+            List<String> bootJars = FileUtils.getFileNames(new File(getTargetFolder(), "boot"),
                                                            "spring-component-framework@*.jar",
                                                            null, false);
             appBoot = "boot/" + bootJars.get(0);
@@ -331,7 +331,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                     copyPropertyFile(new File(path), replaces);
                 }
             } else {
-                File propertiesFile = new File(target, "config/" + project.getArtifactId() + ".properties");
+                File propertiesFile = new File(getTargetFolder(), "config/" + project.getArtifactId() + ".properties");
                 FileOutputStream fos = new FileOutputStream(propertiesFile);
                 properties.store(fos, appName + " Properties");
                 fos.close();
@@ -376,7 +376,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     }
 
     private void generateFrontendResources() throws MojoExecutionException {
-        DefaultComponentRepository repository = new DefaultComponentRepository(target.getAbsolutePath());
+        DefaultComponentRepository repository = new DefaultComponentRepository(getTargetFolder().getAbsolutePath());
         repository.start();
 
         Properties mappings = new Properties();
@@ -393,14 +393,14 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         if( FileUtils.fileExists(frontendNodeModules)){
             try {
                 FileUtils.copyDirectoryStructure(new File(frontendNodeModules),
-                                                 new File(target, "webapp/frontend/node_modules"));
+                                                 new File(getTargetFolder(), "webapp/frontend/node_modules"));
             } catch (IOException e) {
                 getLog().warn("Can't copy node modules", e);
             }
         }
         FileOutputStream mappingStream = null;
         try {
-            mappingStream = new FileOutputStream(new File(target, "webapp/frontend/.mappings"));
+            mappingStream = new FileOutputStream(new File(getTargetFolder(), "webapp/frontend/.mappings"));
             StringBuilder sb = new StringBuilder();
             sb.append("{\n");
             Iterator<String> names = mappings.stringPropertyNames().iterator();
@@ -419,8 +419,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     }
 
     private File[] getApplicationJars() {
-        Collection<File> libJars = getAppJars(new File(target, "lib"));
-        Collection<File> repositoryJars = getAppJars(new File(target, "repository"));
+        Collection<File> libJars = getAppJars(new File(getTargetFolder(), "lib"));
+        Collection<File> repositoryJars = getAppJars(new File(getTargetFolder(), "repository"));
         List<File> allJars = new ArrayList<File>();
         allJars.addAll(libJars);
         allJars.addAll(repositoryJars);
@@ -454,7 +454,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
                 if( entry.getName().startsWith("frontend")){
-                    File file = new File(target, "webapp/" + entry.getName());
+                    File file = new File(getTargetFolder(), "webapp/" + entry.getName());
                     InputStream stream = jarFile.getInputStream(entry);
                     if( entry.isDirectory() )
                         FileUtils.mkdir(file.getAbsolutePath());
@@ -534,7 +534,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         for (String property : projectProperties.stringPropertyNames()) {
             replaces.put(property, projectProperties.getProperty(property));
         }
-        replaces.put("app.home", target.getAbsolutePath());
+        replaces.put("app.home", getTargetFolder().getAbsolutePath());
         replaces.put("app.name", replaceSpaces(appName));
         replaces.put("app.port", appPort);
         replaces.put("app.boot", appBoot);
@@ -558,7 +558,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         }
         String relative = StringUtils
                 .substringAfter(file.getAbsolutePath(), project.getBasedir().getAbsolutePath() + File.separator);
-        FileUtils.fileWrite(new File(target, relative), interpolated);
+        FileUtils.fileWrite(new File(getTargetFolder(), relative), interpolated);
     }
 
     private void changeFileA(String path, Map<String, Object> replaces) throws IOException {
@@ -586,7 +586,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     private void copyResource(String resource, String path, Map<String, Object> replaces) throws IOException {
         String content = read(resource);
         String interpolated = interpolate(content, replaces, 'A');
-        FileUtils.fileWrite(new File(target, path + "/" + resource), interpolated);
+        FileUtils.fileWrite(new File(getTargetFolder(), path + "/" + resource), interpolated);
     }
 
     private void copyResources(String resourcePath, String path) throws IOException {
@@ -597,7 +597,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             for (String name : names) {
                 InputStream stream = cl.getResourceAsStream(resourcePath + name);
                 try {
-                    FileUtils.copyStreamToFile(new RawInputStreamFacade(stream), new File(target, path + "/" + name));
+                    FileUtils.copyStreamToFile(new RawInputStreamFacade(stream), new File(getTargetFolder(), path + "/" + name));
                 } finally {
                     stream.close();
                 }
@@ -608,7 +608,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     }
 
     private void chmod(String resource, String path) {
-        File script = new File(target, path + "/" + resource);
+        File script = new File(getTargetFolder(), path + "/" + resource);
         chmod(script);
     }
 
@@ -684,7 +684,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
 
     private void prepareFolder(String relativePath) throws IOException {
-        File subFolder = new File(target, relativePath);
+        File subFolder = new File(getTargetFolder(), relativePath);
         //noinspection StatementWithEmptyBody
         if (subFolder.exists()) {
             // don't clean it, because extension is build before release now

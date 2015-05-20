@@ -9,6 +9,7 @@ import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentException;
 import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
@@ -77,7 +78,7 @@ public class AppLauncher implements Executable {
             //以后应该让CLI组件托管这块工作
             processCommands();
         } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error(describeException(ex));
         }
     }
 
@@ -267,12 +268,20 @@ public class AppLauncher implements Executable {
             int exitCode = mainWithExitCode(args);
             System.exit(exitCode);
         } catch (LaunchException e) {
-            System.err.println(e.getMessage());
+            System.err.println(describeException(e));
             System.exit(e.getExitCode());
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(describeException(e));
             System.exit(100);
         }
+    }
+
+    public static String describeException(Throwable ex) {
+        String message = ExceptionUtils.getRootCauseMessage(ex);
+        String[] traces = ExceptionUtils.getRootCauseStackTrace(ex);
+        if (traces.length > 2)
+            return message + traces[1];
+        else return message;
     }
 
     /**
@@ -302,10 +311,10 @@ public class AppLauncher implements Executable {
             environment.execute(launcher, newArgs);
             return 0;
         }catch (ComponentException ex){
-            logger.error("{} : {}", ex.getPath(), ex.getRootCause().getMessage());
+            logger.error("{} : {}", ex.getPath(), describeException(ex));
             return -1;
         }catch (Throwable ex){
-            logger.error("Failed: " + ex.getMessage(), ex);
+            logger.error("Failed: {}", describeException(ex));
             return -1;
         } finally {
             if (mainComponent != null) {
