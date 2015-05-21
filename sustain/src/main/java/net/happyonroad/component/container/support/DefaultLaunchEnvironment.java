@@ -16,6 +16,7 @@ import net.happyonroad.component.core.FeatureResolver;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.DefaultComponent;
+import net.happyonroad.spring.context.ContextUtils;
 import net.happyonroad.util.LogUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.util.StringUtils;
 
@@ -252,22 +254,19 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
     void publishContainerStartedEvent() {
         logger.debug("The component container is started");
-        List<ApplicationContext> applications = getApplications();
         ContainerStartedEvent event = new ContainerStartedEvent(this);
-        for (ApplicationContext application : applications) {
-            application.publishEvent(event);
-        }
+        publishEvent(event);
     }
 
     void publishContainerStoppingEvent() {
         logger.debug("The component container is stopping");
-        List<ApplicationContext> applications = context.getApplicationFeatures();
-        Collections.reverse(applications);
-
         ContainerEvent event = new ContainerStoppingEvent(this);
-        for (ApplicationContext application : applications) {
-            application.publishEvent(event);
-        }
+        publishEvent(event);
+    }
+
+    void publishEvent(ApplicationEvent event){
+        List<ApplicationContext> applications = getApplications();
+        ContextUtils.publishEvent(applications, event);
     }
 
 

@@ -5,16 +5,19 @@ package net.happyonroad.spring.context;
 
 import net.happyonroad.spring.support.SmartApplicationEventMulticaster;
 import org.apache.commons.lang.reflect.FieldUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextException;
+import org.springframework.context.*;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.OrderComparator;
+import org.springframework.core.Ordered;
 
-import java.util.List;
+import java.util.*;
 
 import static org.springframework.context.support.AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME;
 
@@ -22,6 +25,9 @@ import static org.springframework.context.support.AbstractApplicationContext.APP
  * 将各个context无法DRY的功能集中到这里
  */
 public class ContextUtils {
+    private static       Logger                        eventLogger = LoggerFactory.getLogger(ApplicationEvent.class);
+    private final static Map<String, Set<ApplicationEvent>> events      = new HashMap<String, Set<ApplicationEvent>>();
+
     /**
      * 继承上级上下文中的属性配置器
      *
@@ -31,9 +37,10 @@ public class ContextUtils {
     public static void inheritParentProperties(ApplicationContext inheriting,
                                                GenericApplicationContext context) {
         if (!(inheriting instanceof AbstractApplicationContext)) return;
-        List<BeanFactoryPostProcessor> processors = ((AbstractApplicationContext) inheriting).getBeanFactoryPostProcessors();
+        List<BeanFactoryPostProcessor> processors =
+                ((AbstractApplicationContext) inheriting).getBeanFactoryPostProcessors();
         for (BeanFactoryPostProcessor processor : processors) {
-            if( processor instanceof PropertyResourceConfigurer)
+            if (processor instanceof PropertyResourceConfigurer)
                 context.addBeanFactoryPostProcessor(processor);
         }
     }
@@ -63,6 +70,92 @@ public class ContextUtils {
             FieldUtils.writeField(context, "applicationEventMulticaster", applicationEventMulticaster, true);
         } catch (IllegalAccessException e) {
             throw new ApplicationContextException("Can't hacking the spring context for applicationEventMulticaster", e);
+        }
+    }
+
+    public static void publishEvent(List<ApplicationContext> contexts, ApplicationEvent event){
+        filterContexts(contexts, event);
+        registerEvents(contexts, event);
+        try {
+            innerPublish(contexts, event);
+        } finally {
+            cleanEvents(contexts, event);
+        }
+    }
+
+    private static void registerEvents(List<ApplicationContext> contexts, ApplicationEvent event) {
+        for (ApplicationContext context : contexts) {
+            Set<ApplicationEvent> set = events.get(context.getId());
+            if( set == null ) {
+                set = new HashSet<ApplicationEvent>();
+                events.put(context.getId(), set);
+            }
+            set.add(event);
+        }
+    }
+
+    private static void filterContexts(List<ApplicationContext> contexts, ApplicationEvent event) {
+        Iterator<ApplicationContext> it = contexts.iterator();
+        while (it.hasNext()) {
+            ApplicationContext context = it.next();
+            Set<ApplicationEvent> set = events.get(context.getId());
+            if( set != null && set.contains(event)) it.remove();
+        }
+    }
+
+    private static void cleanEvents(List<ApplicationContext> contexts, ApplicationEvent event) {
+        for (ApplicationContext context : contexts) {
+            Set<ApplicationEvent> set = events.get(context.getId());
+            if( set != null) set.remove(event);
+        }
+    }
+
+    protected static void innerPublish(List<ApplicationContext> contexts, ApplicationEvent event) {
+        //向所有的context发布，context里面有防止重复的机制
+        // 2. 提速
+        Set<ApplicationListener<ApplicationEvent>> listeners = new HashSet<ApplicationListener<ApplicationEvent>>();
+        for (ApplicationContext context : contexts) {
+            if( context != null ) {
+                if( context instanceof ConfigurableApplicationContext){
+                    if( !((ConfigurableApplicationContext) context).isActive() ) continue;
+                }
+                ApplicationEventMulticaster multicaster = (ApplicationEventMulticaster) context.getBean(
+                        AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
+                if( multicaster instanceof SmartApplicationEventMulticaster){
+                    SmartApplicationEventMulticaster smartOne = (SmartApplicationEventMulticaster) multicaster;
+                    Collection<ApplicationListener<?>> partListeners = smartOne.getApplicationListeners(event);
+                    for (ApplicationListener<?> listener : partListeners) {
+                        //noinspection unchecked
+                        listeners.add((ApplicationListener<ApplicationEvent>) listener);
+                    }
+                }
+            }
+        }
+        if( !listeners.isEmpty() ){
+            LinkedList<ApplicationListener<ApplicationEvent>> list = new LinkedList<ApplicationListener<ApplicationEvent>>();
+            //noinspection unchecked
+            list.addAll(listeners);
+            OrderComparator.sort(list);
+            if( eventLogger.isInfoEnabled() ){
+                StringBuilder sb = new StringBuilder();
+                Iterator<ApplicationListener<ApplicationEvent>> it = list.iterator();
+                while (it.hasNext()) {
+                    ApplicationListener<ApplicationEvent> listener = it.next();
+                    sb.append(listener.getClass().getSimpleName()).append("(");
+                    if( listener instanceof Ordered){
+                        sb.append(((Ordered) listener).getOrder());
+                    }else{
+                        sb.append("0");
+                    }
+                    sb.append(")");
+                    if( it.hasNext() ) sb.append(",");
+                }
+                eventLogger.info("Publish {} of {} to {}", event.getClass().getSimpleName(),
+                                 event.getSource().getClass().getSimpleName(), sb);
+            }
+            for (ApplicationListener<ApplicationEvent> listener : list) {
+                listener.onApplicationEvent(event);
+            }
         }
     }
 
