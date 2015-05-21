@@ -11,12 +11,14 @@ import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
 import org.springframework.context.*;
+import org.springframework.context.event.AbstractApplicationEventMulticaster;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.OrderComparator;
 import org.springframework.core.Ordered;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.springframework.context.support.AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME;
@@ -121,13 +123,25 @@ public class ContextUtils {
                 }
                 ApplicationEventMulticaster multicaster = (ApplicationEventMulticaster) context.getBean(
                         AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
+                Collection<ApplicationListener<?>> partListeners;
                 if( multicaster instanceof SmartApplicationEventMulticaster){
                     SmartApplicationEventMulticaster smartOne = (SmartApplicationEventMulticaster) multicaster;
-                    Collection<ApplicationListener<?>> partListeners = smartOne.getApplicationListeners(event);
-                    for (ApplicationListener<?> listener : partListeners) {
+                    partListeners = smartOne.getApplicationListeners(event);
+                } else {
+                    try {
+                        Class<AbstractApplicationEventMulticaster> klass = AbstractApplicationEventMulticaster.class;
+                        Method method = klass.getDeclaredMethod("getApplicationListeners", ApplicationEvent.class);
+                        method.setAccessible(true);
                         //noinspection unchecked
-                        listeners.add((ApplicationListener<ApplicationEvent>) listener);
+                        partListeners = (Collection<ApplicationListener<?>>) method.invoke(multicaster, event);
+                    } catch (Exception e) {
+                        eventLogger.warn("Can't steal event listener from " + multicaster);
+                        partListeners = Collections.emptyList();
                     }
+                }
+                for (ApplicationListener<?> listener : partListeners) {
+                    //noinspection unchecked
+                    listeners.add((ApplicationListener<ApplicationEvent>) listener);
                 }
             }
         }
