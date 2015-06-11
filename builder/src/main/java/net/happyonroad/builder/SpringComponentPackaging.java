@@ -112,6 +112,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
         moveBootstrapJar();
 
+        interpolateScripts();
+
         generateScripts();
 
         generateWrapper();
@@ -290,37 +292,30 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         }
     }
 
+    private void interpolateScripts() throws MojoExecutionException {
+        try {
+            Collection<File> scripts = listFiles(new File(getTargetFolder(), "bin"), new String[]{"sh", "bat"}, true);
+            if( !scripts.isEmpty() ){
+                Map<String, Object> replaces = createAppOptions();
+                for (File script : scripts) {
+                    changeFileA(script.getPath(), replaces);
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Can't interpolate script", e);
+        }
+    }
+
 
     private void generateScripts() throws MojoExecutionException {
         try {
-            List<String> bootJars = FileUtils.getFileNames(new File(getTargetFolder(), "boot"),
-                                                           "spring-component-framework@*.jar",
-                                                           null, false);
-            appBoot = "boot/" + bootJars.get(0);
-            Map<String, Object> replaces = getProjectProperties();
-            if (jvmOptions == null) jvmOptions = "";
-            // don't put port(maybe replaced at last)
-            // it may affect sed
-            if (debug > 0) {
-                jvmOptions += " -agentlib:jdwp=transport=dt_socket,server=y,address=" + debug + ",suspend=n";
-            }
-            if (jmx > 0) {
-                jvmOptions += " -Dcom.sun.management.jmxremote" +
-                              " -Dcom.sun.management.jmxremote.port=" + jmx +
-                              " -Dcom.sun.management.jmxremote.local.only=false" +
-                              " -Dcom.sun.management.jmxremote.authenticate=false" +
-                              " -Dcom.sun.management.jmxremote.ssl=false";
-            }
-            if (StringUtils.isNotBlank(appPrefix)) {
-                jvmOptions += " -Dapp.prefix=" + appPrefix;
-            }
-            jvmOptions = jvmOptions.replaceAll("\n","");
-            jvmOptions = jvmOptions.replaceAll("\\s+"," ");
-            replaces.put("jvm.options", jvmOptions);
+            Map<String, Object> replaces = createAppOptions();
             String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh", "check.sh"};
             for (String resource : resourceNames) {
-                copyResource(resource, "bin", replaces);
-                chmod(resource, "bin");
+                if(!FileUtils.fileExists(new File(getTargetFolder(), "bin/" + resource).getPath())){
+                    copyResource(resource, "bin", replaces);
+                    chmod(resource, "bin");
+                }
             }
             if (logbackFile != null && logbackFile.exists()) {
                 copyPropertyFile(logbackFile, replaces);
@@ -341,6 +336,34 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             throw new MojoExecutionException("Can't generate script", e);
         }
 
+    }
+
+    private Map<String, Object> createAppOptions() throws IOException {
+        List<String> bootJars = FileUtils.getFileNames(new File(getTargetFolder(), "boot"),
+                                                       "spring-component-framework@*.jar",
+                                                       null, false);
+        appBoot = "boot/" + bootJars.get(0);
+        Map<String, Object> replaces = getProjectProperties();
+        if (jvmOptions == null) jvmOptions = "";
+        // don't put port(maybe replaced at last)
+        // it may affect sed
+        if (debug > 0) {
+            jvmOptions += " -agentlib:jdwp=transport=dt_socket,server=y,address=" + debug + ",suspend=n";
+        }
+        if (jmx > 0) {
+            jvmOptions += " -Dcom.sun.management.jmxremote" +
+                          " -Dcom.sun.management.jmxremote.port=" + jmx +
+                          " -Dcom.sun.management.jmxremote.local.only=false" +
+                          " -Dcom.sun.management.jmxremote.authenticate=false" +
+                          " -Dcom.sun.management.jmxremote.ssl=false";
+        }
+        if (StringUtils.isNotBlank(appPrefix)) {
+            jvmOptions += " -Dapp.prefix=" + appPrefix;
+        }
+        jvmOptions = jvmOptions.replaceAll("\n","");
+        jvmOptions = jvmOptions.replaceAll("\\s+"," ");
+        replaces.put("jvm.options", jvmOptions);
+        return replaces;
     }
 
     private void generateWrapper() throws MojoExecutionException {

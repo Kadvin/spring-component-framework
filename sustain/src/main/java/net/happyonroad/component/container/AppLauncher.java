@@ -70,15 +70,17 @@ public class AppLauncher implements Executable {
             logger.info(banner("Loading components starts from {}", this.mainComponent));
             environment.load(this.mainComponent);
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
-            exportAsRMI();
+            if(!StringUtils.isEmpty(System.getProperty("app.port")))
+                exportAsRMI();
             addShutdownHook();
             logger.info(banner("The {} is started", getAppName()));
             logger.info(banner("System starts took {}", formatDurationHMS(System.currentTimeMillis() - start)));
             //让主线程基于STDIO接受交互命令
             //以后应该让CLI组件托管这块工作
-            processCommands();
+            if(!StringUtils.isEmpty(System.getProperty("app.port")))
+                processCommands();
         } catch (Exception ex) {
-            logger.error(describeException(ex));
+             logger.error(describeException(ex));
         }
     }
 
@@ -281,6 +283,7 @@ public class AppLauncher implements Executable {
         String[] traces = ExceptionUtils.getRootCauseStackTrace(ex);
         if (traces.length > 2)
             return message + traces[1];
+        //TODO: 检查这个trace的包名，如果不是应用包名，则向上一直追溯到应用的包名开头
         else return message;
     }
 
