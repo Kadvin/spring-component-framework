@@ -67,12 +67,6 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
             System.setProperty("app.host", addresses.get(0));
             logger.debug("app.host is not set, use local ip as default");
         }
-        String appPort = System.getProperty("app.port");
-        if (!StringUtils.hasText(appPort)) {
-            appPort = "1099";
-            System.setProperty("app.port", appPort);
-            logger.debug("app.port is not set, use 1099 as default");
-        }
         repository = createComponentRepository(home);
         try {
             repository.start();

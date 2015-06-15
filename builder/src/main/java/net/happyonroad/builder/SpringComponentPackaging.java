@@ -299,6 +299,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                 Map<String, Object> replaces = createAppOptions();
                 for (File script : scripts) {
                     changeFileA(script.getPath(), replaces);
+                    chmod(script);
                 }
             }
         } catch (IOException e) {
