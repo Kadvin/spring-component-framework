@@ -8,6 +8,7 @@ import net.happyonroad.component.container.ComponentRepository;
 import net.happyonroad.component.container.feature.ApplicationFeatureResolver;
 import net.happyonroad.component.container.feature.StaticFeatureResolver;
 import net.happyonroad.component.core.*;
+import net.happyonroad.component.core.support.Dependency;
 import net.happyonroad.spring.service.MutableServiceRegistry;
 import net.happyonroad.spring.service.ServiceRegistry;
 import net.happyonroad.spring.support.CombinedMessageSource;
@@ -177,6 +178,10 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         //而后加载依赖的组件
         for (Component depended : component.getDependedComponents()) {
             //上面会自动检测是否已经加载，防止重复加载
+            Dependency textualDependency = new Dependency(depended.getGroupId(), depended.getArtifactId());
+            Dependency actualDependency = component.getDependency(textualDependency);
+            if( actualDependency.isProvided() || actualDependency.isTest() )
+                continue;
             load(depended);
         }
         quickLoad(component);

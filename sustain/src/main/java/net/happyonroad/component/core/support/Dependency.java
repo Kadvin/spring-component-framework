@@ -152,6 +152,10 @@ public class Dependency implements Versionize{
         return Component.SCOPE_TEST.equalsIgnoreCase(getScope());
     }
 
+    public boolean isProvided(){
+        return Component.SCOPE_PROVIDED.equalsIgnoreCase(getScope());
+    }
+
     @SuppressWarnings("UnusedDeclaration")
     public boolean isRuntime(){
         return Component.SCOPE_RUNTIME.equalsIgnoreCase(getScope());
