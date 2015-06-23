@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.regex.Pattern;
 
 import static net.happyonroad.util.LogUtils.banner;
 import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
@@ -62,7 +63,6 @@ public class AppLauncher implements Executable {
 
     /**
      * 启动当前的组件Jar包
-     *
      */
     public void start() throws Exception {
         try {
@@ -70,23 +70,26 @@ public class AppLauncher implements Executable {
             logger.info(banner("Loading components starts from {}", this.mainComponent));
             environment.load(this.mainComponent);
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
-            if(!StringUtils.isEmpty(System.getProperty("app.port")))
+            if (!StringUtils.isEmpty(System.getProperty("app.port")))
                 exportAsRMI();
             addShutdownHook();
             logger.info(banner("The {} is started", getAppName()));
             logger.info(banner("System starts took {}", formatDurationHMS(System.currentTimeMillis() - start)));
             //让主线程基于STDIO接受交互命令
             //以后应该让CLI组件托管这块工作
-            if(!StringUtils.isEmpty(System.getProperty("app.port")))
+            if (!StringUtils.isEmpty(System.getProperty("app.port")))
                 processCommands();
         } catch (Exception ex) {
-             logger.error(describeException(ex));
+            logger.error("Failed to start", ex);
+            System.exit(1);
         }
     }
 
-    /** 退出 */
+    /**
+     * 退出
+     */
     public void exit() {
-        if( exiting ){
+        if (exiting) {
             logger.debug("Another thread is shutting down");
             return;
         }
@@ -148,10 +151,12 @@ public class AppLauncher implements Executable {
     }
 
     private void addShutdownHook() {
-       Runtime.getRuntime().addShutdownHook(new ShutdownHook(this));
+        Runtime.getRuntime().addShutdownHook(new ShutdownHook(this));
     }
 
-    /** 处理当前进程的命令行交互 */
+    /**
+     * 处理当前进程的命令行交互
+     */
     private void processCommands() {
         running = true;
         boolean normal = true;
@@ -259,10 +264,11 @@ public class AppLauncher implements Executable {
         try {
             // When started by Service wrapper, the context class loader is URLClassLoader of wrapper.jar
             //  but this main class is loaded by the framework jar's ClassLoader(FactoryClassLoader)
-            if( AppLauncher.class.getClassLoader() != ClassLoader.getSystemClassLoader() ){
+            if (AppLauncher.class.getClassLoader() != ClassLoader.getSystemClassLoader()) {
                 //说明是基于Service Wrapper启动
-                Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance(AppLauncher.class.getClassLoader() ));
-            }else{
+                Thread.currentThread()
+                      .setContextClassLoader(MainClassLoader.getInstance(AppLauncher.class.getClassLoader()));
+            } else {
                 Thread.currentThread().setContextClassLoader(MainClassLoader.getInstance());
             }
             // To register the url handler by current context class loader, instead of system bootstrap class loader
@@ -278,13 +284,37 @@ public class AppLauncher implements Executable {
         }
     }
 
+    static Pattern[] appPatterns;
+
+    static {
+        String[] raw = System.getProperty("app.prefix", "dnt.;net.happyonroad").split(";");
+        appPatterns = new Pattern[raw.length];
+        for (int i = 0; i < raw.length; i++) {
+            String prefix = raw[i];
+            appPatterns[i] = Pattern.compile("^|\\s+" + prefix.replaceAll("\\.", "\\\\."));
+        }
+    }
+
     public static String describeException(Throwable ex) {
-        String message = ExceptionUtils.getRootCauseMessage(ex);
+        StringBuilder message = new StringBuilder();
+        message.append(ExceptionUtils.getRootCauseMessage(ex));
         String[] traces = ExceptionUtils.getRootCauseStackTrace(ex);
-        if (traces.length > 2)
-            return message + traces[1];
-        //TODO: 检查这个trace的包名，如果不是应用包名，则向上一直追溯到应用的包名开头
-        else return message;
+        for (int i = 1; i < traces.length; i++) {
+            String trace = traces[i];
+            message.append(trace).append("\n");
+            if( isApplicationTrace(trace) ){
+                break;
+            }
+        }
+        return message.toString();
+    }
+
+    static boolean isApplicationTrace(String trace) {
+        if (appPatterns.length == 0) return true;
+        for (Pattern pattern : appPatterns) {
+            if (pattern.matcher(trace).matches()) return true;
+        }
+        return false;
     }
 
     /**
@@ -313,10 +343,10 @@ public class AppLauncher implements Executable {
             //      停止系统(通过本机Socket停止另外一个已经在运行的系统)
             environment.execute(launcher, newArgs);
             return 0;
-        }catch (ComponentException ex){
+        } catch (ComponentException ex) {
             logger.error("{} : {}", ex.getPath(), describeException(ex));
             return -1;
-        }catch (Throwable ex){
+        } catch (Throwable ex) {
             logger.error("Failed: {}", describeException(ex));
             return -1;
         } finally {
