@@ -284,15 +284,10 @@ public class AppLauncher implements Executable {
         }
     }
 
-    static Pattern[] appPatterns;
+    static String[] appPatterns;
 
     static {
-        String[] raw = System.getProperty("app.prefix", "dnt.;net.happyonroad").split(";");
-        appPatterns = new Pattern[raw.length];
-        for (int i = 0; i < raw.length; i++) {
-            String prefix = raw[i];
-            appPatterns[i] = Pattern.compile("^|\\s+" + prefix.replaceAll("\\.", "\\\\."));
-        }
+        appPatterns = System.getProperty("app.prefix", "dnt.;net.happyonroad").split(";");
     }
 
     public static String describeException(Throwable ex) {
@@ -311,8 +306,16 @@ public class AppLauncher implements Executable {
 
     static boolean isApplicationTrace(String trace) {
         if (appPatterns.length == 0) return true;
-        for (Pattern pattern : appPatterns) {
-            if (pattern.matcher(trace).matches()) return true;
+        for (String pattern : appPatterns) {
+            int i = trace.indexOf(pattern);
+            if( i > 0 ){
+                char c = trace.charAt(i-1);
+                if(Character.isSpaceChar(c)){
+                    return true;
+                }
+            }else if (i == 0 ){
+                return true;
+            }
         }
         return false;
     }

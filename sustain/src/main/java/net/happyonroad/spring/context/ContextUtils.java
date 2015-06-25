@@ -27,7 +27,6 @@ import static org.springframework.context.support.AbstractApplicationContext.APP
  * 将各个context无法DRY的功能集中到这里
  */
 public class ContextUtils {
-    private static       Logger                        eventLogger = LoggerFactory.getLogger(ApplicationEvent.class);
     private final static Map<String, Set<ApplicationEvent>> events      = new HashMap<String, Set<ApplicationEvent>>();
 
     /**
@@ -113,6 +112,7 @@ public class ContextUtils {
     }
 
     protected static void innerPublish(List<ApplicationContext> contexts, ApplicationEvent event) {
+        Logger eventLogger = getEventLogger(event);
         //向所有的context发布，context里面有防止重复的机制
         // 2. 提速
         Set<ApplicationListener<ApplicationEvent>> listeners = new HashSet<ApplicationListener<ApplicationEvent>>();
@@ -164,13 +164,17 @@ public class ContextUtils {
                     sb.append(")");
                     if( it.hasNext() ) sb.append(",");
                 }
-                eventLogger.info("Publish {} of {} to {}", event.getClass().getSimpleName(),
+                eventLogger.debug("Publish {} of {} to {}", event.getClass().getSimpleName(),
                                  event.getSource().getClass().getSimpleName(), sb);
             }
             for (ApplicationListener<ApplicationEvent> listener : list) {
                 listener.onApplicationEvent(event);
             }
         }
+    }
+
+    private static Logger getEventLogger(ApplicationEvent event){
+        return LoggerFactory.getLogger(event.getClass());
     }
 
 }
