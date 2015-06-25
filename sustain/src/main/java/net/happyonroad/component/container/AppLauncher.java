@@ -292,7 +292,7 @@ public class AppLauncher implements Executable {
 
     public static String describeException(Throwable ex) {
         StringBuilder message = new StringBuilder();
-        message.append(ExceptionUtils.getRootCauseMessage(ex));
+        message.append(ExceptionUtils.getRootCauseMessage(ex)).append("\n");
         String[] traces = ExceptionUtils.getRootCauseStackTrace(ex);
         for (int i = 1; i < traces.length; i++) {
             String trace = traces[i];
