@@ -321,6 +321,26 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     }
 
     @Override
+    public boolean cached(File file) {
+        for(Resource resource : cache.values() ){
+            try {
+                if(resource.getFile().equals(file)){
+                    return true;
+                }
+            } catch (IOException e) {
+                //skip, continue for next
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void cache(File file) throws InvalidComponentNameException {
+        Dependency dep = Dependency.parse(file);
+        cache.put(dep, new FileSystemResource(file));
+    }
+
+    @Override
     public void sortCandidates(File[] candidateComponentJars)
             throws DependencyNotMeetException, InvalidComponentNameException {
         final List<Component> components = new ArrayList<Component>(candidateComponentJars.length);

@@ -112,11 +112,13 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
         moveBootstrapJar();
 
-        interpolateScripts();
+        Map<String, Object> replaces = createAppOptions();
 
-        generateScripts();
+        interpolateScripts(replaces);
 
-        generateWrapper();
+        generateScripts(replaces);
+
+        generateWrapper(replaces);
 
         if (StringUtils.isNotBlank(frontendNodeModules)) {
             //从各个jar包里面抽取前端程序
@@ -292,11 +294,10 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         }
     }
 
-    private void interpolateScripts() throws MojoExecutionException {
+    private void interpolateScripts(Map<String, Object> replaces) throws MojoExecutionException {
         try {
             Collection<File> scripts = listFiles(new File(getTargetFolder(), "bin"), new String[]{"sh", "bat"}, true);
             if( !scripts.isEmpty() ){
-                Map<String, Object> replaces = createAppOptions();
                 for (File script : scripts) {
                     changeFileA(script.getPath(), replaces);
                     chmod(script);
@@ -308,9 +309,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     }
 
 
-    private void generateScripts() throws MojoExecutionException {
+    private void generateScripts(Map<String, Object> replaces) throws MojoExecutionException {
         try {
-            Map<String, Object> replaces = createAppOptions();
             String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh", "check.sh"};
             for (String resource : resourceNames) {
                 if(!FileUtils.fileExists(new File(getTargetFolder(), "bin/" + resource).getPath())){
@@ -339,10 +339,15 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
     }
 
-    private Map<String, Object> createAppOptions() throws IOException {
-        List<String> bootJars = FileUtils.getFileNames(new File(getTargetFolder(), "boot"),
-                                                       "spring-component-framework@*.jar",
-                                                       null, false);
+    private Map<String, Object> createAppOptions()  {
+        List<String> bootJars;
+        try {
+            bootJars = FileUtils.getFileNames(new File(getTargetFolder(), "boot"),
+                                              "spring-component-framework@*.jar",
+                                              null, false);
+        } catch (IOException e) {
+            return new HashMap<String, Object>();
+        }
         appBoot = "boot/" + bootJars.get(0);
         Map<String, Object> replaces = getProjectProperties();
         if (jvmOptions == null) jvmOptions = "";
@@ -367,7 +372,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         return replaces;
     }
 
-    private void generateWrapper() throws MojoExecutionException {
+    private void generateWrapper(Map<String, Object> replaces) throws MojoExecutionException {
         if (!wrapper) {
             getLog().warn("Skip generate wrapper");
             return;
@@ -377,7 +382,6 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             copyResources("net/happyonroad/wrapper/boot/", "boot");
             copyResources("net/happyonroad/wrapper/conf/", "config");
 
-            Map<String, Object> replaces = getProjectProperties();
             String appHome = (String) replaces.get("app.home");
             String appName = (String) replaces.get("app.name");
             String mainExecutor = appHome + "/bin/" + StringUtils.lowerCase(appName);

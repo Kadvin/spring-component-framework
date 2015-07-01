@@ -8,6 +8,14 @@ public interface ComponentLoader {
     /**
      * 判断组件是否已经加载
      *
+     * @param componentId 被加载的组件
+     * @return 判断结果
+     */
+    boolean isLoaded(String componentId);
+
+    /**
+     * 判断组件是否已经加载
+     *
      * @param component 被加载的组件
      * @return 判断结果
      */
@@ -46,6 +54,13 @@ public interface ComponentLoader {
      * @param resolver 解析器
      */
     void registerResolver(FeatureResolver resolver);
+
+    /**
+     * 取消特性解析器
+     *
+     * @param resolver 解析器
+     */
+    void removeResolver(FeatureResolver resolver);
 
     /**
      * 获取某个特性的解析器

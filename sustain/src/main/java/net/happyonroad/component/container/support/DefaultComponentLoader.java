@@ -91,6 +91,14 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     }
 
     @Override
+    public void removeResolver(FeatureResolver resolver) {
+        featureResolvers.remove(resolver);
+        reverseResolvers.remove(resolver);
+        Collections.sort(featureResolvers, new LoadOrder());
+        Collections.sort(reverseResolvers, new UnloadOrder());
+    }
+
+    @Override
     public <T extends FeatureResolver> T getFeatureResolver(String name) {
         for (FeatureResolver resolver : featureResolvers) {
             if (resolver.getName().equals(name))
@@ -98,6 +106,15 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 return (T) resolver;
         }
         return null;
+    }
+
+    @Override
+    public boolean isLoaded(String componentId) {
+        for(Component component : loadedFeatures.keySet()){
+            if( component.getId().equals(componentId))
+                return true;
+        }
+        return false;
     }
 
     @Override

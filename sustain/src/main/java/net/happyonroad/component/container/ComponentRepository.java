@@ -12,7 +12,7 @@ import java.util.Set;
 /**
  * 组件仓库
  */
-public interface ComponentRepository{
+public interface ComponentRepository {
 
     /**
      * 根据依赖找到或者解析出当前优先级最高的组件对象
@@ -62,4 +62,18 @@ public interface ComponentRepository{
      */
     List<Component> getComponents();
 
+    /**
+     * Judge a file is cached or not
+     *
+     * @param file the file to be judged
+     * @return cached or not
+     */
+    boolean cached(File file);
+
+    /**
+     * <h2>Dynamic cache a file</h2>
+     *
+     * @param file file to be cache
+     */
+    void cache(File file) throws InvalidComponentNameException;
 }

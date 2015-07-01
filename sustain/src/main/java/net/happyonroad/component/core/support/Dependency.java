@@ -220,7 +220,7 @@ public class Dependency implements Versionize{
     /**
      * 根据文件全名称解析依赖信息
      *
-     * @param fullName 全名称，形如： groupId.artifactId-version.type
+     * @param fullName 全名称，形如： groupId/artifactId@version.type
      * @return 依赖信息
      */
     public static Dependency parse(String fullName) throws InvalidComponentNameException {
