@@ -392,7 +392,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             String[] jvmOptionArray = jvmOptions.split(" ");
             for (int i = 0; i < jvmOptionArray.length; i++) {
                 String jvmOption = jvmOptionArray[i];
-                replaces.put("jvm.option." + (i + 5), jvmOption);
+                replaces.put("jvm.option." + (i + 6), jvmOption);
             }
 
             changeFileB(mainExecutor, replaces);
