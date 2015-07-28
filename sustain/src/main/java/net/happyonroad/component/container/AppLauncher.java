@@ -19,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.regex.Pattern;
 
 import static net.happyonroad.util.LogUtils.banner;
 import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
@@ -46,7 +45,6 @@ public class AppLauncher implements Executable {
     protected LaunchEnvironment environment;
     protected Component         mainComponent;
     //protected PomClassWorld     pomWorld;
-    private   boolean           exiting;
 
     public AppLauncher(Component mainComponent, LaunchEnvironment environment) {
         super();
@@ -89,7 +87,7 @@ public class AppLauncher implements Executable {
      * 退出
      */
     public void exit() {
-        if (exiting) {
+        if (exiting()) {
             logger.debug("Another thread is shutting down");
             return;
         }
@@ -97,7 +95,7 @@ public class AppLauncher implements Executable {
         //noinspection finally
         try {
             logger.info(banner("Unloading the main component {}", this.mainComponent));
-            exiting = true;
+            System.setProperty("app.status", "exiting");
             environment.unload(this.mainComponent);
             logger.info(banner("Unloaded  the main component {}", this.mainComponent));
         } catch (Exception ex) {
@@ -117,7 +115,7 @@ public class AppLauncher implements Executable {
 
     @Override
     public boolean exiting() {
-        return exiting;
+        return System.getProperty("app.status", "normal").equals("exiting");
     }
 
     /*重新加载*/
