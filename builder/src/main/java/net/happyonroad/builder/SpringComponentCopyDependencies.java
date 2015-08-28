@@ -201,7 +201,12 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
                 }
                 String pomXmlPath = "META-INF/maven/" + dep.getGroupId() + "/" + dep.getArtifactId();
                 if (!jarFile.exists()) continue;
-                JarFile jar = new JarFile(jarFile);
+                JarFile jar;
+                try {
+                    jar = new JarFile(jarFile);
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Can't create jar file: " + jarFile.getName(), e);
+                }
                 ZipEntry mavenFolder = jar.getEntry(pomXmlPath);
                 jar.close();
                 if (mavenFolder != null) {

@@ -15,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 
@@ -37,10 +35,6 @@ import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS
  */
 public class AppLauncher implements Executable {
     private static       Logger logger     = LoggerFactory.getLogger(AppLauncher.class.getName());
-    private static final String CMD_EXIT   = "exit";
-    private static final String CMD_RELOAD = "reload";
-
-    private boolean running;
 
     protected LaunchEnvironment environment;
     protected Component         mainComponent;
@@ -73,14 +67,28 @@ public class AppLauncher implements Executable {
             addShutdownHook();
             logger.info(banner("The {} is started", getAppName()));
             logger.info(banner("System starts took {}", formatDurationHMS(System.currentTimeMillis() - start)));
+            //Thread.currentThread().setDaemon(true);
             //让主线程基于STDIO接受交互命令
             //以后应该让CLI组件托管这块工作
+            //if (!StringUtils.isEmpty(System.getProperty("app.port")))
+            //    processCommands();
             if (!StringUtils.isEmpty(System.getProperty("app.port")))
-                processCommands();
+                waitForever();
         } catch (Exception ex) {
             logger.error("Failed to start", ex);
             System.exit(1);
         }
+    }
+
+    private void waitForever() {
+        while(!exiting()){
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                //skip
+            }
+        }
+
     }
 
     /**
@@ -101,7 +109,6 @@ public class AppLauncher implements Executable {
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
-            running = false;
             //启动一个额外的线程停止自身
             new Thread("Stopper") {
                 @Override
@@ -150,44 +157,6 @@ public class AppLauncher implements Executable {
 
     private void addShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new ShutdownHook(this));
-    }
-
-    /**
-     * 处理当前进程的命令行交互
-     */
-    private void processCommands() {
-        running = true;
-        boolean normal = true;
-        while (running) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            try {
-                if (normal) System.out.println("Input command:");
-                String command = reader.readLine();
-                command = command.trim();
-                if (StringUtils.isEmpty(command)) continue;
-                logger.info("Get command: `{}` ", command);
-                if (CMD_EXIT.equalsIgnoreCase(command)) {
-                    exit();
-                } else if (CMD_RELOAD.equalsIgnoreCase(command)) {
-                    reload();
-                } else {
-                    process(command);
-                }
-                normal = true;
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                //We will catch exception while started by wrapper process
-                //Thread.yield();
-                try {
-                    //if we only yield without sleep,
-                    // the CPU usage will be raised to 100%, but other application can works
-                    Thread.sleep(100);
-                } catch (InterruptedException e1) {
-                    //skip it
-                }
-                normal = false;
-            }
-        }
     }
 
     protected String getAppName() {
