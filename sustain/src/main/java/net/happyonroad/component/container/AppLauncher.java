@@ -9,12 +9,14 @@ import net.happyonroad.component.container.support.ShutdownHook;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentException;
 import net.happyonroad.component.core.support.ComponentURLStreamHandlerFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.remoting.rmi.RmiServiceExporter;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
 
@@ -34,8 +36,8 @@ import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS
  * </p>
  */
 public class AppLauncher implements Executable {
-    private static       Logger logger     = LoggerFactory.getLogger(AppLauncher.class.getName());
-
+    private static Logger logger = LoggerFactory.getLogger(AppLauncher.class.getName());
+    private   long              systemStartAt;
     protected LaunchEnvironment environment;
     protected Component         mainComponent;
     //protected PomClassWorld     pomWorld;
@@ -45,6 +47,7 @@ public class AppLauncher implements Executable {
         if (mainComponent == null) {
             throw new IllegalArgumentException("The main component must been specified!");
         }
+        this.systemStartAt = System.currentTimeMillis();
         this.mainComponent = mainComponent;
         //String theMainClassName = this.mainComponent.getManifestAttribute("Main-Class");
         //setAppMain(theMainClassName, this.mainComponent.getId());
@@ -64,6 +67,7 @@ public class AppLauncher implements Executable {
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));
             if (!StringUtils.isEmpty(System.getProperty("app.port")))
                 exportAsRMI();
+
             addShutdownHook();
             logger.info(banner("The {} is started", getAppName()));
             logger.info(banner("System starts took {}", formatDurationHMS(System.currentTimeMillis() - start)));
@@ -72,20 +76,43 @@ public class AppLauncher implements Executable {
             //以后应该让CLI组件托管这块工作
             //if (!StringUtils.isEmpty(System.getProperty("app.port")))
             //    processCommands();
-            if (!StringUtils.isEmpty(System.getProperty("app.port")))
-                waitForever();
+            if (StringUtils.isEmpty(System.getProperty("app.port")))
+                checkSignalPeriodically();
         } catch (Exception ex) {
             logger.error("Failed to start", ex);
             System.exit(1);
         }
     }
 
-    private void waitForever() {
-        while(!exiting()){
+    public static int readSystemAppIndex() {
+        return Integer.valueOf(System.getProperty("app.index", "0"));
+    }
+
+    public static File getSignal(String name) {
+        int appIndex = readSystemAppIndex();
+        if (appIndex == 0) {
+            return new File("tmp/" + name);
+        } else {
+            return new File("tmp/" + name + "." + appIndex);
+        }
+    }
+
+    private void checkSignalPeriodically() {
+        while (!exiting()) {
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 //skip
+            }
+            File signal = getSignal("exit");
+            if( !signal.exists() ) continue;
+
+            if (signal.lastModified() < systemStartAt) {
+                // a legacy file
+                FileUtils.deleteQuietly(signal);
+            } else {
+                FileUtils.deleteQuietly(signal);
+                exit();
             }
         }
 
@@ -101,14 +128,16 @@ public class AppLauncher implements Executable {
         }
         final long start = System.currentTimeMillis();
         //noinspection finally
+        File exitingSignal = getSignal("exiting");
         try {
             logger.info(banner("Unloading the main component {}", this.mainComponent));
-            System.setProperty("app.status", "exiting");
+            FileUtils.touch(exitingSignal);
             environment.unload(this.mainComponent);
             logger.info(banner("Unloaded  the main component {}", this.mainComponent));
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
+            FileUtils.deleteQuietly(exitingSignal);
             //启动一个额外的线程停止自身
             new Thread("Stopper") {
                 @Override
@@ -122,7 +151,7 @@ public class AppLauncher implements Executable {
 
     @Override
     public boolean exiting() {
-        return System.getProperty("app.status", "normal").equals("exiting");
+        return getSignal("exiting").exists();
     }
 
     /*重新加载*/
@@ -264,7 +293,7 @@ public class AppLauncher implements Executable {
         for (int i = 1; i < traces.length; i++) {
             String trace = traces[i];
             message.append(trace).append("\n");
-            if( isApplicationTrace(trace) ){
+            if (isApplicationTrace(trace)) {
                 break;
             }
         }
@@ -275,12 +304,12 @@ public class AppLauncher implements Executable {
         if (appPatterns.length == 0) return true;
         for (String pattern : appPatterns) {
             int i = trace.indexOf(pattern);
-            if( i > 0 ){
-                char c = trace.charAt(i-1);
-                if(Character.isSpaceChar(c)){
+            if (i > 0) {
+                char c = trace.charAt(i - 1);
+                if (Character.isSpaceChar(c)) {
                     return true;
                 }
-            }else if (i == 0 ){
+            } else if (i == 0) {
                 return true;
             }
         }

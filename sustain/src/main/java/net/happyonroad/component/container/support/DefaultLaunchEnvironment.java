@@ -35,11 +35,12 @@ import java.util.*;
 
 import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
 
-/** 为了让Launch静态程序可以被定制化，从原 Plexus/Launch中分离出来的对象 */
+/**
+ * 为了让Launch静态程序可以被定制化，从原 Plexus/Launch中分离出来的对象
+ */
 public class DefaultLaunchEnvironment implements LaunchEnvironment {
-    public static final int MODE_START  = 1;
-    public static final int MODE_STOP   = -1;
-    public static final int MODE_RELOAD = 0;
+    public static final int MODE_START = 1;
+    public static final int MODE_STOP  = -1;
 
     private Logger logger = LoggerFactory.getLogger(AppLauncher.class.getName());
 
@@ -61,7 +62,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         String appHost = System.getProperty("app.host");
         if (!StringUtils.hasText(appHost)) {
             List<String> addresses = getLocalAddresses();
-            if( addresses.isEmpty() ) {
+            if (addresses.isEmpty()) {
                 throw new ApplicationContextException("You server isn't configure any address");
             }
             System.setProperty("app.host", addresses.get(0));
@@ -91,87 +92,46 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         return launcher;
     }
 
-    /**
-     * 在本环境下启动应用程序
-     *
-     * @param launcher 启动器
-     * @throws Exception 错误
-     */
-    /*package*/ void start(Executable launcher) throws Exception {
-        launcher.start();
-    }
-
-    /**
-     * 停止一个远程的launcher对象
-     *
-     * @param launcher 远程launcher对象
-     */
-    /*package*/ void stop(Executable launcher) {
-        launcher.exit();
-    }
-
-    /**
-     * 要求远程launcher对象刷新
-     *
-     * @param launcher 远程launcher对象
-     */
-    /*package*/ void reload(Executable launcher) {
-        launcher.reload();
-    }
-
     @Override
     public void execute(AppLauncher launcher, String[] args) throws Exception {
-        int mode;
         List<String> list = new ArrayList<String>(args.length);
         Collections.addAll(list, args);
         String host = null;
-        int port = 0;
+        int index = 0;
+        int mode, port = 0;
         if (list.contains("--host")) {
             host = list.get(list.indexOf("--host") + 1);
+        }
+        if (list.contains("--index")) {
+            index = Integer.valueOf(list.get(list.indexOf("--index") + 1));
         }
         if (list.contains("--port")) {
             port = Integer.parseInt(list.get(list.indexOf("--port") + 1));
         }
         if (list.contains("--stop")) {
             mode = MODE_STOP;
-            if(host == null)
-                host = "localhost";
-            if(port == 0)
-                port = Integer.valueOf(System.getProperty("app.port", "1099"));
-        } else if (list.contains("--reload")) {
-            mode = MODE_RELOAD;
-            if(host == null)
-                host = "localhost";
-            if(port == 0)
-                port = Integer.valueOf(System.getProperty("app.port", "1099"));
+            if (host == null) host = "localhost";
         } else {
             mode = MODE_START;
             host = null;
-            port = 0;
         }
-        Executable executable = configure(launcher, host, port);
-        switch (mode) {
-            case MODE_START:
-                start(executable);
-                break;
-            case MODE_STOP:
-                stop(executable);
-                break;
-            case MODE_RELOAD:
-                reload(executable);
-                break;
-            default:
-                start(executable);
+        Executable executable = configure(launcher, host, index, port);
+        if (mode == MODE_START) {
+            executable.start();
+        } else {
+            executable.exit();
         }
     }
 
-    protected Executable configure(AppLauncher launcher, String host, int port) {
+    protected Executable configure(AppLauncher launcher, String host, int index, int port) {
         //设定了通过本地端口与已经启动的进程通讯
         if (host != null) {
-            return new LauncherThroughPort(host, port);
-        } else if (port > 0) {
-            return new LauncherThroughPort(port);
-        }
+            if (port > 0) {
+                return new LauncherThroughPort(port);
+            }else{
+                return new LauncherThroughFile(index);
+            }
+        }// itself
         return launcher;
     }
 
@@ -219,7 +179,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
 
     void registerWorldAndComponents(Component component) {
         ApplicationContext mainContext = component.getApplication();
-        if(mainContext == null) return;
+        if (mainContext == null) return;
         MBeanExporter exporter;
         try {
             exporter = mainContext.getBean(MBeanExporter.class);
@@ -229,7 +189,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         }
         List<Component> components = repository.getComponents();
         for (Component comp : components) {
-            if( repository.isApplication(comp.getGroupId())){
+            if (repository.isApplication(comp.getGroupId())) {
                 exporter.registerManagedResource(comp, ((DefaultComponent) comp).getObjectName());
             }
         }
@@ -242,7 +202,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         banner("Container stops took {}", formatDurationHMS(System.currentTimeMillis() - start));
     }
 
-    public List<ApplicationContext> getApplications(){
+    public List<ApplicationContext> getApplications() {
         return context.getApplicationFeatures();
     }
 
@@ -258,7 +218,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         publishEvent(event);
     }
 
-    void publishEvent(ApplicationEvent event){
+    void publishEvent(ApplicationEvent event) {
         List<ApplicationContext> applications = getApplications();
         ContextUtils.publishEvent(applications, event);
     }
@@ -279,14 +239,14 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     protected ComponentLoader createLoader(Component component) {
         DefaultComponentLoader loader = new DefaultComponentLoader(repository);
         String featureResolvers = System.getProperty("component.feature.resolvers");
-        if(StringUtils.hasText(featureResolvers)){
-            for(String resolverFqn: featureResolvers.split(",")){
-                try{
+        if (StringUtils.hasText(featureResolvers)) {
+            for (String resolverFqn : featureResolvers.split(",")) {
+                try {
                     logger.debug("Found extended feature resolver: " + resolverFqn);
                     Class resolverClass = Class.forName(resolverFqn, true, component.getClassLoader());
                     FeatureResolver resolver = (FeatureResolver) resolverClass.newInstance();
                     loader.registerResolver(resolver);
-                }catch (Exception ex){
+                } catch (Exception ex) {
                     logger.error("Can't instantiate the feature resolver: " + resolverFqn, ex);
                 }
             }
@@ -294,7 +254,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
         return loader;
     }
 
-    void banner(String message, Object... args){
+    void banner(String message, Object... args) {
         logger.info(LogUtils.banner(message, args));
     }
 

@@ -26,6 +26,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.jar.Attributes;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,6 +86,7 @@ public class DefaultComponent implements Component, SelfNaming {
     private Map<String, String>     defaults;
     private List<RepositoryScanner> scanners;
     private ResourcePatternResolver resourceLoader;
+    private Attributes mainAttributes = null ;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -227,6 +229,8 @@ public class DefaultComponent implements Component, SelfNaming {
 
     public void setResource(ComponentResource resource) {
         this.resource = resource;
+        if( resource != null )
+            this.mainAttributes = resource.getManifest().getMainAttributes();
         this.resourceLoader = new ComponentResourcePatternResolver(this);
     }
 
@@ -578,11 +582,12 @@ public class DefaultComponent implements Component, SelfNaming {
         return !isApplication() || getResource() == null;
     }
 
+
     @Override
     public String getManifestAttribute(String attributeName) {
         String value = null;
-        if (this.resource != null) {
-            value = this.resource.getManifest().getMainAttributes().getValue(attributeName);
+        if (this.mainAttributes != null) {
+            value = mainAttributes.getValue(attributeName);
         }
         if (value == null && defaults != null) {
             value = defaults.get(attributeName);

@@ -52,11 +52,6 @@ public class LauncherThroughPort implements Executable {
     }
 
     @Override
-    public void reload() {
-        remote.reload();
-    }
-
-    @Override
     public String toString() {
         return "AppLauncher{" + host + ":" + port + '}';
     }
