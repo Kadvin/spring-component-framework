@@ -62,6 +62,9 @@ public class AppLauncher implements Executable {
     public void start() throws Exception {
         try {
             long start = System.currentTimeMillis();
+            //Ensure there is no legacy signal files
+            FileUtils.deleteQuietly(getSignal("exit"));
+            FileUtils.deleteQuietly(getSignal("exiting"));
             logger.info(banner("Loading components starts from {}", this.mainComponent));
             environment.load(this.mainComponent);
             logger.info(banner("Loaded  components starts from {}", this.mainComponent));

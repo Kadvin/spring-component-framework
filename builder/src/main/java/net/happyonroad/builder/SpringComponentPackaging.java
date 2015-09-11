@@ -30,6 +30,7 @@ import java.util.zip.ZipEntry;
 
 import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
 import static org.apache.commons.io.FileUtils.listFiles;
+import static org.apache.commons.lang.StringUtils.substringAfter;
 
 /**
  * 打包一个基于Spring Component 框架的项目
@@ -52,7 +53,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     @Parameter
     String     propertyFiles;
     @Parameter
-    File       logbackFile;
+    String     logbackFile;
     @Parameter
     String     folders;
     @Parameter
@@ -80,7 +81,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     public void doExecute() throws MojoExecutionException {
         getLog().info("Hello, I'm packaging to " + getTargetFolder().getPath());
 
-        if( StringUtils.isNotBlank(repositoryBase)){
+        if (StringUtils.isNotBlank(repositoryBase)) {
             this.repositoryBase = FilenameUtils.normalize(this.repositoryBase);
         }
 
@@ -139,25 +140,25 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         String relativePath = relativePath(destFile);
         File repositoryFolder = getRepositoryFolder();
         File preventFile = null;
-        if(StringUtils.isNotBlank(repositoryBase)){
+        if (StringUtils.isNotBlank(repositoryBase)) {
             boolean contains = false;
             try {
                 contains = FilenameUtils.directoryContains(repositoryBase, artifact.getPath());
             } catch (IOException e) {
                 //skip
             }
-            if(contains){
+            if (contains) {
                 //这个文件是Repository文件，不放到lib下
                 destFile = new File(repositoryFolder, relativePath);
                 File libFolder = new File(getTargetFolder(), "lib");
                 preventFile = new File(libFolder, relativePath);
             }
         }
-        if( preventFile == null )
+        if (preventFile == null)
             preventFile = new File(repositoryFolder, relativePath);
 
         try {
-            copyFile(artifact, destFile,  preventFile);
+            copyFile(artifact, destFile, preventFile);
         } catch (IOException e) {
             throw new MojoExecutionException("Can't move exist " + preventFile.getPath()
                                              + " to " + destFile.getPath(), e);
@@ -166,17 +167,18 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
     /**
      * <h2>把artifact文件copy到目标文件，如果另外一个相应的文件存在，则移动之</h2>
+     *
      * @param artifact 原始文件
      * @param dest     目标文件
      * @param prevent  防止的文件
      */
     protected void copyFile(File artifact, File dest, File prevent) throws IOException, MojoExecutionException {
-        if( dest.exists() ){
-            if( prevent.exists() )
+        if (dest.exists()) {
+            if (prevent.exists())
                 //noinspection ResultOfMethodCallIgnored
                 prevent.delete();
-        }else{
-            if( prevent.exists() )
+        } else {
+            if (prevent.exists())
                 org.apache.commons.io.FileUtils.moveFile(prevent, dest);
             else
                 super.copyFile(artifact, dest);
@@ -235,8 +237,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             for (String path : StringUtils.split(files, ",")) {
                 try {
                     File file = new File(path);
-                    String relativePath = StringUtils
-                            .substringAfter(file.getAbsolutePath(), getProject().getBasedir().getAbsolutePath() + "/");
+                    String relativePath = substringAfter(file.getAbsolutePath(),
+                                                         getProject().getBasedir().getAbsolutePath() + "/");
                     File dest = new File(getTargetFolder(), relativePath);
                     FileUtils.copyFile(file, dest);
                 } catch (IOException e) {
@@ -297,7 +299,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
     private void interpolateScripts(Map<String, Object> replaces) throws MojoExecutionException {
         try {
             Collection<File> scripts = listFiles(new File(getTargetFolder(), "bin"), new String[]{"sh", "bat"}, true);
-            if( !scripts.isEmpty() ){
+            if (!scripts.isEmpty()) {
                 for (File script : scripts) {
                     changeFileA(script.getPath(), replaces);
                     chmod(script);
@@ -313,13 +315,18 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         try {
             String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh", "check.sh"};
             for (String resource : resourceNames) {
-                if(!FileUtils.fileExists(new File(getTargetFolder(), "bin/" + resource).getPath())){
+                if (!FileUtils.fileExists(new File(getTargetFolder(), "bin/" + resource).getPath())) {
                     copyResource(resource, "bin", replaces);
                     chmod(resource, "bin");
                 }
             }
-            if (logbackFile != null && logbackFile.exists()) {
-                copyPropertyFile(logbackFile, replaces);
+            if (logbackFile != null) {
+                if( logbackFile.startsWith("!")) {
+                    FileUtils.copyFile(new File(logbackFile.substring(1)),
+                                       new File(getTargetFolder(), "config/logback.xml"));
+                }else{
+                    copyPropertyFile(new File(logbackFile), replaces);
+                }
             } else {
                 copyResource("logback.xml", "config", replaces);
             }
@@ -339,7 +346,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
     }
 
-    private Map<String, Object> createAppOptions()  {
+    private Map<String, Object> createAppOptions() {
         List<String> bootJars;
         try {
             bootJars = FileUtils.getFileNames(new File(getTargetFolder(), "boot"),
@@ -366,8 +373,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         if (StringUtils.isNotBlank(appPrefix)) {
             jvmOptions += " -Dapp.prefix=" + appPrefix;
         }
-        jvmOptions = jvmOptions.replaceAll("\n","");
-        jvmOptions = jvmOptions.replaceAll("\\s+"," ");
+        jvmOptions = jvmOptions.replaceAll("\n", "");
+        jvmOptions = jvmOptions.replaceAll("\\s+", " ");
         replaces.put("jvm.options", jvmOptions);
         return replaces;
     }
@@ -412,14 +419,14 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         File[] jarArray = getApplicationJars();
         try {
             repository.sortCandidates(jarArray);
-        }catch (Exception ex ){
+        } catch (Exception ex) {
             throw new MojoExecutionException("Can't sort the files by component dependencies", ex);
         }
         for (File componentJar : jarArray) {
             extractFrontendResources(componentJar, mappings);
         }
 
-        if( FileUtils.fileExists(frontendNodeModules)){
+        if (FileUtils.fileExists(frontendNodeModules)) {
             try {
                 FileUtils.copyDirectoryStructure(new File(frontendNodeModules),
                                                  new File(getTargetFolder(), "webapp/frontend/node_modules"));
@@ -436,11 +443,11 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             while (names.hasNext()) {
                 String name = names.next();
                 sb.append(String.format("  \"%s\" : \"%s\"", name, mappings.getProperty(name)));
-                if( names.hasNext() ) sb.append(",\n");
+                if (names.hasNext()) sb.append(",\n");
             }
             sb.append("\n}\n");
             IOUtils.write(sb.toString(), mappingStream);
-        } catch (Exception ex){
+        } catch (Exception ex) {
             throw new MojoExecutionException("Can't generate mapping file");
         } finally {
             IOUtils.closeQuietly(mappingStream);
@@ -462,7 +469,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         while (it.hasNext()) {
             File file = it.next();
             String relativePath = ComponentUtils.relativePath(file);
-            if(!DefaultComponent.isApplication(relativePath)){
+            if (!DefaultComponent.isApplication(relativePath)) {
                 it.remove();
             }
         }
@@ -478,22 +485,22 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             Dependency dep = Dependency.parse(componentJar);
             String source = dep.getGroupId() + "." + dep.getArtifactId();
             JarFile jarFile = new JarFile(componentJar);
-            if( jarFile.getEntry("frontend") == null ) return;
+            if (jarFile.getEntry("frontend") == null) return;
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 JarEntry entry = entries.nextElement();
-                if( entry.getName().startsWith("frontend")){
+                if (entry.getName().startsWith("frontend")) {
                     File file = new File(getTargetFolder(), "webapp/" + entry.getName());
                     InputStream stream = jarFile.getInputStream(entry);
-                    if( entry.isDirectory() )
+                    if (entry.isDirectory())
                         FileUtils.mkdir(file.getAbsolutePath());
-                    else{
-                        if( entry.getName().endsWith("config.js")){
+                    else {
+                        if (entry.getName().endsWith("config.js")) {
                             List<String> strings = IOUtils.readLines(stream);
                             String content = StringUtils.join(strings, "\n");
                             content = interpolate(content, replaces, 'A');
                             org.apache.commons.io.FileUtils.write(file, content);
-                        }else{
+                        } else {
                             org.apache.commons.io.FileUtils.copyInputStreamToFile(stream, file);
                         }
                         mappings.setProperty(entry.getName(), source);
@@ -502,7 +509,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             }
             jarFile.close();
         } catch (Exception e) {
-            throw new MojoExecutionException("Can't extract frontend resources from " + componentJar.getName() , e );
+            throw new MojoExecutionException("Can't extract frontend resources from " + componentJar.getName(), e);
         }
     }
 
@@ -510,17 +517,17 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         File[] jarArray = getApplicationJars();
         for (File jar : jarArray) {
             JarFile jarFile = null;
-            File tempJarFolder = null ;
+            File tempJarFolder = null;
             try {
                 jarFile = new JarFile(jar);
                 String reduceFrontend = jarFile.getManifest().getMainAttributes().getValue("Reduce-Frontend");
-                if( "false".equalsIgnoreCase(reduceFrontend) ) continue;
+                if ("false".equalsIgnoreCase(reduceFrontend)) continue;
                 ZipEntry detailEntry = jarFile.getEntry("META-INF/INDEX.DETAIL");
-                if( detailEntry == null ) continue;
+                if (detailEntry == null) continue;
 
                 List<String> lines = IOUtils.readLines(jarFile.getInputStream(detailEntry));
                 int reduces = reduceIndexes(lines);
-                if(reduces == 0 ) continue;
+                if (reduces == 0) continue;
 
                 tempJarFolder = extractJar(jar);
                 org.apache.commons.io.FileUtils.deleteDirectory(new File(tempJarFolder, "frontend"));
@@ -544,7 +551,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         int count = 0;
         while (it.hasNext()) {
             String line = it.next();
-            if( line.startsWith("frontend") ) {
+            if (line.startsWith("frontend")) {
                 it.remove();
                 count++;
             }
@@ -585,8 +592,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             String content = StringUtils.join(lines, lineSeparator);
             interpolated = interpolate(content, replaces, 'A');
         }
-        String relative = StringUtils
-                .substringAfter(file.getAbsolutePath(), project.getBasedir().getAbsolutePath() + File.separator);
+        String relative = substringAfter(file.getAbsolutePath(),
+                                         project.getBasedir().getAbsolutePath() + File.separator);
         FileUtils.fileWrite(new File(getTargetFolder(), relative), interpolated);
     }
 
@@ -626,7 +633,8 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             for (String name : names) {
                 InputStream stream = cl.getResourceAsStream(resourcePath + name);
                 try {
-                    FileUtils.copyStreamToFile(new RawInputStreamFacade(stream), new File(getTargetFolder(), path + "/" + name));
+                    FileUtils.copyStreamToFile(new RawInputStreamFacade(stream),
+                                               new File(getTargetFolder(), path + "/" + name));
                 } finally {
                     stream.close();
                 }
