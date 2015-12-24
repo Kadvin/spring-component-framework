@@ -54,6 +54,7 @@ public class AppLauncher implements Executable {
         this.environment = environment;
         //super.world = this.pomWorld = new PomClassWorld();
         //this.pomWorld.setMainComponentId(this.mainComponent.getId());
+        System.setProperty("file.encoding", "UTF-8");
     }
 
     /**

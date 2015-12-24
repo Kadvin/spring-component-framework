@@ -308,7 +308,7 @@
             <id>glassfish-repository</id>
             <url>http://download.java.net/maven/glassfish</url>
             <snapshots>
-                <updatePolicy>never</updatePolicy>
+                <scanPolicy>never</scanPolicy>
             </snapshots>
         </repository>
     </repositories>
