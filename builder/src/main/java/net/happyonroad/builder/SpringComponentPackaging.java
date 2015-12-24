@@ -236,7 +236,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         if (StringUtils.isNotBlank(files)) {
             for (String path : StringUtils.split(files, ",")) {
                 try {
-                    File file = new File(path);
+                    File file = new File(path.trim());
                     String relativePath = substringAfter(file.getAbsolutePath(),
                                                          getProject().getBasedir().getAbsolutePath() + "/");
                     File dest = new File(getTargetFolder(), relativePath);
@@ -313,7 +313,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
 
     private void generateScripts(Map<String, Object> replaces) throws MojoExecutionException {
         try {
-            String[] resourceNames = {"start.bat", "start.sh", "stop.bat", "stop.sh", "check.sh"};
+            String[] resourceNames = {"start.bat", "start.sh", "follow.sh", "stop.bat", "stop.sh", "check.sh"};
             for (String resource : resourceNames) {
                 if (!FileUtils.fileExists(new File(getTargetFolder(), "bin/" + resource).getPath())) {
                     copyResource(resource, "bin", replaces);
