@@ -189,7 +189,7 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
         if (context != null) {
             shutdownContext(context);
         } else {
-            logger.error("Can't pick loaded {} feature for: {}", getName(), component);
+            logger.error("Can't release loaded {} feature for: {}", getName(), component);
         }
         return context;
     }
