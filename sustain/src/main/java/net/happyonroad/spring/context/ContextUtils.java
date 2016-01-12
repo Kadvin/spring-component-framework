@@ -4,15 +4,19 @@
 package net.happyonroad.spring.context;
 
 import net.happyonroad.spring.support.SmartApplicationEventMulticaster;
+import net.happyonroad.spring.support.SmartApplicationListenerAdapter;
 import org.apache.commons.lang.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyResourceConfigurer;
+import org.springframework.cglib.core.CollectionUtils;
+import org.springframework.cglib.core.Predicate;
 import org.springframework.context.*;
 import org.springframework.context.event.AbstractApplicationEventMulticaster;
 import org.springframework.context.event.ApplicationEventMulticaster;
+import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.OrderComparator;
@@ -111,7 +115,7 @@ public class ContextUtils {
         }
     }
 
-    protected static void innerPublish(List<ApplicationContext> contexts, ApplicationEvent event) {
+    protected static void innerPublish(List<ApplicationContext> contexts, final ApplicationEvent event) {
         Logger eventLogger = getEventLogger(event);
         //向所有的context发布，context里面有防止重复的机制
         // 2. 提速
@@ -129,11 +133,27 @@ public class ContextUtils {
                     partListeners = smartOne.getApplicationListeners(event);
                 } else {
                     try {
+                        Object source = event.getSource();
+                        final Class<?> sourceType = (source != null ? source.getClass() : null);
                         Class<AbstractApplicationEventMulticaster> klass = AbstractApplicationEventMulticaster.class;
                         Method method = klass.getDeclaredMethod("getApplicationListeners", ApplicationEvent.class);
                         method.setAccessible(true);
                         //noinspection unchecked
                         partListeners = (Collection<ApplicationListener<?>>) method.invoke(multicaster, event);
+                        //自行在外部进行事件过滤，这段逻辑与 SmartApplicationEventMulticaster内部的逻辑一致
+                        CollectionUtils.filter(partListeners, new Predicate() {
+                            @Override
+                            public boolean evaluate(Object o) {
+                                ApplicationListener listener = (ApplicationListener) o;
+                                SmartApplicationListener  smart;
+                                if( listener instanceof SmartApplicationListener ){
+                                    smart = (SmartApplicationListener) listener;
+                                }else{
+                                    smart = new SmartApplicationListenerAdapter(listener);
+                                }
+                                return smart.supportsEventType(event.getClass()) && smart.supportsSourceType(sourceType);
+                            }
+                        });
                     } catch (Exception e) {
                         eventLogger.warn("Can't steal event listener from " + multicaster);
                         partListeners = Collections.emptyList();
