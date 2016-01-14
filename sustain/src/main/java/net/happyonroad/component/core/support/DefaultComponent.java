@@ -39,11 +39,11 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 @ManagedResource(description = "Spring Component")
 public class DefaultComponent implements Component, SelfNaming {
-    private static final String CLASSPATH_THIS_URL_PREFIX = "classpath*:";
-    private static       Logger           logger                    =
+    private static final String   CLASSPATH_THIS_URL_PREFIX = "classpath*:";
+    private static       Logger   logger                    =
             LoggerFactory.getLogger(DefaultComponent.class.getName());
-    private static final Pattern          INTERPOLATE_PTN           = Pattern.compile("\\$\\{([^}]+)\\}");
-    private static final String[]         ATTRIBUTE_NAMES           =
+    private static final Pattern  INTERPOLATE_PTN           = Pattern.compile("\\$\\{([^}]+)\\}");
+    private static final String[] ATTRIBUTE_NAMES           =
             new String[]{"groupId", "artifactId", "version", "type",
                          "classifier", "release", "name",
                          "description",
@@ -70,7 +70,9 @@ public class DefaultComponent implements Component, SelfNaming {
     private DependencyManagement dependencyManagement;
     //这里声明的实际的依赖，可以引用或参考/继承 dependencyManagement 声明的依赖
     private List<Dependency>     dependencies;//依赖信息解析成为一堆字符串
-    private List<Component>      dependedComponents;//依赖信息解析成为一堆字符串
+    private List<Component>      dependedComponents;//直接依赖
+    private Set<Dependency>      allDependencies;//所有依赖
+    private Set<Component>       allDependedComponents;//所有依赖
     private List<String>         moduleNames;       //子模块，子项目，子组件
     private List<Component>      modules;       //子模块，子项目，子组件
 
@@ -86,7 +88,7 @@ public class DefaultComponent implements Component, SelfNaming {
     private Map<String, String>     defaults;
     private List<RepositoryScanner> scanners;
     private ResourcePatternResolver resourceLoader;
-    private Attributes mainAttributes = null ;
+    private Attributes mainAttributes = null;
 
     // XStream Reflection 时并不需要提供一个缺省构造函数
 
@@ -229,7 +231,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     public void setResource(ComponentResource resource) {
         this.resource = resource;
-        if( resource != null )
+        if (resource != null)
             this.mainAttributes = resource.getManifest().getMainAttributes();
         this.resourceLoader = new ComponentResourcePatternResolver(this);
     }
@@ -444,28 +446,30 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public Set<Dependency> getAllDependencies() {
-        Set<Dependency> all = new HashSet<Dependency>();
+        if (allDependencies != null ) return allDependencies;
+        allDependencies = new HashSet<Dependency>();
         if (getDependencies() != null) {
-            all.addAll(getDependencies());
+            allDependencies.addAll(getDependencies());
         }
         if (this.parent != null) {
-            all.addAll(this.parent.getAllDependencies());
+            allDependencies.addAll(this.parent.getAllDependencies());
         }
-        return all;
+        return allDependencies;
     }
 
     public Set<Component> getAllDependedComponents() {
-        Set<Component> all = new HashSet<Component>();
+        if( allDependedComponents != null ) return allDependedComponents;
+        allDependedComponents = new HashSet<Component>();
         if (dependedComponents != null) {
             for (Component depended : dependedComponents) {
-                all.add(depended);
-                all.addAll(depended.getAllDependedComponents());
+                allDependedComponents.add(depended);
+                allDependedComponents.addAll(depended.getAllDependedComponents());
             }
         }
         if (this.parent != null) {
-            all.addAll(this.parent.getAllDependedComponents());
+            allDependedComponents.addAll(this.parent.getAllDependedComponents());
         }
-        return all;
+        return allDependedComponents;
     }
 
 
