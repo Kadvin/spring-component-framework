@@ -14,6 +14,7 @@ import net.happyonroad.spring.service.ServiceRegistry;
 import net.happyonroad.spring.support.CombinedMessageSource;
 import net.happyonroad.spring.support.DefaultServiceHelper;
 import net.happyonroad.spring.support.DefaultServiceRegistry;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -34,13 +35,14 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     private Logger logger = LoggerFactory.getLogger(DefaultComponentLoader.class);
 
     /*package*/ final List<FeatureResolver>    featureResolvers;
+    /*package*/ final List<String>             featureResolverNames;
     /*package*/ final List<FeatureResolver>    reverseResolvers;
     /*package*/ final Map<Component, Features> loadedFeatures;
     /*package*/ final MutableServiceRegistry   registry;
     /*package*/ final DefaultServiceHelper     helper;
     /*package*/ final ComponentRepository      repository;
     /*package*/ final Set<Component>           loading, unloading;
-    /*package*/ ApplicationContext             context;
+    /*package*/ ApplicationContext context;
 
 
     public DefaultComponentLoader(ComponentRepository repository,
@@ -50,6 +52,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         registry = new DefaultServiceRegistry();
         helper = new DefaultServiceHelper(registry);
         featureResolvers = new LinkedList<FeatureResolver>();
+        featureResolverNames = new LinkedList<String>();
         reverseResolvers = new LinkedList<FeatureResolver>();
         loading = new LinkedHashSet<Component>();
         unloading = new LinkedHashSet<Component>();
@@ -86,6 +89,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         resolver.bind(this);
         featureResolvers.add(resolver);
         reverseResolvers.add(resolver);
+        featureResolverNames.add(resolver.getName());
         Collections.sort(featureResolvers, new LoadOrder());
         Collections.sort(reverseResolvers, new UnloadOrder());
     }
@@ -94,6 +98,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     public void removeResolver(FeatureResolver resolver) {
         featureResolvers.remove(resolver);
         reverseResolvers.remove(resolver);
+        featureResolverNames.remove(resolver.getName());
         Collections.sort(featureResolvers, new LoadOrder());
         Collections.sort(reverseResolvers, new UnloadOrder());
     }
@@ -110,8 +115,8 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
 
     @Override
     public boolean isLoaded(String componentId) {
-        for(Component component : loadedFeatures.keySet()){
-            if( component.getId().equals(componentId))
+        for (Component component : loadedFeatures.keySet()) {
+            if (component.getId().equals(componentId))
                 return true;
         }
         return false;
@@ -153,7 +158,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         List<ApplicationContext> contexts = new LinkedList<ApplicationContext>();
         for (Component component : components) {
             ApplicationContext feature = getApplicationFeature(component);
-            if( feature != null ) contexts.add(feature);
+            if (feature != null) contexts.add(feature);
         }
         return contexts;
     }
@@ -197,7 +202,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             //上面会自动检测是否已经加载，防止重复加载
             Dependency textualDependency = new Dependency(depended.getGroupId(), depended.getArtifactId());
             Dependency actualDependency = component.getDependency(textualDependency);
-            if( actualDependency.isProvided() || actualDependency.isTest() )
+            if (actualDependency.isProvided() || actualDependency.isTest())
                 continue;
             load(depended);
         }
@@ -294,6 +299,20 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
             ComponentResource resource = component.getResource();
             if (resource == null) {
                 throw new IOException("The component " + component + " without resource");
+            }
+            String dependsOn = component.getManifestAttribute("Depends-On");
+            if (StringUtils.isNotBlank(dependsOn)) {
+                String[] depends = dependsOn.split("\\s*[,|;]\\s*");
+                List<String> unMeets = new ArrayList<String>(depends.length);
+                for (String depend : depends) {
+                    if( !featureResolverNames.contains(depend) ){
+                        unMeets.add(depend);
+                    }
+                }
+                if( !unMeets.isEmpty() ){
+                    logger.warn("The {} depends {} is not meets, skip it", component, StringUtils.join(unMeets, ","));
+                    return;
+                }
             }
             logger.info("Loading {}", component);
             List<FeatureResolver> resolvers = new ArrayList<FeatureResolver>(featureResolvers.size());
