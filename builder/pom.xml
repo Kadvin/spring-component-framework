@@ -69,7 +69,6 @@
                     <version>3.2</version>
                     <configuration>
                         <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
-                        <skipDescriptor>true</skipDescriptor>
                         <encoding>utf-8</encoding>
                     </configuration>
                     <executions>
