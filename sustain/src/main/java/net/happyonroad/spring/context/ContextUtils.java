@@ -24,6 +24,8 @@ import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static org.springframework.context.support.AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME;
 
@@ -31,13 +33,14 @@ import static org.springframework.context.support.AbstractApplicationContext.APP
  * 将各个context无法DRY的功能集中到这里
  */
 public class ContextUtils {
-    private final static Map<String, Set<ApplicationEvent>> events      = new HashMap<String, Set<ApplicationEvent>>();
+    // Application Context Id -> Received Event Hash Codes
+    private final static Map<String, Set<Integer>> eventHashCodes = new ConcurrentHashMap<String, Set<Integer>>();
 
     /**
      * 继承上级上下文中的属性配置器
      *
-     * @param inheriting  上级上下文
-     * @param context 当前上下文
+     * @param inheriting 上级上下文
+     * @param context    当前上下文
      */
     public static void inheritParentProperties(ApplicationContext inheriting,
                                                GenericApplicationContext context) {
@@ -70,48 +73,53 @@ public class ContextUtils {
     }
 
     private static void setApplicationEventMulticaster(GenericApplicationContext context,
-                                                         ApplicationEventMulticaster applicationEventMulticaster) {
+                                                       ApplicationEventMulticaster applicationEventMulticaster) {
         try {
             FieldUtils.writeField(context, "applicationEventMulticaster", applicationEventMulticaster, true);
         } catch (IllegalAccessException e) {
-            throw new ApplicationContextException("Can't hacking the spring context for applicationEventMulticaster", e);
+            throw new ApplicationContextException("Can't hacking the spring context for applicationEventMulticaster",
+                                                  e);
         }
     }
 
-    public static void publishEvent(List<ApplicationContext> contexts, ApplicationEvent event){
-        filterContexts(contexts, event);
-        registerEvents(contexts, event);
+    public static void publishEvent(List<ApplicationContext> contexts, ApplicationEvent event) {
+        int hashCode = event.hashCode();
+        filterContexts(contexts, hashCode);
+        //避免事件的hash code 变化
+        registerEvents(contexts, hashCode);
         try {
             innerPublish(contexts, event);
         } finally {
-            cleanEvents(contexts, event);
+            cleanEvents(contexts, hashCode);
         }
     }
 
-    private static void registerEvents(List<ApplicationContext> contexts, ApplicationEvent event) {
+    private static void registerEvents(List<ApplicationContext> contexts, int hashCode) {
         for (ApplicationContext context : contexts) {
-            Set<ApplicationEvent> set = events.get(context.getId());
-            if( set == null ) {
-                set = new HashSet<ApplicationEvent>();
-                events.put(context.getId(), set);
+            Set<Integer> set = eventHashCodes.get(context.getId());
+            if (set == null) {
+                set = new ConcurrentSkipListSet<Integer>();
+                eventHashCodes.put(context.getId(), set);
             }
-            set.add(event);
+            set.add(hashCode);
         }
     }
 
-    private static void filterContexts(List<ApplicationContext> contexts, ApplicationEvent event) {
+    private static void filterContexts(List<ApplicationContext> contexts, int hashCode) {
         Iterator<ApplicationContext> it = contexts.iterator();
         while (it.hasNext()) {
             ApplicationContext context = it.next();
-            Set<ApplicationEvent> set = events.get(context.getId());
-            if( set != null && set.contains(event)) it.remove();
+            Set<Integer> set = eventHashCodes.get(context.getId());
+            if (set != null && set.contains(hashCode))
+                it.remove();
         }
     }
 
-    private static void cleanEvents(List<ApplicationContext> contexts, ApplicationEvent event) {
+    private static void cleanEvents(List<ApplicationContext> contexts, int hashCode) {
         for (ApplicationContext context : contexts) {
-            Set<ApplicationEvent> set = events.get(context.getId());
-            if( set != null) set.remove(event);
+            Set<Integer> set = eventHashCodes.get(context.getId());
+            if (set != null)
+                set.remove(hashCode);
         }
     }
 
@@ -121,14 +129,14 @@ public class ContextUtils {
         // 2. 提速
         Set<ApplicationListener<ApplicationEvent>> listeners = new HashSet<ApplicationListener<ApplicationEvent>>();
         for (ApplicationContext context : contexts) {
-            if( context != null ) {
-                if( context instanceof ConfigurableApplicationContext){
-                    if( !((ConfigurableApplicationContext) context).isActive() ) continue;
+            if (context != null) {
+                if (context instanceof ConfigurableApplicationContext) {
+                    if (!((ConfigurableApplicationContext) context).isActive()) continue;
                 }
                 ApplicationEventMulticaster multicaster = (ApplicationEventMulticaster) context.getBean(
                         AbstractApplicationContext.APPLICATION_EVENT_MULTICASTER_BEAN_NAME);
                 Collection<ApplicationListener<?>> partListeners;
-                if( multicaster instanceof SmartApplicationEventMulticaster){
+                if (multicaster instanceof SmartApplicationEventMulticaster) {
                     SmartApplicationEventMulticaster smartOne = (SmartApplicationEventMulticaster) multicaster;
                     partListeners = smartOne.getApplicationListeners(event);
                 } else {
@@ -145,13 +153,14 @@ public class ContextUtils {
                             @Override
                             public boolean evaluate(Object o) {
                                 ApplicationListener listener = (ApplicationListener) o;
-                                SmartApplicationListener  smart;
-                                if( listener instanceof SmartApplicationListener ){
+                                SmartApplicationListener smart;
+                                if (listener instanceof SmartApplicationListener) {
                                     smart = (SmartApplicationListener) listener;
-                                }else{
+                                } else {
                                     smart = new SmartApplicationListenerAdapter(listener);
                                 }
-                                return smart.supportsEventType(event.getClass()) && smart.supportsSourceType(sourceType);
+                                return smart.supportsEventType(event.getClass()) &&
+                                       smart.supportsSourceType(sourceType);
                             }
                         });
                     } catch (Exception e) {
@@ -165,27 +174,28 @@ public class ContextUtils {
                 }
             }
         }
-        if( !listeners.isEmpty() ){
-            LinkedList<ApplicationListener<ApplicationEvent>> list = new LinkedList<ApplicationListener<ApplicationEvent>>();
+        if (!listeners.isEmpty()) {
+            LinkedList<ApplicationListener<ApplicationEvent>> list =
+                    new LinkedList<ApplicationListener<ApplicationEvent>>();
             //noinspection unchecked
             list.addAll(listeners);
             OrderComparator.sort(list);
-            if( eventLogger.isInfoEnabled() ){
+            if (eventLogger.isInfoEnabled()) {
                 StringBuilder sb = new StringBuilder();
                 Iterator<ApplicationListener<ApplicationEvent>> it = list.iterator();
                 while (it.hasNext()) {
                     ApplicationListener<ApplicationEvent> listener = it.next();
                     sb.append(listener.getClass().getSimpleName()).append("(");
-                    if( listener instanceof Ordered){
+                    if (listener instanceof Ordered) {
                         sb.append(((Ordered) listener).getOrder());
-                    }else{
+                    } else {
                         sb.append("0");
                     }
                     sb.append(")");
-                    if( it.hasNext() ) sb.append(",");
+                    if (it.hasNext()) sb.append(",");
                 }
                 eventLogger.debug("Publish {} of {} to {}", event.getClass().getSimpleName(),
-                                 event.getSource().getClass().getSimpleName(), sb);
+                                  event.getSource().getClass().getSimpleName(), sb);
             }
             for (ApplicationListener<ApplicationEvent> listener : list) {
                 listener.onApplicationEvent(event);
@@ -193,7 +203,7 @@ public class ContextUtils {
         }
     }
 
-    private static Logger getEventLogger(ApplicationEvent event){
+    private static Logger getEventLogger(ApplicationEvent event) {
         return LoggerFactory.getLogger(event.getClass());
     }
 
