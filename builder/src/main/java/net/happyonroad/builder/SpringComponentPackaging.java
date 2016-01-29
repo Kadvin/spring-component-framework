@@ -217,7 +217,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
         if (StringUtils.isNotBlank(folders)) {
             for (String path : StringUtils.split(folders, ",")) {
                 try {
-                    File folder = new File(path);
+                    File folder = new File(path.trim());
                     File dest = new File(getTargetFolder(), folder.getName());
                     FileUtils.copyDirectoryStructure(folder, dest);
 //                    String[] propertyFiles = FileUtils.getFilesFromExtension(dest.getAbsolutePath(), new String[]{"properties"});
