@@ -434,8 +434,10 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     public DependencyManagement getDependencyManagement() {
-        if (dependencyManagement == null)
+        if (dependencyManagement == null){
             dependencyManagement = new DependencyManagement();
+            dependencyManagement.setName(toString());
+        }
         return dependencyManagement;
     }
 

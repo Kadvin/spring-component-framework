@@ -98,4 +98,9 @@ public class MainClassLoader extends ManipulateClassLoader{
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "MainClassLoader";
+    }
 }

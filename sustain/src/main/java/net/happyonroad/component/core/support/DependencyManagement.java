@@ -12,6 +12,7 @@ import java.util.Set;
 public class DependencyManagement {
     // Will be set by xstream
     Set<Dependency> dependencies;
+    private String name;
 
 
     public Set<Dependency> getDependencies() {
@@ -42,5 +43,36 @@ public class DependencyManagement {
 
     public boolean isEmpty() {
         return dependencies == null || dependencies.isEmpty();
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof DependencyManagement)) return false;
+
+        DependencyManagement that = (DependencyManagement) o;
+
+        if (dependencies != null ? !dependencies.equals(that.dependencies) : that.dependencies != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return dependencies != null ? dependencies.hashCode() : 0;
+    }
+
+    @Override
+
+    public String toString() {
+        return "DependencyManagement(" + name +')';
     }
 }
