@@ -958,7 +958,7 @@ Listening for transport dt_socket at address: 5004
 | folders      | 从当前项目中copy哪些目录到最终输出目录 |
 | files        | 从当前项目中copy哪些文件到最终输出目录 |
 | frontendNodeModules | 前端npm项目缓存位置          |
-| appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;dnt开头 |
+| appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;com.itsnow开头 |
 | wrapper      | 是否生成Java Service Wrapper       |
 
 2、 index-detail

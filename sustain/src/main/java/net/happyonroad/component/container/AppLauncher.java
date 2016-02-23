@@ -44,7 +44,7 @@ public class AppLauncher implements Executable {
     static String[] appPatterns;
 
     static {
-        appPatterns = System.getProperty("app.prefix", "dnt.;net.happyonroad").split(";");
+        appPatterns = System.getProperty("app.prefix", "com.itsnow.;net.happyonroad").split(";");
     }
 
 
@@ -275,7 +275,7 @@ public class AppLauncher implements Executable {
      * <h2>启动方式</h2>
      * 开发模式下，通过命令行以：
      * <p><strong>java -classpath jdk/jars;container/classes;other/classes
-     * dnt.component.container.AppLauncher depended.group.artifact-version</strong></p>
+     * com.itsnow.component.container.AppLauncher depended.group.artifact-version</strong></p>
      * 生产模式下，通过命令行以：
      * <p><strong>java -Dapp.home=path/to/home -jar path/to/container.jar depended.group.artifact-version</strong></p>
      * 的方式启动
@@ -297,7 +297,7 @@ public class AppLauncher implements Executable {
      * <h2>停止方式</h2>
      * 开发模式下，通过命令行以：
      * <p><strong>java -classpath jdk/jars;container/classes;other/classes
-     * dnt.component.container.AppLauncher depended.group.artifact-version --stop</strong></p>
+     * com.itsnow.component.container.AppLauncher depended.group.artifact-version --stop</strong></p>
      * 生产模式下，通过命令行以：
      * <p><strong>java -Dapp.home=path/to/home -jar path/to/container.jar depended.group.artifact-version --stop</strong></p>
      * 的方式停止

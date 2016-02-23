@@ -18,7 +18,7 @@ import java.util.Locale;
 public class ComponentMessageSourceTest extends ComponentTestSupport{
     @BeforeClass
     public static void setUpTotal() throws Exception {
-        System.setProperty("app.prefix","dnt.;spring.test");
+        System.setProperty("app.prefix","com.itsnow.;spring.test");
         createPom("comp_0", "spring/test@0.0.1", tempFolder);
         createJar("comp_c", "spring.test/comp_c@0.0.1", "spring/test/api", tempFolder);
         createJar("comp_d", "spring.test/comp_d@0.0.1", "spring/test/api", tempFolder);
