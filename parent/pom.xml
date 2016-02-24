@@ -8,7 +8,7 @@
 
     <groupId>com.itsnow</groupId>
     <artifactId>parent</artifactId>
-    <version>24</version>
+    <version>26</version>
 
     <name>Itsnow Pom Parent</name>
     <description>
@@ -35,6 +35,8 @@
 
         <version.springframework>4.1.4.RELEASE</version.springframework>
         <version.spring-security>3.2.5.RELEASE</version.spring-security>
+        <version.spring-data>1.11.4.RELEASE</version.spring-data>
+        <version.spring-data-mongodb>1.8.4.RELEASE</version.spring-data-mongodb>
         <version.mybatis>3.2.7</version.mybatis>
         <version.mybatis-spring>1.2.2</version.mybatis-spring>
 
@@ -92,11 +94,15 @@
                 <repository>
                     <id>itsnow-releases</id>
                     <url>http://nexus.itsnow.com/content/groups/public</url>
+                    <releases><enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
+                    <snapshots><enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
                 </repository>
 
                 <repository>
                     <id>itsnow-snapshots</id>
                     <url>http://nexus.itsnow.com/content/groups/public-snapshots</url>
+                    <releases><enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
+                    <snapshots><enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
                 </repository>
             </repositories>
 
@@ -104,6 +110,8 @@
                 <pluginRepository>
                     <id>itsnow-releases</id>
                     <url>http://nexus.itsnow.com/content/groups/public</url>
+                    <releases><enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
+                    <snapshots><enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
                 </pluginRepository>
             </pluginRepositories>
 
@@ -368,6 +376,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpmime</artifactId>
+                <version>${version.httpclient}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -476,6 +489,16 @@
                         <artifactId>spring-expression</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-commons</artifactId>
+                <version>${version.spring-data}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-mongodb</artifactId>
+                <version>${version.spring-data-mongodb}</version>
             </dependency>
 
             <!--ORM 依赖-->
