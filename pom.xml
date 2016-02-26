@@ -61,7 +61,7 @@
 
     <modules>
         <module>sustain</module>
-        <!--<module>builder</module>-->
+        <module>builder</module>
     </modules>
 
     <build>
