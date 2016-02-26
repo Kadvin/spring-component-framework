@@ -33,7 +33,7 @@
         <version.logback>1.0.13</version.logback>
         <version.jcl-core>2.4</version.jcl-core>
 
-        <version.springframework>4.1.4.RELEASE</version.springframework>
+        <version.springframework>4.1.9.RELEASE</version.springframework>
         <version.spring-security>3.2.5.RELEASE</version.spring-security>
         <version.spring-data>1.11.4.RELEASE</version.spring-data>
         <version.spring-data-mongodb>1.8.4.RELEASE</version.spring-data-mongodb>

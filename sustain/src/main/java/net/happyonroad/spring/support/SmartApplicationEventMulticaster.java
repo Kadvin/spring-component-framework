@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.context.event.SmartApplicationListener;
 
-import java.util.*;
+import java.util.Collection;
 
 /**
  * 能够根据Listener的Event的Source Type进行过滤的派发器

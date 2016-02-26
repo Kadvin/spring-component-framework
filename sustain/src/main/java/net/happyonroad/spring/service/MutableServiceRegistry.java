@@ -4,8 +4,6 @@
 
 package net.happyonroad.spring.service;
 
-import net.happyonroad.spring.service.ServiceRegistry;
-
 import java.util.Map;
 
 /** 可修改的服务注册表 */

@@ -3,8 +3,8 @@
  */
 package net.happyonroad.spring.support;
 
-import net.happyonroad.spring.service.MutableServiceRegistry;
 import net.happyonroad.spring.exception.ServiceConfigurationException;
+import net.happyonroad.spring.service.MutableServiceRegistry;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

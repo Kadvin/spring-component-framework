@@ -9,8 +9,6 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A url handler to handle url like: component:com.itsnow.components.config-0.1.9.jar

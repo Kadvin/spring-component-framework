@@ -3,10 +3,10 @@
  */
 package spring.test.mixed;
 
-import spring.test.api.ServiceProvider;
-import spring.test.api.ServiceUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import spring.test.api.ServiceProvider;
+import spring.test.api.ServiceUser;
 
 import java.util.List;
 

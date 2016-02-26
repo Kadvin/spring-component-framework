@@ -3,8 +3,8 @@
  */
 package com.myapp.work;
 
-import com.myapp.api.WorkAPI;
 import com.myapp.api.RouteAPI;
+import com.myapp.api.WorkAPI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.Lifecycle;
 import org.springframework.remoting.rmi.RmiProxyFactoryBean;

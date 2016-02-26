@@ -4,13 +4,16 @@
 package com.myapp.route;
 
 import com.myapp.api.CacheService;
-import com.myapp.api.WorkAPI;
 import com.myapp.api.RouteAPI;
+import com.myapp.api.WorkAPI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.remoting.rmi.RmiProxyFactoryBean;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 @org.springframework.stereotype.Component
 public class Router implements RouteAPI {

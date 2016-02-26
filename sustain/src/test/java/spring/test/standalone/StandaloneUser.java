@@ -3,10 +3,10 @@
  */
 package spring.test.standalone;
 
-import spring.test.api.ServiceProvider;
-import spring.test.api.ServiceUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import spring.test.api.ServiceProvider;
+import spring.test.api.ServiceUser;
 
 /** 独立app里面使用的类 */
 @Component

@@ -31,7 +31,10 @@ import org.springframework.util.StringUtils;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
 import static org.apache.commons.lang.time.DurationFormatUtils.formatDurationHMS;
 

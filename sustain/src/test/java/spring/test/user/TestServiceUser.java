@@ -3,10 +3,10 @@
  */
 package spring.test.user;
 
-import spring.test.api.ServiceProvider;
-import spring.test.api.ServiceUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import spring.test.api.ServiceProvider;
+import spring.test.api.ServiceUser;
 
 /** 测试的服务用户 */
 @Component

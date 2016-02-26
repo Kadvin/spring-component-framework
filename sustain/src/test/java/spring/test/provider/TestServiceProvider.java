@@ -3,8 +3,8 @@
  */
 package spring.test.provider;
 
-import spring.test.api.ServiceProvider;
 import org.springframework.stereotype.Component;
+import spring.test.api.ServiceProvider;
 
 /** 测试的服务提供者 */
 @Component

@@ -1,7 +1,6 @@
 package sun.net.www.protocol.component;
 
 import net.happyonroad.component.ComponentTestSupport;
-import net.happyonroad.component.container.support.DefaultComponentRepository;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -9,7 +8,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 public class HandlerTest extends ComponentTestSupport {
 
