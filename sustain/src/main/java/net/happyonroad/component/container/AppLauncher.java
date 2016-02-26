@@ -44,7 +44,7 @@ public class AppLauncher implements Executable {
     static String[] appPatterns;
 
     static {
-        appPatterns = System.getProperty("app.prefix", "dnt.;net.happyonroad").split(";");
+        appPatterns = System.getProperty("app.prefix", "com.itsnow.;net.happyonroad").split(";");
     }
 
 
