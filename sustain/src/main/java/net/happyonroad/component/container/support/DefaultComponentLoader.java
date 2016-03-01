@@ -44,6 +44,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     /*package*/ final Set<Component>           loading, unloading;
     /*package*/ ApplicationContext context;
 
+    int indent = -1;
 
     public DefaultComponentLoader(ComponentRepository repository,
                                   FeatureResolver... resolvers) {
@@ -191,7 +192,8 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
     @Override
     public void load(Component component) throws Exception {
         if (isLoaded(component)) return;
-        logger.debug("Before loading {}", component);
+        indent ++;
+        logger.debug("{}Loading {}", indent(), component);
         //首先加载父组件
         if (component.getParent() != null) {
             //上面会自动检测是否已经加载，防止重复加载
@@ -208,7 +210,12 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
         }
         quickLoad(component);
         //最后，加载自身
-        logger.debug("After  loaded  {}", component);
+        logger.debug("{}Loaded  {}", indent(), component);
+        indent --;
+    }
+
+    String indent(){
+        return StringUtils.repeat("  ", indent);
     }
 
     /**
@@ -311,6 +318,7 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 }
                 if( !unMeets.isEmpty() ){
                     logger.warn("The {} depends {} is not meets, skip it", component, StringUtils.join(unMeets, ","));
+                    loaded(component);
                     return;
                 }
             }
