@@ -8,6 +8,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.reflect.FieldUtils;
 import sun.misc.URLClassPath;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashSet;
@@ -30,6 +32,12 @@ public class MainClassLoader extends ManipulateClassLoader{
     private MainClassLoader(ClassLoader parent) {
         super(parent);
         sysUrls = new HashSet<URL>();
+        try {
+            URL modelsUrl = new File(System.getProperty("app.home"), "config/models").toURI().toURL();
+            sysUrls.add(modelsUrl);
+        } catch (MalformedURLException e) {
+            //skip
+        }
         digSysURLs(parent);
         mainUrls = new HashSet<URL>();
     }
