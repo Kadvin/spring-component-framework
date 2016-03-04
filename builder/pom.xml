@@ -68,7 +68,6 @@
                     <artifactId>maven-plugin-plugin</artifactId>
                     <version>3.2</version>
                     <configuration>
-                        <skipDescriptor>true</skipDescriptor>
                         <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
                         <encoding>utf-8</encoding>
                     </configuration>
