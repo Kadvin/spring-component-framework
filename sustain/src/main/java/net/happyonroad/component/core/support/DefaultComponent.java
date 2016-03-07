@@ -705,10 +705,12 @@ public class DefaultComponent implements Component, SelfNaming {
         return false;
     }
 
+    @Override
     public ClassLoader getClassLoader() {
         return classLoader;
     }
 
+    @Override
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }

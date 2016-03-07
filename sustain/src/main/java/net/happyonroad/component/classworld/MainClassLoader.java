@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -28,9 +29,11 @@ public class MainClassLoader extends ManipulateClassLoader{
     final Set<URL> sysUrls;
     //当前class loader可见的url
     final Set<URL> mainUrls;
+    final List<ClassLoader> extraClassLoaders;
 
     private MainClassLoader(ClassLoader parent) {
         super(parent);
+        extraClassLoaders = new LinkedList<ClassLoader>();
         sysUrls = new HashSet<URL>();
         try {
             URL modelsUrl = new File(System.getProperty("app.home"), "config/models").toURI().toURL();
@@ -68,6 +71,19 @@ public class MainClassLoader extends ManipulateClassLoader{
 
     public Set<URL> getMainUrls() {
         return mainUrls;
+    }
+
+    @Override
+    protected ClassLoader[] getExtraClassLoaders() {
+        return extraClassLoaders.toArray(new ClassLoader[extraClassLoaders.size()]);
+    }
+
+    public boolean isCover(URL url) {
+        return mainUrls.contains(url);
+    }
+
+    public void registerExtraClassLoader(ClassLoader classLoader) {
+        extraClassLoaders.add(classLoader);
     }
 
     public static MainClassLoader getInstance() {

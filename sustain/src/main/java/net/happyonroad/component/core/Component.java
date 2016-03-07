@@ -109,6 +109,12 @@ public interface Component extends Comparable<Component>, Versionize {
     ClassLoader getClassLoader();
 
     /**
+     * 设置class loader
+     * @param classLoader 新设置的class loader
+     */
+    void setClassLoader(ClassLoader classLoader);
+
+    /**
      * 获取组件的资源加载器(for Spring)
      * @return Spring 资源加载器
      */
