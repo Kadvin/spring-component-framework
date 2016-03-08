@@ -13,7 +13,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -24,16 +23,14 @@ import java.util.Set;
  * 继承于 URLClassLoader，其 url 范围为AppLaunch启动时，目标组件的所有依赖包（除开父加载器的Class-Path相关url）
  */
 public class MainClassLoader extends ManipulateClassLoader{
-    static MainClassLoader instance;
+    static MainClassLoader          instance;
     //parent class loader可见的url
-    final Set<URL> sysUrls;
+    final  Set<URL>                 sysUrls;
     //当前class loader可见的url
-    final Set<URL> mainUrls;
-    final List<ClassLoader> extraClassLoaders;
+    final  Set<URL>                 mainUrls;
 
     private MainClassLoader(ClassLoader parent) {
         super(parent);
-        extraClassLoaders = new LinkedList<ClassLoader>();
         sysUrls = new HashSet<URL>();
         try {
             URL modelsUrl = new File(System.getProperty("app.home"), "config/models").toURI().toURL();
@@ -56,7 +53,7 @@ public class MainClassLoader extends ManipulateClassLoader{
         }
     }
 
-    protected void innerAddURL(URL url){
+    protected void innerAddURL(URL url) {
         if (sysUrls.contains(url))
             return;
         if (!mainUrls.contains(url)) {
@@ -73,17 +70,8 @@ public class MainClassLoader extends ManipulateClassLoader{
         return mainUrls;
     }
 
-    @Override
-    protected ClassLoader[] getExtraClassLoaders() {
-        return extraClassLoaders.toArray(new ClassLoader[extraClassLoaders.size()]);
-    }
-
     public boolean isCover(URL url) {
         return mainUrls.contains(url);
-    }
-
-    public void registerExtraClassLoader(ClassLoader classLoader) {
-        extraClassLoaders.add(classLoader);
     }
 
     public static MainClassLoader getInstance() {

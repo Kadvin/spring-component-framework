@@ -38,26 +38,4 @@ public abstract class ManipulateClassLoader extends URLClassLoader {
     protected void innerAddURL(URL url) {
         super.addURL(url);
     }
-
-    @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-        try {
-            //先通过url class loader的，快速url方式寻找类
-            return super.findClass(name);
-        } catch (ClassNotFoundException e) {
-            //再判断额外的class loaders
-            ClassLoader[] extras = getExtraClassLoaders();
-            if (extras == null) throw e;
-            for (ClassLoader extra : extras) {
-                try {
-                    return extra.loadClass(name);
-                } catch (ClassNotFoundException e1) {
-                    //continue to try next
-                }
-            }
-            throw e;
-        }
-    }
-
-    protected abstract ClassLoader[] getExtraClassLoaders();
 }
