@@ -110,8 +110,13 @@ public class ContextUtils {
         while (it.hasNext()) {
             ApplicationContext context = it.next();
             Set<Integer> set = eventHashCodes.get(context.getId());
-            if (set != null && set.contains(hashCode))
-                it.remove();
+            if (set != null && set.contains(hashCode)) {
+                try {
+                    it.remove();
+                } catch (Exception e) {
+                    //skip
+                }
+            }
         }
     }
 
