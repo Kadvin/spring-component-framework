@@ -6,6 +6,7 @@ package net.happyonroad.component.container.feature;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.Features;
 import net.happyonroad.spring.support.CombinedMessageSource;
+import net.happyonroad.spring.support.ObservableMessageSource;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -40,12 +41,25 @@ public class StaticFeatureResolver extends AbstractFeatureResolver{
         String appMessage = getAppMessage(component);
         if(StringUtils.isNotBlank(appMessage)){
             CombinedMessageSource combined  = parent.getBean(CombinedMessageSource.class);
-            ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+            ObservableMessageSource source = new ObservableMessageSource();
             source.setBundleClassLoader(realm);
             source.setBasenames(StringUtils.split(appMessage, CONFIG_LOCATION_DELIMITERS));
             combined.combine(source);
         }
         resolveContext.registerFeature(component, getName(), realm);
+    }
+
+    @Override
+    public Object release(Component component) {
+        ApplicationContext parent = resolveContext.getRootContext() ;
+        String appMessage = getAppMessage(component);
+        if(StringUtils.isNotBlank(appMessage)){
+            ClassLoader realm = component.getClassLoader();
+            CombinedMessageSource combined  = parent.getBean(CombinedMessageSource.class);
+            String[] names = StringUtils.split(appMessage, CONFIG_LOCATION_DELIMITERS);
+            combined.unbind(realm, names);
+        }
+        return super.release(component);
     }
 
     protected String getAppMessage(Component component){

@@ -8,24 +8,35 @@ import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.support.DelegatingMessageSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * 将多个依赖的组件的message source合并一个
  */
 public class CombinedMessageSource extends DelegatingMessageSource {
 
-    private final List<ResourceBundleMessageSource> sources;
+    private final List<ObservableMessageSource> sources;
 
     public CombinedMessageSource() {
-        this.sources = new LinkedList<ResourceBundleMessageSource>();
+        this.sources = new LinkedList<ObservableMessageSource>();
     }
 
-    public void combine(ResourceBundleMessageSource source){
+    public void combine(ObservableMessageSource source){
         //后来优先级反而高
         sources.add(0, source);
+    }
+
+    public void unbind(ClassLoader realm, String[] names) {
+        Iterator<ObservableMessageSource> it = sources.iterator();
+        while (it.hasNext()) {
+            ObservableMessageSource source = it.next();
+            ClassLoader bcl = source.getBundleClassLoader();
+            String[] baseNames = source.getBasenames();
+            if( bcl == realm && Arrays.equals(names, baseNames)){
+                it.remove();
+            }
+        }
+
     }
 
     @Override
