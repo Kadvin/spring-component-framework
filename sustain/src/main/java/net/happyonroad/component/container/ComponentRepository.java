@@ -3,6 +3,7 @@ package net.happyonroad.component.container;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 
 import java.io.File;
@@ -60,6 +61,14 @@ public interface ComponentRepository {
      * @return 所有已经解析的组件，按照解析的先后顺序
      */
     List<Component> getComponents();
+
+    /**
+     * 获取已经存在的组件
+     *
+     * @return 存在的组件
+     * @throws java.lang.IllegalStateException 组件不存在
+     */
+    Component getComponent(String componentId) throws IllegalStateException;
 
     /**
      * Judge a file is cached or not

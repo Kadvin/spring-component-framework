@@ -321,6 +321,15 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     }
 
     @Override
+    public Component getComponent(String componentId) throws IllegalStateException {
+        for (Component component : components) {
+            if( component.getId().equalsIgnoreCase(componentId))
+                return component;
+        }
+        throw new IllegalStateException("Can't find component with id " + componentId);
+    }
+
+    @Override
     public boolean cached(File file) {
         for(Resource resource : cache.values() ){
             try {
