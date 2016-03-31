@@ -58,7 +58,7 @@ public class ComponentJarResource extends ComponentResource {
         this.manifest.clear();
         this.manifest = null;
         // system shared jar file, do not close it
-        //try{ this.file.close(); } catch (IOException ex){ /**/ }
+        try{ this.file.close(); } catch (IOException ex){ /**/ }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////

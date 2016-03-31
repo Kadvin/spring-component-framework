@@ -496,8 +496,9 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                         FileUtils.mkdir(file.getAbsolutePath());
                     else {
                         if (entry.getName().endsWith("config.js")) {
-                            List<String> strings = IOUtils.readLines(stream);
-                            String content = StringUtils.join(strings, "\n");
+                            StringWriter writer = new StringWriter();
+                            IOUtils.copy(stream, writer);
+                            String content = writer.toString();
                             content = interpolate(content, replaces, 'A');
                             org.apache.commons.io.FileUtils.write(file, content);
                         } else {

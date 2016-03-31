@@ -368,6 +368,8 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 }
             }
             loadedFeatures.remove(component);
+            if( component.getResource() != null )
+                component.getResource().close();
             unloaded(component);
             logger.info("Unloaded  {} ({})", component, formatDurationHMS(System.currentTimeMillis() - start));
         }

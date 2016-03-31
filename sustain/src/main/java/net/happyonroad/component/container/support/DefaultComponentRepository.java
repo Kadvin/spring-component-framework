@@ -287,6 +287,12 @@ public class DefaultComponentRepository implements MutableComponentRepository {
         return resolveComponent(dependency);
     }
 
+    @Override
+    public void remove(Component component) {
+        logger.debug("Removing {}", component);
+        components.remove(component);
+        logger.debug("Removed  {}", component);
+    }
 
     /**
      * 从当前已经解析的组件中找到符合依赖的组件列表，这不会触发实际解析动作
@@ -345,8 +351,18 @@ public class DefaultComponentRepository implements MutableComponentRepository {
 
     @Override
     public void cache(File file) throws InvalidComponentNameException {
+        logger.debug("Caching {}", file.getPath());
         Dependency dep = Dependency.parse(file);
         cache.put(dep, new FileSystemResource(file));
+        logger.debug("Cached  {}", file.getPath());
+    }
+
+    @Override
+    public void uncache(File file) throws InvalidComponentNameException{
+        logger.debug("Uncaching {}", file.getPath());
+        Dependency dep = Dependency.parse(file);
+        cache.remove(dep);
+        logger.debug("Uncached  {}", file.getPath());
     }
 
     @Override

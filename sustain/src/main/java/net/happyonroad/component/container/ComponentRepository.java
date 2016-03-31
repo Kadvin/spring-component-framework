@@ -3,7 +3,6 @@ package net.happyonroad.component.container;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 
 import java.io.File;
@@ -31,6 +30,13 @@ public interface ComponentRepository {
      * @throws InvalidComponentNameException
      */
     Component resolveComponent(String strDependency) throws DependencyNotMeetException, InvalidComponentNameException;
+
+    /**
+     * 移除已经解析出来的组件
+     *
+     * @param component 移除组件
+     */
+    void remove(Component component);
 
     /**
      * 根据依赖，解析出所有的候选组件
@@ -84,4 +90,12 @@ public interface ComponentRepository {
      * @param file file to be cache
      */
     void cache(File file) throws InvalidComponentNameException;
+
+    /**
+     * <h2>Dynamic un cache a file</h2>
+     *
+     * @param file file to be cache
+     */
+    void uncache(File file) throws InvalidComponentNameException;
+
 }
