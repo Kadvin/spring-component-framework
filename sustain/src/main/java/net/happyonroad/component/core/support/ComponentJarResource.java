@@ -9,6 +9,7 @@ import org.springframework.core.io.Resource;
 import sun.net.www.protocol.jar.Handler;
 import sun.net.www.protocol.jar.JarURLConnection;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -29,22 +30,22 @@ import static net.happyonroad.component.core.support.ComponentUtils.relativePath
 public class ComponentJarResource extends ComponentResource {
 
 
-    private final JarFile          file;
+    private JarFile file;
 
-    public ComponentJarResource(Dependency dependency, String briefId) throws InvalidComponentNameException {
-        this(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), briefId);
+    public ComponentJarResource(File file, Dependency dependency, String briefId) throws InvalidComponentNameException {
+        this(file, dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), briefId);
     }
 
-    public ComponentJarResource(String groupId, String artifactId, String version, String briefId)
+    public ComponentJarResource(File file, String groupId, String artifactId, String version, String briefId)
             throws InvalidComponentNameException {
         super(groupId, artifactId, version, briefId);
         try {
-            URL manifestUrl = new URL(assemble("META-INF/MANIFEST.MF"));
+            //URL manifestUrl = new URL(assemble("META-INF/MANIFEST.MF"));
             //借 connection对象生成 JarFile，这个jar file就被系统统一管理；
             // 而后直接返回的 new URL("jar:file:xxx!/yyy") 读取stream时，就会复用这个系统管理的JarFile
-            JarURLConnection connection = new JarURLConnection(manifestUrl, new Handler());
-            this.file = connection.getJarFile();
-            this.manifest = connection.getManifest();
+            //JarURLConnection connection = new JarURLConnection(manifestUrl, new Handler());
+            this.file = new JarFile(file);
+            this.manifest = this.file.getManifest();
         } catch (IOException e) {
             throw new InvalidComponentNameException("Bad component: " + relativePath(getFileName()), e);
         }
@@ -54,11 +55,17 @@ public class ComponentJarResource extends ComponentResource {
     // 额外扩展的对外方法
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public void close(){
+    public void close() {
         this.manifest.clear();
         this.manifest = null;
         // system shared jar file, do not close it
-        try{ this.file.close(); } catch (IOException ex){ /**/ }
+        try {
+            this.file.close();
+        } catch (IOException ex) {
+          //skip
+        } finally {
+            this.file = null;
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +83,7 @@ public class ComponentJarResource extends ComponentResource {
 
     public InputStream getInputStream(String innerPath) throws IOException {
         JarEntry entry = file.getJarEntry(innerPath);
-        if( entry == null )
+        if (entry == null)
             throw new IllegalArgumentException("Can't find " + innerPath + " from " + file.getName());
         //class loader可能还没有正确配置好,此时直接从file里面获取
         try {
@@ -101,7 +108,7 @@ public class ComponentJarResource extends ComponentResource {
         Enumeration<JarEntry> entries = file.entries();
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
-            if(entry.getName().startsWith(path)) {
+            if (entry.getName().startsWith(path)) {
                 Resource resource = super.getResource(entry.getName());
                 matches.add(resource);
             }
@@ -111,18 +118,18 @@ public class ComponentJarResource extends ComponentResource {
 
     @Override
     public Resource getLocalResourceUnder(String path) {
-        if( isIndexed() && Arrays.binarySearch(indexes, path) >= 0){
+        if (isIndexed() && Arrays.binarySearch(indexes, path) >= 0) {
             return super.getResource(path);
-        }else{
+        } else {
             ZipEntry entry = file.getEntry(path);
-            if( entry != null )
+            if (entry != null)
                 return super.getResource(path);
         }
         return null;
     }
 
     @Override
-    public URL getLocalResource(String path)  {
+    public URL getLocalResource(String path) {
         final String url = assemble(path);
         try {
             return new URL(url);
@@ -132,7 +139,7 @@ public class ComponentJarResource extends ComponentResource {
     }
 
     // replace file protocol to component
-    private String assemble(String path){
-        return  "jar:component:" + getFileName() + "!/" + path;
+    private String assemble(String path) {
+        return "jar:component:" + getFileName() + "!/" + path;
     }
 }

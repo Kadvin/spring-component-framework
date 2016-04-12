@@ -301,7 +301,7 @@ public class DefaultComponentResolver implements ComponentResolver {
                 if (!comp.isAggregating()) {
                     File jarFile = digJarFilePath(fileName);
                     if (jarFile != null) {
-                        ComponentJarResource jarResource = new ComponentJarResource(dependency, relativePath(jarFile));
+                        ComponentJarResource jarResource = new ComponentJarResource(jarFile, dependency, relativePath(jarFile));
                         comp.setResource(jarResource);
                     } else {
                         logger.warn("Can't find jar file for {}", comp);
@@ -316,7 +316,8 @@ public class DefaultComponentResolver implements ComponentResolver {
                 } catch (IOException ex) {/**/}
             }
         } else {
-            ComponentJarResource jarResource = new ComponentJarResource(dependency, relativePath(fileName));
+            File jarFile = new File(fileName);
+            ComponentJarResource jarResource = new ComponentJarResource(jarFile, dependency, relativePath(fileName));
             try {
                 stream = jarResource.getPomStream();
                 comp = (DefaultComponent) resolveComponent(dependency, stream);

@@ -10,12 +10,9 @@ import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.DependencyNotMeetException;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
-import net.happyonroad.component.core.support.ComponentJarResource;
-import net.happyonroad.component.core.support.ComponentUtils;
 import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.component.core.support.Dependency;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -26,7 +23,6 @@ import org.springframework.core.io.Resource;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -167,22 +163,23 @@ public class DefaultComponentRepository implements MutableComponentRepository {
                 continue;
             }
             Dependency dependency;
-            String briefId;
             if( jar.getName().contains("spring-component-framework")){
                 String version = StringUtils.substringBetween(jar.getName(), "@", ".jar");
                 dependency = new Dependency("net.happyonroad", "spring-component-framework", version);
-                briefId = "net.happyonroad/" + FilenameUtils.getName(jar.getName());
             }else{
                 dependency = Dependency.parse(jar);
-                briefId = ComponentUtils.relativePath(jar);
             }
             //先放到cache里面，避免构建 component jar resource时无法寻址
             cache.put(dependency, new FileSystemResource(jar));
-            ComponentJarResource resource = null;
-            InputStream stream = null;
+            JarFile jarFile = null;
             try {
-                resource = new ComponentJarResource(dependency, briefId);
-                stream = resource.getPomStream();
+                String entryPath = String.format("META-INF/maven/%s/%s/pom.xml",
+                                                 dependency.getGroupId(),dependency.getArtifactId());
+                jarFile = new JarFile(jar);
+                JarEntry entry = jarFile.getJarEntry(entryPath);
+                if(entry == null){
+                    throw new IllegalArgumentException("There is no " + entryPath);
+                }
                 //只有存在 pom.xml 的jar包才直接解析
                 //而不存在 pom.xml 的jar包，需要依赖 poms里面的定义进行解析
             } catch (IOException e) {
@@ -195,8 +192,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
                 throw new IOException("Failed scan " + jar.getPath(), e);
             } finally {
                 try {
-                    if (stream != null) stream.close();
-                    if(resource != null ) resource.close();
+                    if (jarFile != null) jarFile.close();
                 } catch (IOException e) {
                     logger.error("Error while close:" + jar.getPath(), e);
                 }
