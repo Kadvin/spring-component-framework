@@ -5,6 +5,7 @@ package net.happyonroad.component.container.feature;
 
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.Features;
+import net.happyonroad.component.core.support.DefaultComponent;
 import net.happyonroad.spring.support.CombinedMessageSource;
 import net.happyonroad.spring.support.ObservableMessageSource;
 import org.apache.commons.lang.StringUtils;
@@ -16,6 +17,9 @@ import static org.springframework.context.ConfigurableApplicationContext.CONFIG_
 /** 静态特性解析 */
 public class StaticFeatureResolver extends AbstractFeatureResolver{
     public static final String APP_MESSAGE = "App-Message";
+    static {
+        DefaultComponent.MANIFEST_ATTRS.add(APP_MESSAGE);
+    }
 
     public StaticFeatureResolver() {
         super(10, 100);

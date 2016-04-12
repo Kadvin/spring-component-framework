@@ -39,15 +39,16 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 @ManagedResource(description = "Spring Component")
 public class DefaultComponent implements Component, SelfNaming {
-    private static final String   CLASSPATH_THIS_URL_PREFIX = "classpath*:";
-    private static       Logger   logger                    =
+    private static final String      CLASSPATH_THIS_URL_PREFIX = "classpath*:";
+    private static       Logger      logger                    =
             LoggerFactory.getLogger(DefaultComponent.class.getName());
-    private static final Pattern  INTERPOLATE_PTN           = Pattern.compile("\\$\\{([^}]+)\\}");
-    private static final String[] ATTRIBUTE_NAMES           =
+    private static final Pattern     INTERPOLATE_PTN           = Pattern.compile("\\$\\{([^}]+)\\}");
+    private static final String[]    ATTRIBUTE_NAMES           =
             new String[]{"groupId", "artifactId", "version", "type",
                          "classifier", "release", "name",
                          "description",
                          "url"};
+    public static final  Set<String> MANIFEST_ATTRS            = new HashSet<String>();
 
     static {
         Arrays.sort(ATTRIBUTE_NAMES);
@@ -434,7 +435,7 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     public DependencyManagement getDependencyManagement() {
-        if (dependencyManagement == null){
+        if (dependencyManagement == null) {
             dependencyManagement = new DependencyManagement();
             dependencyManagement.setName(toString());
         }
@@ -448,7 +449,7 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public Set<Dependency> getAllDependencies() {
-        if (allDependencies != null ) return allDependencies;
+        if (allDependencies != null) return allDependencies;
         allDependencies = new HashSet<Dependency>();
         if (getDependencies() != null) {
             allDependencies.addAll(getDependencies());
@@ -460,7 +461,7 @@ public class DefaultComponent implements Component, SelfNaming {
     }
 
     public Set<Component> getAllDependedComponents() {
-        if( allDependedComponents != null ) return allDependedComponents;
+        if (allDependedComponents != null) return allDependedComponents;
         allDependedComponents = new HashSet<Component>();
         if (dependedComponents != null) {
             for (Component depended : dependedComponents) {
@@ -585,7 +586,7 @@ public class DefaultComponent implements Component, SelfNaming {
     @ManagedAttribute
     @Override
     public boolean isPlain() {
-        return !isApplication() || getResource() == null;
+        return !isApplication();
     }
 
 
@@ -689,6 +690,12 @@ public class DefaultComponent implements Component, SelfNaming {
 
     @Override
     public boolean isApplication() {
+        //检查组件的有没有动态manifest属性
+        if (getResource() != null) for (String attr : MANIFEST_ATTRS) {
+            if (getManifestAttribute(attr) != null) {
+                return true;
+            }
+        }
         return DefaultComponent.isApplication(getGroupId());
     }
 

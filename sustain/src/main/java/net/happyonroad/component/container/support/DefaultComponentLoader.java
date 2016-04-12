@@ -21,6 +21,7 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -368,8 +369,17 @@ public class DefaultComponentLoader implements ComponentLoader, ComponentContext
                 }
             }
             loadedFeatures.remove(component);
-            if( component.getResource() != null )
+            if( component.getResource() != null ){
                 component.getResource().close();
+                ClassLoader classLoader = component.getClassLoader();
+                if( classLoader != null && classLoader instanceof Closeable){
+                    try {
+                        ((Closeable) classLoader).close();
+                    } catch (IOException e) {
+                        logger.warn("Error while close {} {}: {}", component, classLoader, e.getMessage());
+                    }
+                }
+            }
             unloaded(component);
             logger.info("Unloaded  {} ({})", component, formatDurationHMS(System.currentTimeMillis() - start));
         }

@@ -35,6 +35,10 @@ public class ApplicationFeatureResolver extends AbstractFeatureResolver {
     public static final String APP_CONFIG     = "App-Config";
     public static final String APP_REPOSITORY = "App-Repository";
     public static final String APP_XML        = "META-INF/application.xml";
+    static {
+        DefaultComponent.MANIFEST_ATTRS.add(APP_CONFIG);
+        DefaultComponent.MANIFEST_ATTRS.add(APP_REPOSITORY);
+    }
 
     public ApplicationFeatureResolver() {
         super(30, 70);
