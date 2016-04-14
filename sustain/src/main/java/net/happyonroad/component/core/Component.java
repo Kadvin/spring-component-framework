@@ -13,7 +13,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/** 组件对外接口 */
+/**
+ * 组件对外接口
+ */
 @SuppressWarnings("unused")
 public interface Component extends Comparable<Component>, Versionize {
     final String LATEST_VERSION   = "LATEST";
@@ -104,18 +106,21 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * 获得相应的类加载器
+     *
      * @return 类加载器
      */
     ClassLoader getClassLoader();
 
     /**
      * 设置class loader
+     *
      * @param classLoader 新设置的class loader
      */
     void setClassLoader(ClassLoader classLoader);
 
     /**
      * 获取组件的资源加载器(for Spring)
+     *
      * @return Spring 资源加载器
      */
     ResourcePatternResolver getResourceLoader();
@@ -198,6 +203,7 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * 判断是否是当前项目的应用程序，而非第三方包
+     *
      * @return 非第三方包
      */
     boolean isApplication();
@@ -227,6 +233,7 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * 是否是简单的，普通的第三方包，没有按照我们的规范进行打包
+     *
      * @return 是否
      */
     boolean isPlain();
@@ -241,6 +248,7 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * GroupId + ArtifactId + Version
+     *
      * @return brief id
      */
     String getBriefId();
@@ -254,10 +262,11 @@ public interface Component extends Comparable<Component>, Versionize {
 
     /**
      * 为组件设置额外的缺省manifest属性
-     *
+     * <p/>
      * 这些属性会被实际配置的manifest属性覆盖
-     *                 主要用于配置缺省值，减少配置工作量
-     * @param key 额外的缺省属性key
+     * 主要用于配置缺省值，减少配置工作量
+     *
+     * @param key   额外的缺省属性key
      * @param value 额外的缺省属性值
      */
     void setManifestAttribute(String key, String value);
@@ -269,4 +278,17 @@ public interface Component extends Comparable<Component>, Versionize {
     void registerScanner(RepositoryScanner scanner);
 
     List<RepositoryScanner> getScanners();
+
+    /**
+     * <h2>判断这个组件是否可以卸载</h2>
+     *
+     * @return 判断结果
+     */
+    boolean isUnloadable();
+
+    /**
+     * <h2>关闭组件</h2>
+     * 关闭组件资源，关闭组件 ClassLoader/JarFile
+     */
+    void close();
 }

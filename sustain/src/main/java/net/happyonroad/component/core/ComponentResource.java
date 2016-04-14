@@ -162,4 +162,8 @@ public abstract class ComponentResource extends DefaultResourceLoader {
         return dependencies;
     }
 
+    @Override
+    public String toString() {
+        return "ComponentResource(" + fileName + '\'' +')';
+    }
 }

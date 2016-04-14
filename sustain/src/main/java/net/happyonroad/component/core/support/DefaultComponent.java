@@ -3,6 +3,8 @@
  */
 package net.happyonroad.component.core.support;
 
+import net.happyonroad.component.classworld.MainClassLoader;
+import net.happyonroad.component.classworld.ManipulateClassLoader;
 import net.happyonroad.component.container.RepositoryScanner;
 import net.happyonroad.component.core.Component;
 import net.happyonroad.component.core.ComponentResource;
@@ -21,6 +23,8 @@ import org.springframework.jmx.export.naming.SelfNaming;
 
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -783,6 +787,33 @@ public class DefaultComponent implements Component, SelfNaming {
     @Override
     public ResourcePatternResolver getResourceLoader() {
         return resourceLoader;
+    }
+
+    @Override
+    public boolean isUnloadable(){
+        if( classLoader instanceof MainClassLoader) return false;
+        if( !(classLoader instanceof ManipulateClassLoader)) return false;
+        MainClassLoader main = MainClassLoader.getInstance();
+        ManipulateClassLoader mcl = (ManipulateClassLoader) classLoader;
+        for (URL url : mcl.getURLs()) {
+            //实际为委托main class loader加载的，不应该在组件卸载时关闭
+            if (main.isCover(url))
+                return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void close() {
+        if (resource != null)
+            resource.close();
+        if (isUnloadable()) {
+            try {
+                ((Closeable) classLoader).close();
+            } catch (IOException e) {
+                logger.warn("Error while close {} {}: {}", this, classLoader, e.getMessage());
+            }
+        }
     }
 }
 

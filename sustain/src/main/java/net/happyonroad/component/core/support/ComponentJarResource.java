@@ -5,8 +5,10 @@ package net.happyonroad.component.core.support;
 
 import net.happyonroad.component.core.ComponentResource;
 import net.happyonroad.component.core.exception.InvalidComponentNameException;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
-
 
 
 import java.io.File;
@@ -28,7 +30,7 @@ import static net.happyonroad.component.core.support.ComponentUtils.relativePath
  * 组件以Jar包形式，封闭状态运行
  */
 public class ComponentJarResource extends ComponentResource {
-
+    static Logger logger = LoggerFactory.getLogger(ComponentJarResource.class);
 
     private JarFile file;
 
@@ -56,13 +58,17 @@ public class ComponentJarResource extends ComponentResource {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public void close() {
-        this.manifest.clear();
-        this.manifest = null;
+        if (this.manifest != null) {
+            this.manifest.clear();
+            this.manifest = null;
+        } else{
+            logger.warn("Duplicate close {}", this);
+        }
         // system shared jar file, do not close it
-        try {
+        if (this.file != null) try {
             this.file.close();
         } catch (IOException ex) {
-          //skip
+            logger.warn("Error while close {}, {}", this, ExceptionUtils.getRootCauseMessage(ex));
         } finally {
             this.file = null;
         }
