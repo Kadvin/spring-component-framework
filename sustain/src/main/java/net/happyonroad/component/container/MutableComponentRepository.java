@@ -2,7 +2,9 @@ package net.happyonroad.component.container;
 
 import net.happyonroad.component.core.Component;
 
-/** 可修改的组件仓库 */
+/**
+ * 可修改的组件仓库
+ */
 public interface MutableComponentRepository extends ComponentRepository {
     /**
      * 向仓库中注册一个组件
@@ -32,4 +34,18 @@ public interface MutableComponentRepository extends ComponentRepository {
      * @return home目录路径
      */
     String getHome();
+
+    /**
+     * 判断是否已经主程序启动完毕
+     *
+     * @return 是否主程序启动完毕
+     */
+    boolean isContainerStarted();
+
+    /**
+     * 设置主程序是否启动完毕
+     *
+     * @param started 是否主程序启动完毕
+     */
+    void setContainerStarted(boolean started);
 }

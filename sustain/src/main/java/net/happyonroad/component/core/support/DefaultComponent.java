@@ -724,6 +724,9 @@ public class DefaultComponent implements Component, SelfNaming {
     @Override
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
+        if( this.resource != null ){
+            this.resource.setClassLoader(classLoader);
+        }
     }
 
     public void perform(Runnable job) throws Exception {

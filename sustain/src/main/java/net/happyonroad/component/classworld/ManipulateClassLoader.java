@@ -3,6 +3,9 @@
  */
 package net.happyonroad.component.classworld;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Set;
@@ -11,6 +14,8 @@ import java.util.Set;
  * 可控的Class Loader
  */
 public abstract class ManipulateClassLoader extends URLClassLoader {
+    protected Logger logger = LoggerFactory.getLogger(getClass());
+
     public ManipulateClassLoader(ClassLoader parent) {
         super(new URL[0], parent);
     }

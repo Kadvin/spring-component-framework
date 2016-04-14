@@ -26,7 +26,7 @@ public class CombinedMessageSource extends DelegatingMessageSource {
         sources.add(0, source);
     }
 
-    public void unbind(ClassLoader realm, String[] names) {
+    public synchronized void unbind(ClassLoader realm, String[] names) {
         Iterator<ObservableMessageSource> it = sources.iterator();
         while (it.hasNext()) {
             ObservableMessageSource source = it.next();

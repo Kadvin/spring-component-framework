@@ -45,7 +45,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
     private Map<Dependency, Resource> cache;
 
     /*package*/ ComponentResolver resolver;
-
+    private boolean containerStarted;
     /**
      * 构建一个缺省组件仓库
      *
@@ -474,6 +474,15 @@ public class DefaultComponentRepository implements MutableComponentRepository {
         return home.getPath();
     }
 
+    @Override
+    public boolean isContainerStarted() {
+        return containerStarted;
+    }
+
+    @Override
+    public void setContainerStarted(boolean containerStarted) {
+        this.containerStarted = containerStarted;
+    }
 
     public static DefaultComponentRepository getRepository() {
         return sharedInstance;

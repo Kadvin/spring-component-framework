@@ -212,6 +212,7 @@ public class DefaultLaunchEnvironment implements LaunchEnvironment {
     void publishContainerStartedEvent() {
         logger.debug("The component container is started");
         ContainerStartedEvent event = new ContainerStartedEvent(this);
+        repository.setContainerStarted(true);
         publishEvent(event);
     }
 

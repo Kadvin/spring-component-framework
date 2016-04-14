@@ -14,7 +14,6 @@ import net.happyonroad.component.core.exception.InvalidComponentNameException;
 import net.happyonroad.component.core.support.*;
 import net.happyonroad.spring.exception.ApplicationConfigurationException;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
@@ -26,13 +25,13 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 import static net.happyonroad.component.core.support.ComponentUtils.relativePath;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /** 解析pom xml的缺省实现对象 */
 public class DefaultComponentResolver implements ComponentResolver {
     protected XStream                    xmlResolver;
     protected MutableComponentRepository repository;
-    private Logger                      logger                =
-            LoggerFactory.getLogger(DefaultComponentResolver.class.getName());
+    private Logger                      logger                = getLogger(DefaultComponentResolver.class.getName());
     //应该用一个DM的merge/unmerge，但是现在这么做会失败，需要debug
     private Stack<DependencyManagement> dependencyManagements = new Stack<DependencyManagement>();
 
@@ -355,16 +354,18 @@ public class DefaultComponentResolver implements ComponentResolver {
         if( comp.getResource() != null ){
             try {
                 URL compUrl = comp.getResource().getURL();
-                URLClassLoader singleURLCL = new URLClassLoader(new URL[]{compUrl}, ClassLoader.getSystemClassLoader());
+                if( !repository.isContainerStarted() ){
+                    mcl.addURL(compUrl);
+                }
+                comp.setClassLoader(mcl);
+                URLClassLoader scl = new URLClassLoader(new URL[]{compUrl}, ClassLoader.getSystemClassLoader());
                 //让component jar resource的bind cl为仅能获取单个url的cl
-                comp.getResource().setClassLoader(singleURLCL);
-                mcl.addURL(compUrl);
+                comp.getResource().setClassLoader(scl);
             } catch (MalformedURLException e) {
                 throw new InvalidComponentException(comp.getGroupId(), comp.getArtifactId(), comp.getVersion(), comp.getType(),
                                                     "Can't get component url " + e.getMessage());
             }
         }
-        comp.setClassLoader(mcl);
         return comp;
     }
 
