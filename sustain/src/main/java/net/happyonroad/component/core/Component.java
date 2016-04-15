@@ -11,6 +11,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 /**
@@ -291,4 +292,8 @@ public interface Component extends Comparable<Component>, Versionize {
      * 关闭组件资源，关闭组件 ClassLoader/JarFile
      */
     void close();
+
+    void perform(Runnable job);
+
+    <T> T perform(Callable<T> job) throws Exception;
 }

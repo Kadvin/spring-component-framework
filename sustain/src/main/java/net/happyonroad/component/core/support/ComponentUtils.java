@@ -80,7 +80,7 @@ public final class ComponentUtils {
         try {
             return Integer.valueOf(string);
         } catch (NumberFormatException e) {
-            return Integer.valueOf(NUMBER.matcher(string).group(0));
+            return Integer.valueOf(string.replaceAll("[^\\d]", ""));
         }
     }
 

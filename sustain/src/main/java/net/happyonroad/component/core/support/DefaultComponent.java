@@ -729,7 +729,7 @@ public class DefaultComponent implements Component, SelfNaming {
         }
     }
 
-    public void perform(Runnable job) throws Exception {
+    public void perform(Runnable job) {
         ClassLoader originCl = Thread.currentThread().getContextClassLoader();
         try {
             ClassLoader classLoader = this.getClassLoader();

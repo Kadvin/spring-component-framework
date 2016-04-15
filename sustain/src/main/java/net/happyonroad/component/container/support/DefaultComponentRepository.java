@@ -120,7 +120,7 @@ public class DefaultComponentRepository implements MutableComponentRepository {
                 logger.error("Failed to scan {} poms.jar in {}", poms, e.getMessage());
             }
 
-        //最后还要扫描扩展仓库目录 repository/*.jar
+        //还要扫描扩展仓库目录 repository/*.jar
         File repositoryFolder = new File(home, "repository");
         try {
             scanJars(repositoryFolder);
@@ -133,6 +133,14 @@ public class DefaultComponentRepository implements MutableComponentRepository {
             scanPoms(poms);
         } catch (Exception e) {
             logger.error("Failed to scan {} dir for poms: {}", poms, e.getMessage());
+        }
+        File candidateFolder = new File(home, "candidates");
+        if( candidateFolder.exists() ){
+            try {
+                scanJars(candidateFolder);
+            } catch (Exception e) {
+                logger.error("Failed to scan {} dir for jars: {}", candidateFolder, e.getMessage());
+            }
         }
         pomsJar = new File(repositoryFolder, "poms.jar");
         if( pomsJar.exists())
