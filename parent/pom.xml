@@ -84,25 +84,25 @@
 
 
     <scm>
-        <url>http://git.happyonroad.net/insight/root.git</url>
+        <url>http://gitlab.happyonroad.net/insight/root.git</url>
         <connection>scm:git:git@happyonroad.net:insight/root.git</connection>
         <developerConnection>scm:git:git@happyonroad.net:insight/root.git</developerConnection>
     </scm>
 
     <profiles>
         <profile>
-            <id>itsnow</id>
+            <id>happy</id>
             <repositories>
                 <repository>
-                    <id>itsnow-releases</id>
-                    <url>http://nexus.itsnow.com/content/groups/public</url>
+                    <id>happy-releases</id>
+                    <url>http://nexus.happyonroad.net/content/groups/public</url>
                     <releases><enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
                     <snapshots><enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
                 </repository>
 
                 <repository>
-                    <id>itsnow-snapshots</id>
-                    <url>http://nexus.itsnow.com/content/groups/public-snapshots</url>
+                    <id>happy-snapshots</id>
+                    <url>http://nexus.happyonroad.net/content/groups/public-snapshots</url>
                     <releases><enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
                     <snapshots><enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
                 </repository>
@@ -110,8 +110,8 @@
 
             <pluginRepositories>
                 <pluginRepository>
-                    <id>itsnow-releases</id>
-                    <url>http://nexus.itsnow.com/content/groups/public</url>
+                    <id>happy-releases</id>
+                    <url>http://nexus.happyonroad.net/content/groups/public</url>
                     <releases><enabled>true</enabled><updatePolicy>always</updatePolicy></releases>
                     <snapshots><enabled>true</enabled><updatePolicy>always</updatePolicy></snapshots>
                 </pluginRepository>
@@ -119,14 +119,14 @@
 
             <distributionManagement>
                 <repository>
-                    <id>itsnow-releases</id>
+                    <id>happy-releases</id>
                     <name>Nexus Release Repository</name>
-                    <url>http://nexus.itsnow.com/content/repositories/releases</url>
+                    <url>http://nexus.happyonroad.net/content/repositories/releases</url>
                 </repository>
                 <snapshotRepository>
-                    <id>itsnow-snapshots</id>
+                    <id>happy-snapshots</id>
                     <name>Nexus Snapshot Repository</name>
-                    <url>http://nexus.itsnow.com/content/repositories/snapshots</url>
+                    <url>http://nexus.happyonroad.net/content/repositories/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
         </profile>
@@ -547,6 +547,16 @@
                 <groupId>com.sybase</groupId>
                 <artifactId>jdbc4</artifactId>
                 <version>${version.sybase}</version>
+            </dependency>
+            <dependency>
+                <groupId>weblogic</groupId>
+                <artifactId>wlclient</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>weblogic</groupId>
+                <artifactId>wljmxclient</artifactId>
+                <version>1.0.0</version>
             </dependency>
 
             <!--WEB Container: Jetty-->
