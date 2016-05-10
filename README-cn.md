@@ -63,7 +63,7 @@ Spring component framework 是一个基于SpringFramework和Maven的组件化的
 
 在此之外，它还可以辅助你打包应用程序，并且在Maven的支持下，保持你的应用程序中在开发态与运行态的一致性。
 
-在阅读以下介绍时，你可以下载并参考完整的 [示例程序](http://git.itsnow.com/happyonroad/spring-component-framework/tree/master/example)
+在阅读以下介绍时，你可以下载并参考完整的 [示例程序](http://git.happyonroad.cn/happyonroad/spring-component-framework/tree/master/example)
 
 2. 使用方式
 ----------
@@ -958,7 +958,7 @@ Listening for transport dt_socket at address: 5004
 | folders      | 从当前项目中copy哪些目录到最终输出目录 |
 | files        | 从当前项目中copy哪些文件到最终输出目录 |
 | frontendNodeModules | 前端npm项目缓存位置          |
-| appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;com.itsnow开头 |
+| appPrefix    | 标记如何识别应用组件，默认为net.happyonroad;cn.happyonroad开头 |
 | wrapper      | 是否生成Java Service Wrapper       |
 
 2、 index-detail

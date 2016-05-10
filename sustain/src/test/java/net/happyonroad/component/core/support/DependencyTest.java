@@ -119,8 +119,8 @@ public class DependencyTest extends TestCase {
      * @throws Exception
      */
     public void testParseNameWithSlashInGroupOrArtifactName() throws Exception {
-        Dependency dependency = Dependency.parse("com.itsnow-soft/new-artifact@1.0.0.RELEASE-Rc1.pom");
-        assertEquals("com.itsnow-soft", dependency.getGroupId());
+        Dependency dependency = Dependency.parse("cn.happyonroad-soft/new-artifact@1.0.0.RELEASE-Rc1.pom");
+        assertEquals("cn.happyonroad-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.0.0", dependency.getVersion());
         assertEquals("pom", dependency.getType());
@@ -129,14 +129,14 @@ public class DependencyTest extends TestCase {
 
     /**
      * 测试目的：
-     *   测试 com.itsnow-soft.new-artifact-1.0.jar 这种具有四位长度的文件名称的能解析成功
+     *   测试 cn.happyonroad-soft.new-artifact-1.0.jar 这种具有四位长度的文件名称的能解析成功
      * 验证方式：
      *   解析出来，groupId, artifactId, version被正确设置
      * @throws Exception
      */
     public void testParseNameWithTwoDigits() throws Exception {
-        Dependency dependency = Dependency.parse("com.itsnow-soft/new-artifact@1.0.jar");
-        assertEquals("com.itsnow-soft", dependency.getGroupId());
+        Dependency dependency = Dependency.parse("cn.happyonroad-soft/new-artifact@1.0.jar");
+        assertEquals("cn.happyonroad-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.0", dependency.getVersion());
         assertEquals("jar", dependency.getType());
@@ -145,14 +145,14 @@ public class DependencyTest extends TestCase {
 
     /**
      * 测试目的：
-     *   测试 com.itsnow-soft.new-artifact-1.0.0.1.jar 这种具有四位长度的文件名称的能解析成功
+     *   测试 cn.happyonroad-soft.new-artifact-1.0.0.1.jar 这种具有四位长度的文件名称的能解析成功
      * 验证方式：
      *   解析出来，groupId, artifactId, version被正确设置
      * @throws Exception
      */
     public void testParseNameWithFourDigits() throws Exception {
-        Dependency dependency = Dependency.parse("com.itsnow-soft/new-artifact@1.0.0.1.jar");
-        assertEquals("com.itsnow-soft", dependency.getGroupId());
+        Dependency dependency = Dependency.parse("cn.happyonroad-soft/new-artifact@1.0.0.1.jar");
+        assertEquals("cn.happyonroad-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.0.0.1", dependency.getVersion());
         assertEquals("jar", dependency.getType());
@@ -161,14 +161,14 @@ public class DependencyTest extends TestCase {
 
     /**
      * 测试目的：
-     *   测试 com.itsnow-soft.new-artifact-1.2.4c.jar 这种具有最后一位数字后面带有classifier的依赖能解析成功
+     *   测试 cn.happyonroad-soft.new-artifact-1.2.4c.jar 这种具有最后一位数字后面带有classifier的依赖能解析成功
      * 验证方式：
      *   解析出来，groupId, artifactId, version, classifier被正确设置
      * @throws Exception
      */
     public void testParseNameWithClosingClassifier() throws Exception {
-        Dependency dependency = Dependency.parse("com.itsnow-soft/new-artifact@1.2.4c.jar");
-        assertEquals("com.itsnow-soft", dependency.getGroupId());
+        Dependency dependency = Dependency.parse("cn.happyonroad-soft/new-artifact@1.2.4c.jar");
+        assertEquals("cn.happyonroad-soft", dependency.getGroupId());
         assertEquals("new-artifact", dependency.getArtifactId());
         assertEquals("1.2.4", dependency.getVersion());
         assertEquals("c", dependency.getClassifier());

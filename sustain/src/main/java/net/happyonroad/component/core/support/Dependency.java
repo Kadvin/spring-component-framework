@@ -302,8 +302,8 @@ public class Dependency implements Versionize{
     /**
      * 判断某个组件是否满足特定依赖信息
      * <pre>
-     * 如， dependency1 = {groupId: com.itsnow, artifactId: component}
-     *     dependency2 = {groupId: com.itsnow, artifactId: component, version: 1.0.0}
+     * 如， dependency1 = {groupId: cn.happyonroad, artifactId: component}
+     *     dependency2 = {groupId: cn.happyonroad, artifactId: component, version: 1.0.0}
      *     那么: dependency1.accept(dependency2) = true
      *     反之: dependency2.accept(dependency1) = false
      * </pre>

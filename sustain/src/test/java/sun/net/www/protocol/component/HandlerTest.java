@@ -14,7 +14,7 @@ public class HandlerTest extends ComponentTestSupport {
 
     @BeforeClass
     public static void setUpTotal() throws Exception {
-        System.setProperty("app.prefix","com.itsnow.;spring.test");
+        System.setProperty("app.prefix","cn.happyonroad.;spring.test");
         System.setProperty("app.home", tempFolder.getAbsolutePath());
 
         createPom("comp_0", "spring.test-0.0.1", tempFolder);
@@ -31,7 +31,7 @@ public class HandlerTest extends ComponentTestSupport {
 
     @Test
     public void testComponentProtocol() throws Exception {
-        URL url = new URL("component:com.itsnow.components.config-1.2.3.jar");
+        URL url = new URL("component:cn.happyonroad.components.config-1.2.3.jar");
         assertNotNull(url);
         URLConnection conn = url.openConnection();
         assertNotNull(conn);

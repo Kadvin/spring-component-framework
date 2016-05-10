@@ -11,7 +11,7 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
 /**
- * A url handler to handle url like: component:com.itsnow.components.config-0.1.9.jar
+ * A url handler to handle url like: component:cn.happyonroad.components.config-0.1.9.jar
  */
 @SuppressWarnings("UnusedDeclaration")
 public class Handler extends URLStreamHandler {
