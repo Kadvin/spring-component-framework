@@ -144,6 +144,10 @@ public class ComponentJarResource extends ComponentResource {
         }
     }
 
+    public JarFile getJarFile() {
+        return file;
+    }
+
     // replace file protocol to component
     private String assemble(String path) {
         return "jar:component:" + getFileName() + "!/" + path;

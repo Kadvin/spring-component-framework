@@ -3,14 +3,21 @@
  */
 package net.happyonroad.spring.support;
 
+import net.happyonroad.component.core.support.ComponentJarResource;
 import net.happyonroad.component.core.support.DefaultComponent;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.util.Assert;
+import org.springframework.util.ResourceUtils;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.JarURLConnection;
+import java.net.URLConnection;
+import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.zip.ZipException;
 
 /**
  * The extended spring path matching resource pattern resolver
@@ -29,10 +36,10 @@ public class ComponentResourcePatternResolver extends PathMatchingResourcePatter
 
     @Override
     public Resource getResource(String location) {
-        if( location.startsWith(CLASSPATH_THIS_URL_PREFIX)){
+        if (location.startsWith(CLASSPATH_THIS_URL_PREFIX)) {
             location = location.substring(CLASSPATH_THIS_URL_PREFIX.length());
             return component.getResource().getLocalResourceUnder(location);
-        }else {
+        } else {
             return super.getResource(location);
         }
     }
@@ -50,7 +57,7 @@ public class ComponentResourcePatternResolver extends PathMatchingResourcePatter
         //仔细考虑，其实做这个篡改，与我设计这个组件的隔离思路一致
         // 也就是，如果开发者在组件中说要搜索某个包，那么按照隔离的原则，就应该只限定在本jar包中搜索
         //不能搜索到依赖的包中，否则就破坏原本的隔离初衷
-        if( locationPattern.startsWith(CLASSPATH_ALL_URL_PREFIX) && locationPattern.endsWith("**/*.class")){
+        if (locationPattern.startsWith(CLASSPATH_ALL_URL_PREFIX) && locationPattern.endsWith("**/*.class")) {
             String pattern = locationPattern.substring(CLASSPATH_ALL_URL_PREFIX.length());
 //            if( component == null ){
 //                component = ((ComponentApplicationContext)getResourceLoader()).getComponent();
@@ -65,16 +72,49 @@ public class ComponentResourcePatternResolver extends PathMatchingResourcePatter
                     String resourcePath = resource.getURL().getPath().replaceAll("\\\\", "/");
                     int pos = resourcePath.indexOf(rootDirPath) + rootDirPath.length();
                     String relativePath = resourcePath.substring(pos);
-                    if(getPathMatcher().match(subPattern, relativePath)){
+                    if (getPathMatcher().match(subPattern, relativePath)) {
                         matches.add(resource);
                     }
                 }
                 return matches.toArray(new Resource[matches.size()]);
-            }else{
+            } else {
                 return component.getResource().getLocalResourcesUnder(pattern);
             }
         } else {
             return super.getResources(locationPattern);
         }
+    }
+
+    @Override
+    protected Set<Resource> doFindPathMatchingJarResources(Resource rootDirResource, String subPattern)
+            throws IOException {
+        if( !(rootDirResource instanceof ClassPathResource)){
+            return super.doFindPathMatchingJarResources(rootDirResource, subPattern);
+        }
+
+        JarFile jarFile = ((ComponentJarResource) component.getResource()).getJarFile();
+        String rootEntryPath;
+
+        JarEntry jarEntry = jarFile.getJarEntry(((ClassPathResource)rootDirResource).getPath());
+        rootEntryPath = (jarEntry != null ? jarEntry.getName() : "");
+
+        if (!"".equals(rootEntryPath) && !rootEntryPath.endsWith("/")) {
+            // Root entry path must end with slash to allow for proper matching.
+            // The Sun JRE does not return a slash here, but BEA JRockit does.
+            rootEntryPath = rootEntryPath + "/";
+        }
+        Set<Resource> result = new LinkedHashSet<Resource>(8);
+        for (Enumeration<JarEntry> entries = jarFile.entries(); entries.hasMoreElements(); ) {
+            JarEntry entry = entries.nextElement();
+            String entryPath = entry.getName();
+            if (entryPath.startsWith(rootEntryPath)) {
+                String relativePath = entryPath.substring(rootEntryPath.length());
+                if (getPathMatcher().match(subPattern, relativePath)) {
+                    result.add(rootDirResource.createRelative(relativePath));
+                }
+            }
+        }
+        return result;
+
     }
 }
