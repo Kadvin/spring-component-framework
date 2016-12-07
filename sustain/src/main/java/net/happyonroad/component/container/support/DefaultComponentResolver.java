@@ -4,6 +4,8 @@
 package net.happyonroad.component.container.support;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.ConversionException;
+import com.thoughtworks.xstream.io.StreamException;
 import net.happyonroad.component.classworld.ManipulateClassLoader;
 import net.happyonroad.component.container.ComponentResolver;
 import net.happyonroad.component.container.MutableComponentRepository;
@@ -71,7 +73,13 @@ public class DefaultComponentResolver implements ComponentResolver {
     public Component resolveComponent(Dependency dependency, InputStream pomDotXml)
             throws DependencyNotMeetException, InvalidComponentNameException {
         //由于流是外部传入的，遵循谁打开，谁关闭的原则，所以此地并不需要关闭之
-        DefaultComponent component = (DefaultComponent) xmlResolver.fromXML(pomDotXml);
+        DefaultComponent component;
+        try {
+            component = (DefaultComponent) xmlResolver.fromXML(pomDotXml);
+        } catch (ConversionException e) {
+            logger.warn( "Failed to parse " + dependency ); // + ", because of " + e.getMessage());
+            throw new DependencyNotMeetException(dependency);
+        }
         DefaultComponent parent = (DefaultComponent) component.getParent();
         //处理属性的继承
         if (parent != null) {

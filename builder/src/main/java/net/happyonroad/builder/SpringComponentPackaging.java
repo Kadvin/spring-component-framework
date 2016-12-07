@@ -85,6 +85,10 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
             this.repositoryBase = FilenameUtils.normalize(this.repositoryBase);
         }
 
+        if (StringUtils.isNotBlank(appPrefix)) {
+            System.setProperty("app.prefix", appPrefix);
+        }
+
         initAppParams();
 
         prepareFolders();
