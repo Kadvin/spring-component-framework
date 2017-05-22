@@ -19,6 +19,7 @@ import org.apache.tools.ant.types.FileSet;
 import org.codehaus.plexus.util.FileUtils;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -125,10 +126,31 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
         copyFile(artifact.getFile(), destFile);
     }
 
+    static FileFilter signatureFileExcluder = new FileFilter() {
+        @Override
+        public boolean accept(File pathname) {
+            String path = pathname.getPath();
+            String name = pathname.getName();
+            return "MANIFEST.MF".equals(name) ||
+                    !(path.contains("META-INF/") &&
+                    (name.endsWith(".DSA") || name.endsWith(".RSA") || name.endsWith(".SF")));
+        }
+    };
+
     @Override
     protected void copyFile(File artifact, File destFile) throws MojoExecutionException {
         if (destFile.exists() && destFile.lastModified() == artifact.lastModified())
             return;
+        //对于包含了 META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA 的jar文件，需要将他们都删除掉
+        if( artifact.getName().endsWith(".jar") && containsSignatureFile(artifact) ){
+            try {
+                File folder = extractJar(artifact, signatureFileExcluder);
+                createJar(folder, destFile);
+                return; // do not copy
+            } catch (IOException e) {
+                throw new MojoExecutionException("Can't exclude signature files from: " + artifact.getPath(), e);
+            }
+        }
         super.copyFile(artifact, destFile);
     }
 
@@ -212,7 +234,7 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
                 if (mavenFolder != null) {
                     FileUtils.forceDelete(pomFile);
                 } else {
-                    File tempJarFolder = extractJar(jarFile);
+                    File tempJarFolder = extractJar(jarFile, null);
                     File pomFolder = new File(tempJarFolder, pomXmlPath);
                     FileUtils.forceMkdir(pomFolder);
 
@@ -268,7 +290,7 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
 
     }
 
-    protected File extractJar(File jar) throws IOException {
+    protected File extractJar(File jar, FileFilter filter) throws IOException {
         JarFile jarFile = new JarFile(jar);
         File tempJarFolder;
         try {
@@ -282,9 +304,11 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
                 if (entry.isDirectory()) {
                     org.apache.commons.io.FileUtils.forceMkdir(file);
                     continue;
-                } else {
-                    org.apache.commons.io.FileUtils.touch(file);
                 }
+                if( filter != null && !filter.accept(file)){
+                    continue;
+                }
+                org.apache.commons.io.FileUtils.touch(file);
                 FileOutputStream outStream = new FileOutputStream(file);
                 try {
                     IOUtils.copy(jarFile.getInputStream(entry), outStream);
@@ -296,6 +320,23 @@ public class SpringComponentCopyDependencies extends CopyDependenciesMojo {
             jarFile.close();
         }
         return tempJarFolder;
+    }
+
+    boolean containsSignatureFile(File jar){
+        JarFile jarFile;
+        try {
+            jarFile = new JarFile(jar);
+        } catch (IOException e) {
+            return false;
+        }
+        Enumeration<JarEntry> entries = jarFile.entries();
+        while (entries.hasMoreElements()) {
+            String name = entries.nextElement().getName();
+            boolean found = name.contains("META-INF/") &&
+                    (name.endsWith(".DSA") || name.endsWith(".RSA") || name.endsWith(".SF"));
+            if (found) return true;
+        }
+        return false;
     }
 
     protected void createJar(File srcFolder, File destJar) {

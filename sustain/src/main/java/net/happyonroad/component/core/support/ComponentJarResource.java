@@ -95,7 +95,12 @@ public class ComponentJarResource extends ComponentResource {
         try {
             return super.getResource(innerPath).getInputStream();
         } catch (IOException e) {
-            return file.getInputStream(entry);
+            try {
+                return file.getInputStream(entry);
+            } catch (SecurityException e1) {
+                //这是一个典型的问题，需要package时解决，将原包中 META-INF/*.SF, META-INF/*.DSA, META-INF/*.RSA 过滤掉
+                throw new SecurityException("Can't read " + innerPath + " from " + file.getName(), e1);
+            }
         }
     }
 

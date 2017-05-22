@@ -534,7 +534,7 @@ public class SpringComponentPackaging extends SpringComponentCopyDependencies {
                 int reduces = reduceIndexes(lines);
                 if (reduces == 0) continue;
 
-                tempJarFolder = extractJar(jar);
+                tempJarFolder = extractJar(jar, null);
                 org.apache.commons.io.FileUtils.deleteDirectory(new File(tempJarFolder, "frontend"));
                 FileOutputStream outStream = new FileOutputStream(new File(tempJarFolder, detailEntry.getName()));
                 IOUtils.writeLines(lines, "\n", outStream);
